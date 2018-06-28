@@ -8,7 +8,7 @@ aspects of a web application.
 */
 
 
-require_once 'confbase.php';
+require_once 'confload.php';
 processSharedMemoryReload();
 
 

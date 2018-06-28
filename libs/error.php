@@ -11,8 +11,6 @@ the user.
 
 */
 
-require_once "confbase.php";
-
 interface handleErrorsInterface
 {
 	const ETMISC	= 0;	// Misc Errors

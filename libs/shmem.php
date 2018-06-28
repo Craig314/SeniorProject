@@ -32,7 +32,6 @@ Note that this class is only available on Unix platforms.
 
 */
 
-require_once 'confbase.php';
 require_once 'util.php';
 
 interface shared_memory_interface

@@ -7,7 +7,7 @@
 // the epoch time of Jan 1, 1970 12:00:01 AM.
 
 
-require_once "confbase.php";
+require_once "confload.php";
 
 
 interface timedate_interface

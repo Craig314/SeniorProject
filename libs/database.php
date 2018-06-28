@@ -5,18 +5,14 @@
 Database Access Library
 Object Oriented
 
+This is tooled for use with multiple databases with just adding
+in the code to create a connection to that specific database.
+
 */
 
 require_once('confbase.php');
 require_once('error.php');
 require_once('util.php');
-
-if (APP_DEBUG_STATUS)
-{
-	error_reporting(E_ALL);
-	ini_set('display_errors', '1');
-	ini_set('display_startup_errors', '1');
-}
 
 
 interface database_core_interface

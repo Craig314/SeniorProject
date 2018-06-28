@@ -10,7 +10,6 @@ sure that they make sense and that invalid input is flagged as
 an error.
 
 */
-require_once 'confbase.php';
 require_once 'error.php';
 
 interface verifyStringInterface

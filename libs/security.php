@@ -1,6 +1,6 @@
 <?php
 
-require_once "confbase.php";
+require_once "confload.php";
 require_once "util.php";
 
 /*
