@@ -1,0 +1,62 @@
+/*
+
+Cascading Style Sheet
+
+Page Template/Header
+
+*/
+
+button:focus {
+	outline: none;
+}
+
+.main-wrapper-div {
+	overflow-y: auto;
+	overflow-x: hidden;
+	height: 200px;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+}
+
+.text-left {
+	text-align: left !important;
+}
+
+.text-right {
+	text-align: right !important;
+}
+
+.image-border-top {
+	width: 800px;
+	height: 60px;
+	margin: auto;
+}
+
+.image-border-bottom {
+	width: 800px;
+	margin: auto;
+}
+
+.width50 {
+	width: 50%;
+	max-width: 800px;
+	margin: auto;
+}
+
+.width75 {
+	width: 75%;
+	max-width: 800px;
+	margin: auto;
+}
+
+.padding5 {
+	padding-left: 5%;
+}
+
+.padding10 {
+	padding-left: 10%;
+}
