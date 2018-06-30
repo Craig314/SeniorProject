@@ -18,12 +18,16 @@ require_once 'confload.php';
 
 interface html_interface
 {
+	// Field error status.  These constants must match values in both
+	// error.php and ajax.js
 	const STAT_NONE = 0;
 	const STAT_DEFAULT = 0;
 	const STAT_OK = 1;
 	const STAT_WARN = 2;
 	const STAT_ERROR = 3;
+	const STAT_GENERAL = 4;
 
+	// Field type definitions used by pageAutoGenerate.
 	const TYPE_HIDE			= 0;
 	const TYPE_TEXT			= 1;
 	const TYPE_PASS			= 2;
@@ -73,6 +77,7 @@ interface html_interface
 	static public function width75open();
 	static public function widthClose();
 
+	static public function pageAutoGenerate($data);
 	static public function loadTemplatePage($title, $url, $fname, $left, $right, $funcbar,
 		$js_files, $css_files, $html_flags);
 }

@@ -90,7 +90,7 @@ var serverLinkObject = ({
 	// Returns the embedded object which represents the communications link.
 	getCommLink: function() {
 		return this.link;
-	}
+	},
 });
 
 
@@ -102,12 +102,12 @@ var serverLinkObject = ({
 
 // Class to handle the actual sending of commands and the responses
 // of those requests.
-var ajaxServerCommand = ({
+var ajaxServerCommand = {
 
 	// Sends a command to the server. This function takes a variable
 	// number of parameters. Each additional parameter beyond cmd must
 	// be a key=value pair.
-	sendCommand: function(cmd){
+	sendCommand: function(cmd) {
 		var param = "COMMAND=" + cmd;
 		var i;
 		if (arguments.length > 1)
@@ -131,18 +131,18 @@ var ajaxServerCommand = ({
 
 	// Sends the return home command to the server.
 	returnHome: function() {
-		this.sendCommand(-4);
+		this.sendCommand(serverCommands['goHome']);
 	},
 
 	// Logs out the user.
 	logoutUser: function() {
-		this.sendCommand(-3);
+		this.sendCommand(serverCommands['logout']);
 	},
 
 	// Sends the heartbeat command to the server.  This is sent periodically to
 	// prevent the session from timing out.
 	heartbeat: function() {
-		this.sendCommand(-2);
+		this.sendCommand(serverCommands['heartbeat']);
 	},
 
 	// Takes a variable amount of parameters.  If specified, the
@@ -151,7 +151,7 @@ var ajaxServerCommand = ({
 	// from main to something else.  The third parameter, if
 	// specified, changes the command that is sent.
 	loadAdditionalContent: function() {
-		cmd = -1;
+		cmd = serverCommands['loadContent'];
 		if (arguments.length > 0) {
 			switch (arguments.length) {
 				case 3:
@@ -169,8 +169,8 @@ var ajaxServerCommand = ({
 			}
 		}
 		this.sendCommand(cmd);
-	}
-});
+	},
+};
 
 
 
@@ -199,7 +199,7 @@ var ajaxServerSend = {
 				link.send();
 				break;
 			case 2:		// Single extra argument
-				link.send(arguments[2]);
+				link.send(arguments[1]);
 				break;
 			default:	// Multiple extra arguments
 				var str = "";
@@ -275,6 +275,9 @@ var ajaxServerSend = {
 
 
 
+
+// This class contains routines that process AJAX data from the server.  This
+// should only be called from ajaxServerSend::responseHandler.
 var ajaxProcessData = ({
 
 	// Parses a code response from the server.
@@ -336,7 +339,7 @@ var ajaxProcessData = ({
 				var txt = str.slice(8);
 				writeError("");
 				writeResponse(txt);
-				if (typeof clearForm === "function") clearForm();
+				if (typeof clearForm === 'function') clearForm();
 				break;
 			case 951:   // Ok, display to responseTarget
 				var txt = str.slice(8);
@@ -347,7 +350,7 @@ var ajaxProcessData = ({
 				var txt = str.slice(8);
 				writeError(txt);
 				writeResponse("");
-				if (typeof clearForm === "function") clearForm();
+				if (typeof clearForm === 'function') clearForm();
 				break;
 			case 953:   // Error, display to errorTarget
 				var txt = str.slice(8);
@@ -367,7 +370,7 @@ var ajaxProcessData = ({
 			default:
 				// If the command is none of the above, then we are dealing
 				// with a possible custom command, or an invalid command.
-				if (typeof customCmdProc === "function") {
+				if (typeof customCmdProc === 'function') {
 					var result = customCmdProc(cmdnum);
 					if (result == false) alert("Unknown command " + cmdnum + " returned by server.");
 				}
@@ -380,14 +383,11 @@ var ajaxProcessData = ({
 	// field status accordingly.
 	parseStatus: function(str) {
 		var cst;
-		var est;
 		var entity;
 		var i;
+		var text;
+		var objArray;
 		var message;
-		var msg;
-		var objHtml;
-		var objParent;
-		var objSpan;
 		entity = str.indexOf("STAT");
 		if (entity != 0) return;
 		cst = str.indexOf(" ")
@@ -395,9 +395,9 @@ var ajaxProcessData = ({
 			writeError("JSON data format error from server.");
 			return;
 		}
-		txt = str.slice(0, cst);
+		text = str.slice(0, cst);
 		try {
-			var objArray = JSON.parse(txt);
+			var objArray = JSON.parse(text);
 		}
 		catch (error) {
 			writeError(error.message);
@@ -405,56 +405,37 @@ var ajaxProcessData = ({
 		}
 		message = '';
 		for (i = 0; i < objArray.length; i++) {
-			/* This assumes the following structure:
-				<div>
-					<label>
-					<div>
-						<input>
-						<span>
-					</div>
-				</div>
-			*/
-			objHtml = document.getElementById(objArray[i].field);
-			if (objHtml == null) continue;
-			objParent = objHtml.parentNode.parentNode;
-			objSpan = objHtml.nextSibling;
-			if (objParent.nodeName.toUpperCase != 'DIV') continue;
-			if (objSpan.nodeName.toUpperCase != 'SPAN') continue;
 			switch (objArray[i].status) {
-				case 0:
-					classNameDiv = "form-group";
-					classNameSpan = "glyphicon glyphicon-ok form-control-feedback";
-					msg = null;
+				case 0:			// Default Status
+					if (objArray[i].message.length() > 0)
+						this.setStatusTextDefault(objArray[i].id, objArray[i].message);
+					else
+						this.setStatusTextDefault(objArray[i].id);
 					break;
-				case 1:
-					classNameDiv = "form-group has-success has-feedback";
-					classNameSpan = "glyphicon form-control-feedback";
-					msg = null;
+				case 1:			// Ok Status
+					if (objArray[i].message.length() > 0)
+						this.setStatusTextOk(objArray[i].id, objArray[i].message);
+					else
+						this.setStatusTextOk(objArray[i].id);
 					break;
-				case 2:
-					classNameDiv = "form-group has-warning has-feedback";
-					classNameSpan = "glyphicon glyphicon-warning-sign form-control-feedback";
-					msg = objArray[i].msg;
+				case 2:			// Warning Status
+					this.setStatusTextWarn(objArray[i].id, objArray[i].message);
 					break;
-				case 3:
-					classNameDiv = "form-group has-error has-feedback";
-					classNameSpan = "glyphicon glyphicon-remove form-control-feedback";
-					msg = objArray[i].msg;
+				case 3:			// Error Status
+					this.setStatusTextError(objArray[i].id, objArray[i].message);
 					break;
-				default:
-					classNameDiv = "form-group";
-					classNameSpan = "glyphicon form-control-feedback";
-					msg = null;
+				case 4:			// General Error Message
+					message += '<br>' . objArray[i].message;
 					break;
-			}
-			objParent.className = classNameDiv;
-			objSpan.className = classNameSpan;
-			if (msg != null) {
-				if (message == '') message = msg;
-					else message += '<br>' + msg;
+				default:		// Default Status
+					if (objArray[i].message.length() > 0)
+						this.setStatusTextDefault(objArray[i].id, objArray[i].message);
+					else
+						this.setStatusTextDefault(objArray[i].id);
+					break;
 			}
 		}
-		writeError(message);	
+		if (message.length > 0) writeError(message);	
 	},
 
 	// Parses the JSON data from text format into object format
@@ -515,15 +496,19 @@ var ajaxProcessData = ({
 			string = objArray[i].slice(0, space);
 			switch(string) {
 				case "CODE":	// Status Code
-					parseCode(objArray[i]);
+					this.parseCode(objArray[i]);
 					return;
 					break;
 				case "CMD":		// Command with/without data
-					parseCommand(objArray[i]);
+					this.parseCommand(objArray[i]);
+					return;
+					break;
+				case 'STAT':	// JSON formatted error data
+					this.parseStatus(objArray[i]);
 					return;
 					break;
 				case "JSON":	// JSON formatted data
-					parseJSON(objArray[i]);
+					this.parseJSON(objArray[i]);
 					return;
 					break;
 				default:
@@ -531,7 +516,37 @@ var ajaxProcessData = ({
 					break;
 			}
 		}
-	}
+	},
+
+	// Sets the status of a text field to Ok.
+	setStatusTextOk: function(id) {
+		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon glyphicon-ok form-control-feedback');
+		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group has-success has-feedback');
+		if (arguments > 1)
+			document.getElementById('dcmMS-' + id).innerHTML = arguments[1];
+	},
+	
+	// Sets the status of a text field to Warning.
+	setStatusTextWarn: function(id, message) {
+		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon glyphicon-check form-control-feedback');
+		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group has-warning has-feedback');
+	},
+	
+	// Sets the status of a text field to Error.
+	setStatusTextError: function(id, message) {
+		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon glyphicon-remove form-control-feedback');
+		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group has-error has-feedback');
+		document.getElementById('dcmMS-' + id).innerHTML = message;
+	},
+	
+	// Sets the status of a text field to Default.
+	setStatusTextDefault: function(id) {
+		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon form-control-feedback');
+		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group');
+		if (arguments > 1)
+			document.getElementById('dcmMS-' + id).innerHTML = arguments[1];
+	},
+	
 });
 
 
@@ -541,7 +556,7 @@ var ajaxProcessData = ({
 
 
 
-// Writes an error to the error target field.
+// Writes an error message to the error target field.
 function writeError(msg) {
 	document.getElementById(serverLinkObject.getTargetError()).innerHTML = msg;
 }

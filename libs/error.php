@@ -19,9 +19,11 @@ interface handleErrorsInterface
 	const ETFORM	= 2;	// Form Input
 
 	// These constants must match values in both html.php and ajax.js.
-	const ESFAIL = 0;	// Failure State
-	const ESWARN = 1;	// Warning State
-	const ESOK = 2;		// Ok State
+	const ESDEFAULT	= 0;	// Default State
+	const ESOK		= 1;	// Ok State
+	const ESWARN	= 2;	// Warning State
+	const ESFAIL	= 3;	// Failure State
+	const ESGEN		= 4;	// General Error State (Displays in common area)
 
 	public function setLineTerm($lntchr);
 	public function reset();
@@ -101,11 +103,11 @@ class handleErrors implements handleErrorsInterface
 		array_push(
 			$this->errmsg,
 			array(
-				'type' => $type,
-				'msg' => $msg,
-				'st' => $state,
-				'fld' => $field,
-				'id' => $id,
+				'type'		=> $type,
+				'message'	=> $msg,
+				'status'	=> $state,
+				'field'		=> $field,
+				'id'		=> $id,
 			)
 		);
 		if ($state != errorHandling::ESOK) $this->status = true;
@@ -117,11 +119,11 @@ class handleErrors implements handleErrorsInterface
 		array_push(
 			$this->errmsg,
 			array(
-				'type' => handleErrors::ETMISC,
-				'msg' => $message,
-				'st' => handleErrors::ESFAIL,
-				'fld' => '',
-				'id' => '',
+				'type'		=> handleErrors::ETMISC,
+				'message'	=> $message,
+				'status'	=> handleErrors::ESFAIL,
+				'field'		=> '',
+				'id'		=> '',
 			)
 		);
 		$this->status = true;

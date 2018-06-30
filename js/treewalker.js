@@ -1,26 +1,30 @@
-function treeWalker(nodeId)
-{
+/*
+
+Treewalker
+
+This walks the DOM tree looking for any and all input fields.  It will
+convert the input data into the proper format for sending to the server
+via a POST operation.
+
+*/
+
+function treeWalker(nodeId) {
 	var nodeObject = document.getElementById(nodeId);
 	var nodeObjStart = nodeObject;
 	var params = "";
 
-	while (nodeObject)
-	{
-		if (nodeObject.children.length > 0)
-		{
+	while (nodeObject) {
+		if (nodeObject.children.length > 0) {
 			// Check for children
 			nodeObject = nodeObject.firstElementChild;
 		}
-		else if (nodeObject.nextElementSibling)
-		{
+		else if (nodeObject.nextElementSibling) {
 			// Check for siblings
 			nodeObject = nodeObject.nextElementSibling;
 		}
-		else
-		{
+		else {
 			// If we can't find either, then go up the tree.
-			do
-			{
+			do {
 				nodeObject = nodeObject.parentNode;
 				if (nodeObject === nodeObjStart)
 				return(params);
@@ -29,10 +33,8 @@ function treeWalker(nodeId)
 		}
 
 		// Look for any objects in the DOM with a tag name of INPUT.
-		if (nodeObject.nodeName.toLowerCase() === "input")
-		{
-			switch (nodeObject.type.toLowerCase())
-			{
+		if (nodeObject.nodeName.toLowerCase() === "input") {
+			switch (nodeObject.type.toLowerCase()) {
 				// String input types
 				case "text":
 				case "password":
@@ -58,8 +60,7 @@ function treeWalker(nodeId)
 				// Boolean input types
 				case "checkbox":
 				case "radio":
-					if (nodeObject.checked == true)
-					{
+					if (nodeObject.checked == true) {
 						if (params.length > 0) params += "&";
 						params += nodeObject.name + "=" + nodeObject.value;
 					}
@@ -76,15 +77,13 @@ function treeWalker(nodeId)
 		}
 
 		// Look for any objects in the DOM with a tag name of TEXTAREA.
-		if (nodeObject.nodeName.toLowerCase() === "textarea")
-		{
+		if (nodeObject.nodeName.toLowerCase() === "textarea") {
 			if (params.length > 0) params += "&";
 			params += nodeObject.name + "=" + nodeObject.value;
 		}
 
 		// Selected Lists
-		if (nodeObject.nodeName.toLowerCase() === "select")
-		{
+		if (nodeObject.nodeName.toLowerCase() === "select") {
 			if (params.length > 0) params += "&";
 			params += nodeObject.name + "=" + nodeObject.value;
 		}

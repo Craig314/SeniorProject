@@ -5,6 +5,7 @@ require_once '../libs/confload.php';
 require_once '../libs/session.php';
 require_once '../libs/security.php';
 require_once '../libs/html.php';
+require_once '../libs/ajax.php';
 
 $session->start('', '', '', '');
 html::checkRequestPort(true);
@@ -40,13 +41,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
 	);
 
 	html::loadTemplatePage($title, $url, $fname, $left, '', $fbar, $jsfiles, '', $flags);
+	var_dump($_GET);
 }
 else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 {
-?>
-<?php
-	// Additional Content
+	if (isset($_POST['COMMAND']))
+	{
+		switch((int)$_POST['COMMAND'])
+		{
+			case -1:
+				content();
+				break;
+			case -2:
+				$ajax->sendCode(200, 'Heartbeat Ok');
+				break;
+			case -3:
+				$ajax->sendCode(200, 'Logout Ok');
+				break;
+			case -4:
+				$ajax->sendCode(200, 'Go Home Ok');
+				break;
+			default:
 
+		}
+	}
+}
+else
+{
+	echo "unknown method";
+	exit(1);
+}
+
+
+
+
+
+// Additional Content
+function content()
+{
 	$data = array(
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_FORMOPEN),
@@ -314,11 +346,6 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 	// Render
 	html::pageAutoGenerate($data);
 	//var_dump($_SESSION, $_SERVER, $_POST, $_GET);
-?>
-<?php
 }
-else
-{
-	echo "unknown method";
-}
+
 ?>

@@ -65,7 +65,7 @@ interface ajaxInterface
 
 }
 
-class ajax implements ajaxInterface
+class ajaxClass implements ajaxInterface
 {
 	private $queue = NULL;
 	private $codeStatus = false;
@@ -80,21 +80,21 @@ class ajax implements ajaxInterface
 	// Note: Filename must begin with a /
 	public function redirect($filename)	{
 		$url = html::getBaseURL();
-		$this->sendCode(303, $url . $filename);
+		$this->sendCode(ajaxClass::CODE_REDIR, $url . $filename);
 	}
 
 	// Sends a code to the client.
 	public function sendCode($code, $data = NULL)
 	{
-		if (empty($data)) echo ajax::TYPE_CODE . $code;
-		else echo ajax::TYPE_CODE . $code . ' ' . $data;
+		if (empty($data)) echo ajaxClass::TYPE_CODE . $code;
+		else echo ajaxClass::TYPE_CODE . $code . ' ' . $data;
 	}
 
 	// Sends a command to the client.
 	public function sendCommand($cmd, $data = NULL)
 	{
-		if (empty($data)) echo ajax::TYPE_COMMAND . $cmd;
-		else echo ajax::TYPE_COMMAND . $cmd . ' ' . $data;
+		if (empty($data)) echo ajaxClass::TYPE_COMMAND . $cmd;
+		else echo ajaxClass::TYPE_COMMAND . $cmd . ' ' . $data;
 	}
 
 	// Sends error status to the client.
@@ -104,25 +104,25 @@ class ajax implements ajaxInterface
 		$str = jason_encode($data);
 		if ($str === false)
 		{
-			sendCommand(ajax::CMD_ERRDISP, 'JSON encoding error: (' .
+			sendCommand(ajaxClass::CMD_ERRDISP, 'JSON encoding error: (' .
 				json_last_error() . ') ' . json_last_error_msg());
 			exit(1);
 		}
-		echo ajax::TYPE_STATUS . $str;
+		echo ajaxClass::TYPE_STATUS . $str;
 	}
 
 	// Sends JSON format data to the server.
 	public function sendJSON($jnbr, $data)
 	{
-		echo ajax::JSON . $jnbr . ' ' . $data;
+		echo ajaxClass::JSON . $jnbr . ' ' . $data;
 	}
 
 	// Loads a code into the send queue.
 	public function loadQueueCode($code, $data = NULL)
 	{
 		if ($this->codeStatus) return;
-		if (empty($data)) $str = ajax::TYPE_CODE . $code;
-		else $str = ajax::TYPE_CODE . $code . ' ' . $data;
+		if (empty($data)) $str = ajaxClass::TYPE_CODE . $code;
+		else $str = ajaxClass::TYPE_CODE . $code . ' ' . $data;
 		array_push($this->queue, $str);
 		$this->codeStatus = true;
 	}
@@ -130,8 +130,8 @@ class ajax implements ajaxInterface
 	// Loads a command into the send queue.
 	public function loadQueueCommand($cmd, $data = NULL)
 	{
-		if (empty($data)) $str = ajax::TYPE_COMMAND . $cmd;
-		else $str = ajax::TYPE_COMMAND . $cmd . ' ' . $data;
+		if (empty($data)) $str = ajaxClass::TYPE_COMMAND . $cmd;
+		else $str = ajaxClass::TYPE_COMMAND . $cmd . ' ' . $data;
 		array_push($this->queue, $str);
 	}
 
@@ -142,18 +142,18 @@ class ajax implements ajaxInterface
 		$str = jason_encode($data);
 		if ($str === false)
 		{
-			sendCommand(ajax::CMD_ERRDISP, 'JSON encoding error: (' .
+			sendCommand(ajaxClass::CMD_ERRDISP, 'JSON encoding error: (' .
 				json_last_error() . ') ' . json_last_error_msg());
 			exit(1);
 		}
-		$str = ajax::TYPE_STATUS . $str;
+		$str = ajaxClass::TYPE_STATUS . $str;
 		array_push($this->queue, $str);
 	}
 
 	// Loads JSON formatted data into the send queue.
 	public function loadQueueJSON($jnbr, $data)
 	{
-		$str = ajax::TYPE_JASON . $jnbr . ' ' . $data;
+		$str = ajaxClass::TYPE_JASON . $jnbr . ' ' . $data;
 		array_push($this->queue, $str);
 	}
 
@@ -164,11 +164,11 @@ class ajax implements ajaxInterface
 		$str = json_encode($this->queue);
 		if ($str === false)
 		{
-			sendCommand(ajax::CMD_ERRDISP, 'JSON encoding error: (' .
+			sendCommand(ajaxClass::CMD_ERRDISP, 'JSON encoding error: (' .
 				json_last_error() . ') ' . json_last_error_msg());
 			exit(1);
 		}
-		echo ajax::TYPE_MULTI . $str;
+		echo ajaxClass::TYPE_MULTI . $str;
 		$this->queue = array();
 		$this->codeStatus = false;
 	}
@@ -176,7 +176,7 @@ class ajax implements ajaxInterface
 }
 
 // Auto instantiate the class
-$ajax = new ajax();
+$ajax = new ajaxClass();
 
 
 ?>
