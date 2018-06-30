@@ -5,11 +5,6 @@ session alive.
 
 */
 
-var timer_heartbeat = window.setInterval(heartBeat, 600000);
+var timer_heartbeat = window.setInterval(ajaxServerCommand.heartbeat, 600000);
 
-// Heartbeat to keep session alive
-function heartBeat()
-{
-	sendCommand(-2);
-}
 

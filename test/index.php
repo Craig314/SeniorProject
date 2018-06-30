@@ -2,10 +2,11 @@
 
 
 require_once '../libs/confload.php';
+require_once '../libs/session.php';
 require_once '../libs/security.php';
 require_once '../libs/html.php';
 
-$sec->sessionStart('', '', '', '');
+$session->start('', '', '', '');
 html::checkRequestPort(true);
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
 {

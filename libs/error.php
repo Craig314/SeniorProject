@@ -2,7 +2,7 @@
 
 /*
 
-Error Handling Library
+PHP Web Application Error Handling Library
 
 Error messages are collected into an array as they are
 encountered.  Then they are pulled out and sent to
@@ -13,12 +13,15 @@ the user.
 
 interface handleErrorsInterface
 {
+	// These constants must match value in ajax.js.
 	const ETMISC	= 0;	// Misc Errors
 	const ETDBASE	= 1;	// Error in database
 	const ETFORM	= 2;	// Form Input
 
+	// These constants must match values in both html.php and ajax.js.
 	const ESFAIL = 0;	// Failure State
 	const ESWARN = 1;	// Warning State
+	const ESOK = 2;		// Ok State
 
 	public function setLineTerm($lntchr);
 	public function reset();
@@ -105,7 +108,7 @@ class handleErrors implements handleErrorsInterface
 				'id' => $id,
 			)
 		);
-		$this->status = true;
+		if ($state != errorHandling::ESOK) $this->status = true;
 	}
 
 	// Adds an error message with default values.

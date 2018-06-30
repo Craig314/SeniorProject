@@ -7,14 +7,14 @@
 // Logout Function
 $("#logout").on('click', function()
 {
-	sendCommand(-3);
+	ajaxServerCommand.logoutUser();
 });
 
 
 // Navigate to Home Function
 $("#returnHome").on('click', function()
 {
-	returnHome();
+	ajaxServerCommand.returnHome();
 });
 
 
@@ -32,7 +32,8 @@ $("checkbox").mouseup(function(){
 // It calls the load_initial function from ajax.js
 $(document).ready(function()
 {
-	setTimeout(function() { load_additional_content($(document.body).attr("href-link")); }, 250);
+	setTimeout(function() { ajaxServerCommand.loadAdditionalContent(
+		$(document.body).attr("href-link")); }, 250);
 });
 
 

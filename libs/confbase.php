@@ -2,7 +2,7 @@
 
 /*
 
-PHP Application Base Configuration File
+PHP Web Application Base Configuration File
 
 All values defined in this file should be constants only.  Furthermore,
 only values which are required to access shared memory and the database

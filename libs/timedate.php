@@ -1,11 +1,22 @@
 <?php
 
-// This library contains functions to convert times and dates
-// between different formats.
+/*
 
-// The base time format is Unix Time Stamp which starts at
-// the epoch time of Jan 1, 1970 12:00:01 AM.
+PHP Web Application Time-Date Library
 
+This library contains functions to convert times and dates between different
+formats. The base time format is Unix Time Stamp which starts at the epoch
+time of Jan 1, 1970 00:00:00 UTC.
+
+NOTES:
+
+On 32-bit platforms, the last day which can be represented in a integer datatype
+is Jan 19, 2038 03:14:07 UTC.  So years through 2037 will be accepted normally.
+
+On 64-bit platforms, the last year that this library will accept is 9999.
+Although the datatype will go further, this seems to be a reasonable limit.
+
+*/
 
 require_once "confload.php";
 

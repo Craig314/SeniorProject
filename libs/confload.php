@@ -2,7 +2,7 @@
 
 /*
 
-Load Configuration Database
+PHP Web Application Load Configuration Database
 
 This checks if a predefined shared memory region is defined and
 active.  If not, then the region is created and the configuration
@@ -33,11 +33,11 @@ processSharedMemoryInitial();
 // Perform the initial processing of the shared memory region.
 function processSharedMemoryInitial()
 {
-	$shmem = new shared_memory(APP_SYSV_SHAREDMEMORY_KEY, APP_SYSV_SHAREDMEMORY_SIZE);
+	$shmem = new sharedMemory(APP_SYSV_SHAREDMEMORY_KEY, APP_SYSV_SHAREDMEMORY_SIZE);
 	switch ($shmem->getstatus())
 	{
 		case 0:			// Invalid Parameters
-			echo 'shared_memory: invalid parameters';
+			echo 'sharedMemory: invalid parameters';
 			exit(1);
 			break;
 		case 1:		// Valid: Load config into shared memory, then fall through.
@@ -46,11 +46,11 @@ function processSharedMemoryInitial()
 			loadConfigurationVariable($shmem);
 			break;
 		case 3:
-			echo 'shared_memory: shmop_open failure';
+			echo 'sharedMemory: shmop_open failure';
 			exit(1);
 			break;
 		default:
-			echo 'shared_memory: unknown error';
+			echo 'sharedMemory: unknown error';
 			exit(1);
 			break;
 	}
@@ -59,11 +59,11 @@ function processSharedMemoryInitial()
 // Reloads the configuration data into shared memory.
 function processSharedMemoryReload()
 {
-	$shmem = new shared_memory(APP_SYSV_SHAREDMEMORY_KEY, APP_SYSV_SHAREDMEMORY_SIZE);
+	$shmem = new sharedMemory(APP_SYSV_SHAREDMEMORY_KEY, APP_SYSV_SHAREDMEMORY_SIZE);
 	switch ($shmem->getstatus())
 	{
 		case 0:			// Invalid Parameters
-			echo 'shared_memory: invalid parameters';
+			echo 'sharedMemory: invalid parameters';
 			exit(1);
 			break;
 		case 1:		// Valid: Falls through.
@@ -74,11 +74,11 @@ function processSharedMemoryReload()
 			loadConfigurationVariable($shmem);
 			break;
 		case 3:
-			echo 'shared_memory: shmop_open failure';
+			echo 'sharedMemory: shmop_open failure';
 			exit(1);
 			break;
 		default:
-			echo 'shared_memory: unknown error';
+			echo 'sharedMemory: unknown error';
 			exit(1);
 			break;
 	}
@@ -103,7 +103,7 @@ function loadConfigurationDatabase($shmem)
 	$result = $shmem->putdata($cfg);
 	if ($result == false)
 	{
-		echo 'shared_memory: shmop_write failure';
+		echo 'sharedMemory: shmop_write failure';
 		$shmem->remove();
 		exit(1);
 	}
@@ -117,7 +117,7 @@ function loadConfigurationVariable($shmem)
 	$result = $shmem->getdata();
 	if ($result === false)
 	{
-		echo 'shared_memory: shmop_read failure';
+		echo 'sharedMemory: shmop_read failure';
 		$shmem->remove();
 		exit(1);
 	}

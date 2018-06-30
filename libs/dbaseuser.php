@@ -2,7 +2,7 @@
 
 /*
 
-Database Driver for User Database
+PHP Web Application User Database Driver
 
 */
 
@@ -33,7 +33,7 @@ class database_user implements database_userdata_interface
 		global $dbcore;
 		$table = $tablecore . '.users';
 		$column = '*';
-		$qxa = $dbcore->buildArray('username', $username, database_core::PTSTR);
+		$qxa = $dbcore->buildArray('username', $username, databaseCore::PTSTR);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
@@ -49,20 +49,20 @@ class database_user implements database_userdata_interface
 	{
 		global $dbcore;
 		$table = $tablecore . '.users';
-		$qxa = $db_core->buildArray('userid', $userid, database_core::PTINT);
-		$qxa = $db_core->buildArray('profileid', $profid, database_core::PTINT, $qxa);
-		$qxa = $db_core->buildArray('appid', $appid, database_core::PTINT, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'username', $username, database_core::PTSTR, $qxa));
+		$qxa = $db_core->buildArray('userid', $userid, databaseCore::PTINT);
+		$qxa = $db_core->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
+		$qxa = $db_core->buildArray('appid', $appid, databaseCore::PTINT, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'username', $username, databaseCore::PTSTR, $qxa));
 	}	
 
 	public function insertUsers($username, $userid, $profid)
 	{
 		global $dbcore;
 		$table = $tablecore . '.users';
-		$qxa = $db_core->buildArray('username', $username, database_core::PTSTR, $qxa);
-		$qxa = $db_core->buildArray('userid', $userid, database_core::PTINT, $qxa);
-		$qxa = $db_core->buildArray('profileid', $profid, database_core::PTINT, $qxa);
-		$qxa = $db_core->buildArray('appid', $appid, database_core::PTINT, $qxa);
+		$qxa = $db_core->buildArray('username', $username, databaseCore::PTSTR, $qxa);
+		$qxa = $db_core->buildArray('userid', $userid, databaseCore::PTINT, $qxa);
+		$qxa = $db_core->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
+		$qxa = $db_core->buildArray('appid', $appid, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}	
 
@@ -70,7 +70,7 @@ class database_user implements database_userdata_interface
 	{
 		global $dbcore;
 		$table = $tablecore . '.users';
-		return($dbcore->launchUpdateSingle($table, 'username', $username, database_core::PTSTR));
+		return($dbcore->launchUpdateSingle($table, 'username', $username, databaseCore::PTSTR));
 	}
 }
 

@@ -5,7 +5,8 @@
 PHP Web Application Utility Routine Library
 
 These routines are for general use throughout the application.  They
-perform generic tasks designed to make things easier.
+perform generic tasks designed to make things easier.  Note that these
+routines are not encapsulated by any object oriented overhead.
 
 */
 

@@ -2,18 +2,19 @@
 
 /*
 
-Unix System V Shared Memory Access Class Definition
+PHP Web Application Shared Memory Access
 
 
 To use this class, insert the following line into your code:
 
-  $sharemem = new SharedMemoryClass();
+	$sharemem = new SharedMemory();
 
-Replace shremem with your variable name.  There is no need
-to explictly destroy the instance of this or any class
-because PHP will call the destructors of all classes when
-the script exits.
+When calling the first time in the scripts, you must specify
+the ID and Size parameters.
 
+	$sharemem = new SharedMemory(SHMID, SHMSZ);
+
+Replace shremem with your variable name.
 
 **ALERT NOTICE**
 
@@ -28,13 +29,15 @@ events taking place:
   3.  The kernel panics and brings the entire machine down.
 
 
-Note that this class is only available on Unix platforms.
+NOTES:
+
+This class is available on both Unix and Windows platforms.
 
 */
 
 require_once 'util.php';
 
-interface shared_memory_interface
+interface sharedMemoryInterface
 {
 	public function getstatus();
 	public function remove();
@@ -42,7 +45,7 @@ interface shared_memory_interface
 	public function getdata();
 }
 
-class shared_memory implements shared_memory_interface
+class sharedMemory implements sharedMemoryInterface
 {
 	const STATUS_INVALID = 0;
 	const STATUS_NOTLOADED = 1;
@@ -73,12 +76,12 @@ class shared_memory implements shared_memory_interface
 				if ($shres == false)
 				{
 					$valid = false;
-					$this->status = shared_memory::STATUS_ERROR;
+					$this->status = sharedMemory::STATUS_ERROR;
 				}
-				else $this->status = shared_memory::STATUS_NOVAR;
+				else $this->status = sharedMemory::STATUS_NOVAR;
 				
 			}
-			else $this->status = shared_memory::STATUS_NOTLOADED;
+			else $this->status = sharedMemory::STATUS_NOTLOADED;
 			$this->shmres = $shres;
 			$this->shmsize = $shmsz;
 		}
@@ -86,7 +89,7 @@ class shared_memory implements shared_memory_interface
 		{
 			$this->shmres = false;
 			$this->shmsize = false;
-			$this->status = shared_memory::STATUS_INVALID;
+			$this->status = sharedMemory::STATUS_INVALID;
 		}
 
 		// Return

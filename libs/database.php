@@ -2,11 +2,11 @@
 
 /*
 
-Database Access Library
-Object Oriented
+PHP Web Application Core Database Driver
 
-This is tooled for use with multiple databases with just adding
-in the code to create a connection to that specific database.
+This is tooled for use with multiple databases with just adding in the code to
+create a connection to that specific type of database at the switch statement
+around line 66.
 
 */
 
@@ -15,7 +15,7 @@ require_once('error.php');
 require_once('util.php');
 
 
-interface database_core_interface
+interface databaseCoreInterface
 {
 	const PTINT = PDO::PARAM_INT;
 	const PTSTR = PDO::PARAM_STR;
@@ -54,7 +54,7 @@ interface database_core_interface
 }
 
 
-class database_core implements database_core_interface
+class databaseCore implements databaseCoreInterface
 {
 
 	private $sqlconn;
@@ -493,7 +493,7 @@ class database_core implements database_core_interface
 
 
 // Auto instantiate the class.
-$dbcore = new database_core();
+$dbcore = new databaseCore();
 
 
 

@@ -2,7 +2,7 @@
 
 /*
 
-Database Driver for Configuration Database
+PHP Web Application Configuration Database Driver
 
 */
 
@@ -62,7 +62,7 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.config';
 		$column = '*';
-		$qxa = $dbcore->buildArray('setting', $setting, database_core::PTINT);
+		$qxa = $dbcore->buildArray('setting', $setting, databaseCore::PTINT);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
@@ -72,7 +72,7 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.config';
 		$column = '*';
-		$qxa = $dbcore->buildArray('profileid', $profid, database_core::PTINT);
+		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT);
 		return($dbcore->launchQueryMultiple($table, $column, $qxa));
 	}
 
@@ -91,8 +91,8 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.config';
 		$column = '*';
-		$qxa = $dbcore->buildArray('value', $value, database_core::PTSTR);
-		return($dbcore->launchUpdateSingle($table, 'setting', $setting, database_core::PTINT, $qxa));
+		$qxa = $dbcore->buildArray('value', $value, databaseCore::PTSTR);
+		return($dbcore->launchUpdateSingle($table, 'setting', $setting, databaseCore::PTINT, $qxa));
 	}
 
 	// Updates a configuration parameter profile ID.
@@ -101,8 +101,8 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.config';
 		$column = '*';
-		$qxa = $dbcore->buildArray('profileid', $profid, database_core::PTINT);
-		return($dbcore->launchUpdateSingle($table, 'setting', $setting, database_core::PTINT, $qxa));
+		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT);
+		return($dbcore->launchUpdateSingle($table, 'setting', $setting, databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a configuration parameter.
@@ -110,15 +110,15 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.config';
-		$qxa = $dbcore->buildArray('setting', $setting, database_core::PTINT);
-		$qxa = $dbcore->buildArray('type', $type, database_core::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('name', $name, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('dispname', $dispname, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('value', $value, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('profileid', $profid, database_core::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('vendor', $vendor, database_core::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('admin', $admin, database_core::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('setting', $setting, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('type', $type, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('dispname', $dispname, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('value', $value, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('vendor', $vendor, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('admin', $admin, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
@@ -127,7 +127,7 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.config';
-		return($dbcore->launchDeleteSingle($table, 'setting', $setting, database_core::PTINT));
+		return($dbcore->launchDeleteSingle($table, 'setting', $setting, databaseCore::PTINT));
 	}
 
 
@@ -145,7 +145,7 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.flagdesc_app';
 		$column = '*';
-		$qxa = $dbcore->buildArray('flag', $flag, database_core::PTINT);
+		$qxa = $dbcore->buildArray('flag', $flag, databaseCore::PTINT);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
@@ -163,9 +163,9 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.flagdesc_app';
-		$qxa = $dbcore->buildArray('name', $name, database_core::PTSTR);
-		$qxa = $dbcore->buildArray('desc', $desc, database_core::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'flag', $flag, database_core::PTINT, $qxa));
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'flag', $flag, databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts data for a specific flag.
@@ -173,9 +173,9 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.flagdesc_app';
-		$qxa = $dbcore->buildArray('flag', $flag, database_core::PTINT);
-		$qxa = $dbcore->buildArray('name', $name, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, database_core::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('flag', $flag, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
@@ -184,7 +184,7 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.flagdesc_app';
-		return($dbcore->launchDeleteSingle($table, 'flag', $flag, database_core::PTINT));
+		return($dbcore->launchDeleteSingle($table, 'flag', $flag, databaseCore::PTINT));
 	}
 
 
@@ -202,7 +202,7 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.flagdesc_core';
 		$column = '*';
-		$qxa = $dbcore->buildArray('flag', $flag, database_core::PTINT);
+		$qxa = $dbcore->buildArray('flag', $flag, databaseCore::PTINT);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
@@ -220,9 +220,9 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.flagdesc_core';
-		$qxa = $dbcore->buildArray('name', $name, database_core::PTSTR);
-		$qxa = $dbcore->buildArray('desc', $desc, database_core::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'flag', $flag, database_core::PTINT, $qxa));
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'flag', $flag, databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts data for a specific flag.
@@ -230,9 +230,9 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.flagdesc_core';
-		$qxa = $dbcore->buildArray('flag', $flag, database_core::PTINT);
-		$qxa = $dbcore->buildArray('name', $name, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, database_core::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('flag', $flag, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
@@ -241,7 +241,7 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.flagdesc_core';
-		return($dbcore->launchDeleteSingle($table, 'flag', $flag, database_core::PTINT));
+		return($dbcore->launchDeleteSingle($table, 'flag', $flag, databaseCore::PTINT));
 	}
 
 
@@ -259,7 +259,7 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.module';
 		$column = '*';
-		$qxa = $dbcore->buildArray('moduleid', $modid, database_core::PTINT);
+		$qxa = $dbcore->buildArray('moduleid', $modid, databaseCore::PTINT);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
@@ -268,10 +268,10 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
-		$qxa = $dbcore->buildArray('name', $name, database_core::PTSTR);
-		$qxa = $dbcore->buildArray('filename', $file, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('iconname', $icon, database_core::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, database_core::PTINT, $qxa));
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('filename', $file, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('iconname', $icon, databaseCore::PTSTR, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, databaseCore::PTINT, $qxa));
 	}
 
 	// Updates the activation data for a module.
@@ -279,8 +279,8 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
-		$qxa = $dbcore->buildArray('active', $active, database_core::PTSTR);
-		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, database_core::PTINT, $qxa));
+		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTSTR);
+		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, databaseCore::PTINT, $qxa));
 	}
 
 	// Updates all information about a module.
@@ -288,11 +288,11 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
-		$qxa = $dbcore->buildArray('name', $name, database_core::PTSTR);
-		$qxa = $dbcore->buildArray('filename', $file, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('iconname', $icon, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('active', $active, database_core::PTINT, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, database_core::PTINT, $qxa));
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('filename', $file, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('iconname', $icon, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a module into the database.
@@ -300,13 +300,13 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
-		$qxa = $dbcore->buildArray('moduleid', $modid, database_core::PTINT);
-		$qxa = $dbcore->buildArray('name', $name, database_core::PTSTR);
-		$qxa = $dbcore->buildArray('filename', $file, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('iconname', $icon, database_core::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('active', $active, database_core::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('allusers', $rtu, database_core::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('system', $rtukey, database_core::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('moduleid', $modid, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('filename', $file, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('iconname', $icon, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('allusers', $rtu, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('system', $rtukey, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
@@ -315,7 +315,7 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
-		return($dbcore->launchDeleteSingle($table, 'moduleid', $modid, database_core::PTINT));
+		return($dbcore->launchDeleteSingle($table, 'moduleid', $modid, databaseCore::PTINT));
 	}
 
 }

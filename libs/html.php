@@ -2,6 +2,11 @@
 
 /*
 
+PHP Web Application HTML Generation/Handling Library
+
+This library uses a class with static methods to perform it's functions.
+Do not instantiate.
+
 This script file contains code dealing with HTTP, HTTPS, and HTML
 aspects of a web application.
 
@@ -9,7 +14,6 @@ aspects of a web application.
 
 
 require_once 'confload.php';
-processSharedMemoryReload();
 
 
 interface html_interface
@@ -91,6 +95,15 @@ class html implements html_interface
 	static private $fsize_default = false;
 	static private $base_url = NULL;
 	static private $base_url2 = NULL;
+
+
+	/* ******** CONSTRUCTOR METHOD ******** */
+
+	public function __constructor()
+	{
+		echo 'Internal Programming Error: HTML: Attempt to instantiate static class.';
+		exit(1);
+	}
 
 
 	/* ******** PRIVATE METHODS ******** */
