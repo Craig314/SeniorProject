@@ -11,7 +11,7 @@ function setStatusOk()
 {
 	document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon glyphicon-ok form-control-feedback');
 	document.getElementById('dcmST-' + id).setAttribute('class', 'form-group has-success has-feedback');
-	document.getElementById('dcmMS-' + id).innerHTML = 'Field status set to OK.';
+	document.getElementById('dcmMS-' + id).innerHTML = '';
 }
 
 function setStatusWarn()
@@ -32,6 +32,6 @@ function setStatusDefault()
 {
 	document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon form-control-feedback');
 	document.getElementById('dcmST-' + id).setAttribute('class', 'form-group');
-	document.getElementById('dcmMS-' + id).innerHTML = 'Field status set to Default.';
+	document.getElementById('dcmMS-' + id).innerHTML = '';
 }
 

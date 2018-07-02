@@ -30,7 +30,7 @@ interface handleErrorsInterface
 	public function checkState();
 	public function errorGetMessage();
 	public function errorGetData();
-	public function errorPutMessage($type, $msg = '', $state = 0, $field = '', $id = '');
+	public function errorPutMessage($type, $msg = '', $state = 0, $field = '', $id = '', $value = '');
 	public function puterrmsg($message);
 
 }
@@ -98,7 +98,7 @@ class handleErrors implements handleErrorsInterface
 	}
 
 	// Adds an error message.
-	public function errorPutMessage($type, $msg = '', $state = 0, $field = '', $id = '')
+	public function errorPutMessage($type, $msg = '', $state = 0, $field = '', $id = '', $value = '')
 	{
 		array_push(
 			$this->errmsg,
@@ -108,6 +108,7 @@ class handleErrors implements handleErrorsInterface
 				'status'	=> $state,
 				'field'		=> $field,
 				'id'		=> $id,
+				'value'		=> $value,
 			)
 		);
 		if ($state != errorHandling::ESOK) $this->status = true;
@@ -124,6 +125,7 @@ class handleErrors implements handleErrorsInterface
 				'status'	=> handleErrors::ESFAIL,
 				'field'		=> '',
 				'id'		=> '',
+				'value'		=> '',
 			)
 		);
 		$this->status = true;

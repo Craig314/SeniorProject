@@ -1,7 +1,7 @@
 <?php
 
-require_once "confload.php";
-require_once "util.php";
+require_once 'confload.php';
+require_once 'utility.php';
 
 /*
 
@@ -32,7 +32,7 @@ class password implements passwordInterface
 		global $CONFIGVAR;
 
 		$mda = openssl_get_md_methods();
-		$mdb = explode(" ", $CONFIGVAR['openssl_digests']['value']);
+		$mdb = explode(' ', $CONFIGVAR['openssl_digests']['value']);
 
 		// Scan what SSL supports with what we are looking for.
 		// Return string on first match.
@@ -44,7 +44,7 @@ class password implements passwordInterface
 				return $reqdigalg;
 			}
 		}
-		echo "Security Error: Unable to get message digest algorithm.";
+		echo 'Security Error: Unable to get message digest algorithm.';
 		exit(1);
 	}
 
@@ -59,7 +59,7 @@ class password implements passwordInterface
 		$salt = openssl_random_pseudo_bytes($saltlen, $cstrong);
 		if ($cstrong == false)
 		{
-			echo "Security Error: OpenSSL Weak crypto!";
+			echo 'Security Error: OpenSSL Weak crypto!';
 			exit(1);
 		}
 		return $salt;
@@ -76,11 +76,11 @@ class password implements passwordInterface
 		$length = strlen($passwd);
 		if ($length == 0)
 		{
-			echo "Security Error: Password is zero length.";
+			echo 'Security Error: Password is zero length.';
 			exit(1);
 		}
 		$loopcount = (integer)(1024 / $passlen);
-		$longpass = "";
+		$longpass = '';
 		if ($loopcount > 0)
 		{
 			for ($i = 0; $i < $loopcount; $i++)

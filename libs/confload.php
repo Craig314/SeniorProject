@@ -15,20 +15,11 @@ require_once 'confbase.php';
 require_once 'dbaseconf.php';
 require_once 'shmem.php';
 
-if (APP_DEBUG_STATUS)
-{
-	error_reporting(E_ALL);
-	ini_set('display_errors', '1');
-	ini_set('display_startup_errors', '1');
-}
-
 // Define the global configuration variable.
 $CONFIGVAR = NULL;
 
 // Begin shared memory processing.
-//var_dump($CONFIGVAR);
 processSharedMemoryInitial();
-//var_dump($CONFIGVAR);
 
 // Perform the initial processing of the shared memory region.
 function processSharedMemoryInitial()

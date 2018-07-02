@@ -12,19 +12,12 @@ interface database_config_interface
 {
 	// Table: config
 	public function queryConfig($setting);
-	public function queryConfigAllProf($profid);
+	public function queryConfigAllAdmin();
 	public function queryConfigAll();
 	public function updateConfigValue($setting, $value);
-	public function updateConfigProfId($setting, $profid);
-	public function insertConfig($setting, $type, $name, $dispname, $value, $desc, $profid, $vendor, $admin);
+	public function updateConfigAll($settng, $type, $name, $dispname, $value, $desc, $admin);
+	public function insertConfig($setting, $type, $name, $dispname, $value, $desc, $admin);
 	public function deleteConfig($setting);
-
-	// Table: flagdesc_core
-	public function queryFlagdescCore($flag);
-	public function queryFlagdescCoreAll();
-	public function updateFlagdescCore($flag, $name, $desc);
-	public function insertFlagdescCore($flag, $name, $desc);
-	public function deleteFlagdescCore($flag);
 
 	//Table: flagdesc_app
 	public function queryFlagdescApp($flag);
@@ -33,13 +26,35 @@ interface database_config_interface
 	public function insertFlagdescApp($flag, $name, $desc);
 	public function deleteFlagdescApp($flag);
 
+	// Table: flagdesc_core
+	public function queryFlagdescCore($flag);
+	public function queryFlagdescCoreAll();
+	public function updateFlagdescCore($flag, $name, $desc);
+	public function insertFlagdescCore($flag, $name, $desc);
+	public function deleteFlagdescCore($flag);
+
 	// Table: module
 	public function queryModule($modid);
-	public function updateModuleInfo($modid, $name, $file, $icon);
+	public function queryModuleAll();
+	public function updateModuleInfo($modid, $name, $desc, $file, $icon);
 	public function updateModuleActivation($modid, $active);
-	public function updateModule($modid, $name, $file, $icon, $active);
-	public function insertModule($modid, $name, $file, $icon, $active, $allusers, $system);
+	public function updateModule($modid, $name, $desc, $file, $icon, $active, $allusers, $system, $vendor);
+	public function insertModule($modid, $name, $desc, $file, $icon, $active, $allusers, $system, $vendor);
 	public function deleteModule($modid);
+
+	// Table: modaccess
+	public function queryModaccessProfile($profid);
+	public function queryModaccess($profid, $modid);
+	public function insertModaccess($profid, $modid);
+	public function deleteModaccess($profid, $modid);
+
+	// Table: profile
+	public function queryProfile($profid);
+	public function queryProfileAll();
+	public function updateProfile($profid, $name, $desc, $portal, $bmc, $bma);
+	public function insertProfile($profid, $name, $desc, $portal, $bmc, $bma);
+	public function deleteProfile($profid);
+
 }
 
 class database_config implements database_config_interface
@@ -66,13 +81,13 @@ class database_config implements database_config_interface
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
-	// Query all parameters for the given profile ID.
-	public function queryConfigAllProf($profid)
+	// Query all parameters for the admin user.
+	public function queryConfigAllAdmin()
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.config';
 		$column = '*';
-		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('admin', 1, databaseCore::PTINT);
 		return($dbcore->launchQueryMultiple($table, $column, $qxa));
 	}
 
@@ -95,18 +110,21 @@ class database_config implements database_config_interface
 		return($dbcore->launchUpdateSingle($table, 'setting', $setting, databaseCore::PTINT, $qxa));
 	}
 
-	// Updates a configuration parameter profile ID.
-	public function updateConfigProfId($setting, $profid)
+	public function updateConfigAll($settng, $type, $name, $dispname, $value, $desc, $admin)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.config';
-		$column = '*';
-		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT);
-		return($dbcore->launchUpdateSingle($table, 'setting', $setting, databaseCore::PTINT, $qxa));
+		$qxa = $dbcore->buildArray('type', $type, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('dispname', $dispname, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('value', $value, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('admin', $admin, databaseCore::PTINT, $qxa);
+		return($dbcore->launchUpdate($table, 'setting', $setting, databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a configuration parameter.
-	public function insertConfig($setting, $type, $name, $dispname, $value, $desc, $profid, $vendor, $admin)
+	public function insertConfig($setting, $type, $name, $dispname, $value, $desc, $admin)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.config';
@@ -116,8 +134,6 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('dispname', $dispname, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('value', $value, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('vendor', $vendor, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('admin', $admin, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
@@ -263,12 +279,22 @@ class database_config implements database_config_interface
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
+	// Returns all modules in the database.
+	public function queryModuleAll()
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.module';
+		$column = 'moduleid, name, desc, active';
+		return($dbcore->launchQueryDumpTable($table, $column));
+	}
+
 	// Updates the general information about a module.
-	public function updateModuleInfo($modid, $name, $file, $icon)
+	public function updateModuleInfo($modid, $name, $desc, $file, $icon)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('desc', $file, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('filename', $file, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('iconname', $icon, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, databaseCore::PTINT, $qxa));
@@ -284,29 +310,35 @@ class database_config implements database_config_interface
 	}
 
 	// Updates all information about a module.
-	public function updateModule($modid, $name, $file, $icon, $active)
+	public function updateModule($modid, $name, $desc, $file, $icon, $active, $allusers, $system, $vendor)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('filename', $file, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('iconname', $icon, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('allusers', $allusers, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('system', $system, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('vendor', $vendor, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a module into the database.
-	public function insertModule($modid, $name, $file, $icon, $active, $allusers, $system)
+	public function insertModule($modid, $name, $desc, $file, $icon, $active, $allusers, $system, $vendor)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
 		$qxa = $dbcore->buildArray('moduleid', $modid, databaseCore::PTINT);
-		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('filename', $file, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('iconname', $icon, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('allusers', $rtu, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('system', $rtukey, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('allusers', $allusers, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('system', $system, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('vendor', $vendor, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
@@ -318,6 +350,116 @@ class database_config implements database_config_interface
 		return($dbcore->launchDeleteSingle($table, 'moduleid', $modid, databaseCore::PTINT));
 	}
 
+	/* ******** MODACCESS TABLE ******** */
+
+	/* The modaccess table maps which user profiles have access to
+		which modules.  If an entry exists, then the access is allowed.
+		If the entry is missing, then access is denied unless the
+		user is on a special account, or the allusers flag is marked
+		for the module. */
+
+	// Query all modules for a specific profile ID.
+	public function queryModaccessProfile($profid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.modaccess';
+		$column = '*';
+		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT);
+		return($dbcore->launchQueryMultiple($table, $column, $qxa));
+	}
+
+	// Query if a specific module ID and profile ID combination exists
+	// in the database.
+	public function queryModaccess($profid, $modid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.modaccess';
+		$column = '*';
+		$qxa = $dbcore->buildArray('moduleid', $modid, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
+		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	// Inserts a module/profile ID pair into the database.
+	public function insertModaccess($profid, $modid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.modaccess';
+		$qxa = $dbcore->buildArray('moduleid', $modid, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
+		return($dbcore->launchInsert($table, $qxa));
+	}
+
+	// Removes a module/profile ID pair from the database.
+	public function deleteModaccess($profid, $modid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.modaccess';
+		$qxa = $dbcore->buildArray('moduleid', $modid, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
+		return($dbcore->launchDeleteMultiple($table, $qxa));
+	}
+
+
+	/* ******** PROFILE TABLE ******** */
+
+	/* The profile table determines what access rights a user has on the
+	   system.  Every user must have a profile associated with their
+	   account. */
+
+	// Queries a specific profile.
+	public function queryProfile($profid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.modaccess';
+		$column = '*';
+		$qxa = $dbcore->buildarray('profileid', $profid, databaseCore::PTINT);
+		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	// Returns all profiles in the database.
+	public function queryProfileAll()
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.modaccess';
+		$column = 'profileid, name, desc, portal';
+		return($dbcore->launchQueryDumpTable($table, $column));
+	}
+
+	// Updates a profile.
+	public function updateProfile($profid, $name, $desc, $portal, $bmc, $bma)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.modaccess';
+		$qxa = $dbcore->buildarray('name', $name, databaseCore::PTSTR);
+		$qxa = $dbcore->buildarray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildarray('portal', $portal, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildarray('bitmap_core', $bmc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildarray('bitmap_app', $bma, databaseCore::PTSTR, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'profileid', $profid, databaseCore::PTINT, $qxa));
+	}
+
+	// Inserts a new profile in the database.
+	public function insertProfile($profid, $name, $desc, $portal, $bmc, $bma)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.modaccess';
+		$qxa = $dbcore->buildarray('profileid', $profid, databaseCore::PTINT);
+		$qxa = $dbcore->buildarray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildarray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildarray('portal', $portal, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildarray('bitmap_core', $bmc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildarray('bitmap_app', $bma, databaseCore::PTSTR, $qxa);
+		return($dbcore->launchInsert($table, $qxa));
+	}
+
+	// Deletes a profile from the database.
+	public function deleteProfile($profid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.modaccess';
+		return($dbcore->launchDeleteSingle($table, 'profileid', $profid, databaseCore::PTINT));
+	}
 }
 
 // Autoinstantiate the class

@@ -9,6 +9,7 @@ This library contains session functions that make the application more secure.
 */
 
 require_once 'confload.php';
+require_once 'utility.php';
 
 
 interface sessionInterface

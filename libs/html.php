@@ -63,7 +63,7 @@ interface html_interface
 	static public function insertFieldDropList($data);
 	static public function insertFieldCheckbox($data);
 	static public function insertFieldTextArea($data);
-	static public function insertList($data);
+	static public function insertList($data, $indent = "");
 
 	static public function openForm($data);
 	static public function closeForm();
@@ -1048,22 +1048,22 @@ class html implements html_interface
 
 	// Inserts a static bulleted list.
 	// This function is recursive.
-	static public function insertList($data)
+	static public function insertList($data, $indent = "")
 	{
 		// Check Input
 		if (!is_array($data)) return;
 
 		// Render
-		echo '<ul>';
+		echo $indent . "\t<ul>\n";
 		foreach($data as $vx)
 		{
-			if (is_array($vx)) html::insertList($vx);
+			if (is_array($vx)) html::insertList($vx, $indent . "\t");
 			else
 			{
-				echo '<li>' . $vx . '</li>';
+				echo $indent . "\t\t<li>" . $vx . "</li>\n";
 			}
 		}
-		echo '</ul>';
+		echo $indent . "\t</ul>\n";
 	}
 
 	// Opens a form element.
@@ -1113,12 +1113,12 @@ class html implements html_interface
 		}
 		else $disabled = '';
 ?>
-			<fieldset<?php echo $disabled; ?>>
+	<fieldset<?php echo $disabled; ?>>
 <?php
 		if (!empty($name))
 		{
 ?>
-				<legend><?php echo $name; ?></legend>
+		<legend><?php echo $name; ?></legend>
 <?php
 		}
 	}
@@ -1127,7 +1127,7 @@ class html implements html_interface
 	static public function closeFieldset()
 	{
 ?>
-			</fieldset>
+	</fieldset>
 <?php
 	}
 
@@ -1135,9 +1135,9 @@ class html implements html_interface
 	static public function border1top()
 	{
 ?>
-	<div class="image-border-top">
-		<img src="<?php echo html::$base_url; ?>/images/border1a.gif" alt="border1a">
-	</div>
+<div class="image-border-top">
+	<img src="<?php echo html::$base_url; ?>/images/border1a.gif" alt="border1a">
+</div>
 <?php
 	}
 
@@ -1145,9 +1145,9 @@ class html implements html_interface
 	static public function border2top()
 	{
 ?>
-	<div class="image-border-top">
-		<img src="<?php echo html::$base_url; ?>/images/border2a.gif" alt="border2a">
-	</div>
+<div class="image-border-top">
+	<img src="<?php echo html::$base_url; ?>/images/border2a.gif" alt="border2a">
+</div>
 <?php
 	}
 	
@@ -1155,9 +1155,9 @@ class html implements html_interface
 	static public function border1bottom()
 	{
 ?>
-	<div class="image-border-bottom">
-		<img src="<?php echo html::$base_url; ?>/images/border1b.gif" alt="border1b">
-	</div>
+<div class="image-border-bottom">
+	<img src="<?php echo html::$base_url; ?>/images/border1b.gif" alt="border1b">
+</div>
 <?php
 	}
 	
@@ -1165,9 +1165,9 @@ class html implements html_interface
 	static public function border2bottom()
 	{
 ?>
-	<div class="image-border-bottom">
-		<img src="<?php echo html::$base_url; ?>/images/border2b.gif" alt="border2b">
-	</div>
+<div class="image-border-bottom">
+	<img src="<?php echo html::$base_url; ?>/images/border2b.gif" alt="border2b">
+</div>
 <?php
 	}
 

@@ -10,9 +10,9 @@ around line 66.
 
 */
 
-require_once('confbase.php');
-require_once('error.php');
-require_once('util.php');
+require_once 'confbase.php';
+require_once 'error.php';
+require_once 'utility.php';
 
 
 interface databaseCoreInterface

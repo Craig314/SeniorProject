@@ -405,6 +405,7 @@ var ajaxProcessData = ({
 		}
 		message = '';
 		for (i = 0; i < objArray.length; i++) {
+			this.setValueText(objArray[i].id, objArray[i].value);
 			switch (objArray[i].status) {
 				case 0:			// Default Status
 					if (objArray[i].message.length() > 0)
@@ -530,6 +531,7 @@ var ajaxProcessData = ({
 	setStatusTextWarn: function(id, message) {
 		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon glyphicon-check form-control-feedback');
 		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group has-warning has-feedback');
+		document.getElementById('dcmMS-' + id).innerHTML = message;
 	},
 	
 	// Sets the status of a text field to Error.
@@ -546,6 +548,11 @@ var ajaxProcessData = ({
 		if (arguments > 1)
 			document.getElementById('dcmMS-' + id).innerHTML = arguments[1];
 	},
+
+	// Sets the value of a text field.
+	setValueText: function(id, value) {
+		if (value.length() > 0) document.getElementById(id).value = value;
+	}
 	
 });
 

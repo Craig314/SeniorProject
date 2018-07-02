@@ -35,7 +35,7 @@ This class is available on both Unix and Windows platforms.
 
 */
 
-require_once 'util.php';
+require_once 'utility.php';
 
 interface sharedMemoryInterface
 {

@@ -17,6 +17,7 @@ function heartbeatBootstrap() {
 
 // Calls the heartbeat method to send it to the server.
 function heartbeatTimer() {
+	if (typeof ajaxServerCommand.heartbeat !== 'function') return;
 	ajaxServerCommand.heartbeat();
 }
 

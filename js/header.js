@@ -42,14 +42,7 @@ $(document).ready(function()
 // content scrolling in the ajaxTarget div.
 $(document).ready(function()
 {
-	var window_height = $(window).height();
-	var header_height = $('nav#navigationBar.navbar.navbar-default').height();
-	var funbar_height = 0;
-	var fbarObj = document.getElementById("functionBar");
-	if (fbarObj != null)
-		funbar_height = $("nav#functionBar.nav.nav-inline").height();
-	var content_height = window_height - (header_height + funbar_height + 2);
-	$(".main-wrapper-div").height(content_height);
+	windowResize();
 });
 
 
@@ -58,6 +51,15 @@ $(document).ready(function()
 // content scrolling in the ajaxTarget div.
 $(window).resize(function()
 {
+	windowResize();
+});
+
+// XXX: Possible Bug
+// Adjusts the content height so it will scroll down the window
+// without the header scrolling.  Note that by subtracting from
+// the content height, the scroll data zone gets larger.  This
+// is counter-intuitive and may be a bug...but it works.
+function windowResize() {
 	var window_height = $(window).height();
 	var header_height = $('nav#navigationBar.navbar.navbar-default').height();
 	var funbar_height = 0;
@@ -65,8 +67,6 @@ $(window).resize(function()
 	if (fbarObj != null)
 		funbar_height = $("nav#functionBar.nav.nav-inline").height();
 	var content_height = window_height - (header_height + funbar_height + 2);
-	$(".main-wrapper-div").height(content_height);
-});
-
-
+	$(".main-wrapper-div").height(content_height - 30);
+}
 

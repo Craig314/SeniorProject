@@ -41,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
 	);
 
 	html::loadTemplatePage($title, $url, $fname, $left, '', $fbar, $jsfiles, '', $flags);
-	var_dump($_GET);
 }
 else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 {
@@ -81,8 +80,8 @@ function content()
 {
 	$data = array(
 		array('type' => html::TYPE_TOPB1),
-		array('type' => html::TYPE_FORMOPEN),
 		array('type' => html::TYPE_WD75OPEN),
+		array('type' => html::TYPE_FORMOPEN),
 		array(
 			'type' => html::TYPE_FSETOPEN,
 			'name' => 'Block 1: Text Fields'
@@ -338,14 +337,13 @@ function content()
 			)
 		),
 		array('type' => html::TYPE_FSETCLOSE),
-		array('type' => html::TYPE_WDCLOSE),
 		array('type' => html::TYPE_FORMCLOSE),
+		array('type' => html::TYPE_WDCLOSE),
 		array('type' => html::TYPE_BOTB2)
 	);
 
 	// Render
 	html::pageAutoGenerate($data);
-	//var_dump($_SESSION, $_SERVER, $_POST, $_GET);
 }
 
 ?>
