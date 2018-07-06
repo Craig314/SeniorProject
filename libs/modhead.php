@@ -35,16 +35,9 @@ included:
 		The ID number for this module.
 		Must match what is in the database.
 
-The following variables are optional and only need to be defined if
-the features/abilities they represent are being used:
-
-	$htmlInjectFile
-		Specifies a HTML file to use as the template instead of the
-		default page.
-
 Notes:
 
-Session must already be running for this to function correctly.
+This restarts the session so the $_SESSION superglobal array can be accessed.
 
 */
 
@@ -57,6 +50,7 @@ require_once 'session.php';
 require_once 'security.php';
 require_once 'html.php';
 require_once 'ajax.php';
+require_once 'error.php';
 
 
 // This is to be filled later.
@@ -75,8 +69,6 @@ function checkUserSecurity()
 {
 	global $CONFIGVAR;
 	global $moduleId;
-	global $moduleName;
-	global $moduleFile;
 	global $moduleData;
 
 	// Check user credentials
@@ -133,33 +125,33 @@ function redirectLogin()
 	exit;
 }
 
-
-
-
-
-
-
-
 // Check to make sure that mandatory variables have been set.
-if (!isset($moduleId)) printErrorImmediate('Internal Error: Module ID is not set.');
-if (!isset($moduleName)) printErrorImmediate('Internal Error: Module Name is not set.');
-if (!isset($moduleFile)) printErrorImmediate('Internal Error: Module Filename is not set.');
+if (!isset($moduleId) || empty($moduleId))
+	printErrorImmediate('Internal Error: Module ID is not set.');
+if (!isset($moduleTitle) || empty($moduleTitle))
+	printErrorImmediate('Internal Error: Module Title is not set.');
+if (!isset($moduleFilename) || empty($moduleFilename))
+	printErrorImmediate('Internal Error: Module Filename is not set.');
 
 // Loads the module data for this module.
 $moduleData = $dbconf->queryModule($moduleId);
 if ($moduleData === false) printErrorImmediate('Module database query failed.');
 
+// We need to make sure that the user has access.
+// This function does not return if this check fails.
+checkUserSecurity();
+
+// Sets the base URL
+$baseUrl = html::getBaseURL();
+
 // The HTTP GET method is the initial request to the server
 // when a module loads.
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
 {
-	// We need to make sure that the user has access.
-	checkUserSecurity();
-
 	// If the method is GET, then we call the module specific
 	// initial content generator.
 	loadInitialContent();
-	exit;
+	exit(0);
 }
 
 // The HTTP POST request is used on subsequent queries to the
@@ -176,16 +168,16 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 		// Command Dispatcher
 		// Should be integers and all the commands that the server
 		// will recognize from the client will go here.
-		$command_id = (int)$_POST['COMMAND'];
-		switch ($command_id)
+		$commandId = (int)$_POST['COMMAND'];
+		switch ($commandId)
 		{
 			case -1:      // Load Additional Content
 				loadAdditionalContent();
-				exit;
+				exit(0);
 				break;
 			case -2:      // Heartbeat
 				$ajax->sendCode(ajaxClass::CODE_OK, 'Heartbeat OK');
-				exit;
+				exit(0);
 				break;
 			case -3:      // LOGOUT
 				$_SESSION = array();
@@ -193,17 +185,17 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 				setcookie(session_name(), '', time() - 42000, $cookie['path'],
 				$cookie['domain'], $cookie['secure'], $cookie['httponly']);
 				session_destroy();
-				html_ajax_redirect($html_login_page);
-				exit;
+				$ajax->redirect($CONFIGVAR['html_login_page']['value']);
+				exit(0);
 				break;
 			case -4:      // HOME
 				redirectPortal();
-				exit;
+				exit(0);
 				break;
 			default:
 				// If we get here, then proceed to module specific code.
-				commandProcessor($command_id);
-				exit;
+				commandProcessor($commandId);
+				exit(0);
 				break;
 		}
 	}
