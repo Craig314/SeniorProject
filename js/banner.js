@@ -35,14 +35,14 @@ function submitPasswordChange() {
 	newpass2 = document.getElementById('newpass2').value;
 	if (typeof btoa === 'function') {
 		$data1 = 'oldpassword=' + encodeURIComponent(btoa(oldpass));
-		$data2 = 'newpassword1=' + encodeURIComponent(btoa(newpass));
-		$data3 = 'newpassword2=' + encodeURIComponent(btoa(newpass));
+		$data2 = 'newpassword1=' + encodeURIComponent(btoa(newpass1));
+		$data3 = 'newpassword2=' + encodeURIComponent(btoa(newpass2));
 		$data4 = 'base64=1';
 	} else {
 		// For browsers that do not have a btoa function.
 		$data1 = 'oldpassword=' + encodeURIComponent(oldpass);
-		$data2 = 'newpassword1=' + encodeURIComponent(newpass);
-		$data3 = 'newpassword2=' + encodeURIComponent(newpass);
+		$data2 = 'newpassword1=' + encodeURIComponent(newpass1);
+		$data3 = 'newpassword2=' + encodeURIComponent(newpass2);
 		$data4 = 'base64=0';
 	}
 	ajaxServerCommand.sendCommand(1, $data1, $data2, $data3, $data4);
