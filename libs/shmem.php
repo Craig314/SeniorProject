@@ -73,7 +73,7 @@ class sharedMemory implements sharedMemoryInterface
 		// Validate Input
 		if ($valid == true)
 		{
-			$shres = @shmop_open($shmid, "n", 0644, $shmsz);
+			$shres = @shmop_open($shmid, "n", 0664, $shmsz);
 			if ($shres == false)
 			{
 				$shres = shmop_open($shmid, "w", 0, 0);
