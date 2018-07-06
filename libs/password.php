@@ -1,9 +1,8 @@
 <?php
-
-require_once 'confload.php';
-require_once 'utility.php';
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application Password Library
 
@@ -14,34 +13,42 @@ to automatically handle password encryption.
 
 */
 
+
+require_once 'confload.php';
+require_once 'utility.php';
+
+
 interface passwordInterface
 {
-	public function getHashAlgorithm();
-	public function generateSalt($saltlen = 0);
-	public function passwordHash($passwd, $salt, $digest);
-	public function passwordEncryptNew($password, &$hexsalt, &$hexpass, &$digest);
-	public function passwordEncrypt($password, $hexsalt, $digest);
+	static public function getHashAlgorithm();
+	static public function generateSalt($saltlen = 0);
+	static public function hash($passwd, $salt, $digest, $count);
+	static public function encryptNew($passwd, &$hexsalt, &$hexpass, &$digest, $count);
+	static public function encrypt($passwd, $hexsalt, $digest, $count);
+	static public function verify($passwd, $hexsalt, $hexpass, $digest, $count);
+	static public function checkComplexity($passwd);
 }
+
 
 class password implements passwordInterface
 {
 
 	// Returns the best digest algorithm available on the system.
-	public function getHashAlgorithm()
+	static public function getHashAlgorithm()
 	{
 		global $CONFIGVAR;
 
-		$mda = openssl_get_md_methods();
-		$mdb = explode(' ', $CONFIGVAR['openssl_digests']['value']);
+		$mdp = openssl_get_md_methods();
+		$mdr = explode(' ', $CONFIGVAR['openssl_digests']['value']);
 
 		// Scan what SSL supports with what we are looking for.
 		// Return string on first match.
-		foreach($mda as $reqdigalg)
+		foreach($mdr as $req)
 		{
-			foreach($mdb as $ssldigalg)
+			foreach($mdp as $ssl)
 			{
-				if (strcasecmp(strtolower($reqdigalg), strtolower($ssldigalg)) == 0)
-				return $reqdigalg;
+				if (strcasecmp($req, $ssl) == 0)
+				return $req;
 			}
 		}
 		echo 'Security Error: Unable to get message digest algorithm.';
@@ -50,7 +57,7 @@ class password implements passwordInterface
 
 	// Generates a random salt using the OpenSSL CSPRNG.
 	// Returns a BINARY string that represents the salt.
-	public function generateSalt($saltlen = 0)
+	static public function generateSalt($saltlen = 0)
 	{
 		global $CONFIGVAR;
 
@@ -68,13 +75,13 @@ class password implements passwordInterface
 	// Performs password hashing.  Uses random timing values
 	// to thwart password hash timing attacks.
 	// Returns a BINARY string of the hashed password.
-	public function passwordHash($passwd, $salt, $digest, $rounds)
+	static public function hash($passwd, $salt, $digest, $count)
 	{
-		global $CONFIGCVAR;
+		global $CONFIGVAR;
 
 		// Repeat concat the password multiple times to build up the length.
-		$length = strlen($passwd);
-		if ($length == 0)
+		$passlen = strlen($passwd);
+		if ($passlen == 0)
 		{
 			echo 'Security Error: Password is zero length.';
 			exit(1);
@@ -92,7 +99,7 @@ class password implements passwordInterface
 		// access a message digest algorithm.  This may
 		// need to be modified in the future.
 		$pwdhash = openssl_digest($longpass, $digest, true);
-		for ($i = 0; $i < $rounds; $i++)
+		for ($i = 0; $i < $count; $i++)
 		{
 			if ($salt) $pwdhash .= $salt;
 			$pwdhash = openssl_digest($pwdhash, $digest, true);
@@ -114,12 +121,12 @@ class password implements passwordInterface
 	// salt, encrypted password, and the digest used.  Note that
 	// the salt and password are returned via ascii hex strings
 	// through the parameter list.
-	public function passwordEncryptNew($password, &$hexsalt, &$hexpass, &$digest, $rounds)
+	static public function encryptNew($passwd, &$hexsalt, &$hexpass, &$digest, $count)
 	{
 		global $CONFIGVAR;
-		$digest = $this->getHashAlgorithm();
-		$binsalt = $this->generateSalt($CONFIGVAR['security_salt_len']['value']);
-		$binpass = $this->passwordHash($password, $binsalt, $digest, $rounds);
+		$digest = self::getHashAlgorithm();
+		$binsalt = self::generateSalt($CONFIGVAR['security_salt_len']['value']);
+		$binpass = self::hash($passwd, $binsalt, $digest, $count);
 		$hexsalt = bin2hex($binsalt);
 		$hexpass = bin2hex($binpass);
 	}
@@ -129,17 +136,84 @@ class password implements passwordInterface
 	// and digest is one of several OpenSSL recognized message
 	// digest algorithms.  Returns the ascii hex string of the
 	// given password.
-	public function passwordEncrypt($password, $hexsalt, $digest, $rounds)
+	static public function encrypt($passwd, $hexsalt, $digest, $count)
 	{
 		$binsalt = hex2bin($hexsalt);
-		$binpass = $this->passwordHash($password, $binsalt, $digest, $rounds);
+		$binpass = self::hash($passwd, $binsalt, $digest, $count);
 		$hexpass = bin2hex($binpass);
 		return $hexpass;
 	}
 
+	static public function verify($passwd, $hexsalt, $hexpass, $digest, $count)
+	{
+		$hexpass2 = self::encrypt($passwd, $hexsalt, $digest, $count);
+		if (strcasecmp($hexpass, $hexpass2) != 0) return false;
+		return true;
+	}
+
+	// Checks the password to make sure that it meets complexity
+	// requirements.  Returns true if requirements have been met,
+	// false otherwise.
+	static public function checkComplexity($passwd)
+	{
+		global $CONFIGVAR;
+
+		$length = strlen($passwd);
+		switch($CONFIGVAR['security_passwd_complex_level']['value'])
+		{
+			case 0:		// None, do not check
+				return true;
+				break;
+			case 1:		// Upper, lower case letters
+				$upper = false;
+				$lower = false;
+				for ($i = 0; $i < $length; $i++)
+				{
+					$ascii = ord($passwd[$i]);
+					if ($ascii >= 65 && $ascii <=  90) $upper = true;
+					if ($ascii >= 97 && $ascii <= 122) $lower = true;
+				}
+				if ($upper && $lower) return true;
+				break;
+			case 2:		// Upper, lower case letters, numbers
+				$upper = false;
+				$lower = false;
+				$number = false;
+				for ($i = 0; $i < $length; $i++)
+				{
+					$ascii = ord($passwd[$i]);
+					if ($ascii >= 48 && $ascii <=  57) $number = true;
+					if ($ascii >= 65 && $ascii <=  90) $upper = true;
+					if ($ascii >= 97 && $ascii <= 122) $lower = true;
+				}
+				if ($upper && $lower && $number) return true;
+				break;
+			case 3:		// Upper, lower case letters, numbers, symbols
+				$upper = false;
+				$lower = false;
+				$number = false;
+				$symbol = false;
+				for ($i = 0; $i < $length; $i++)
+				{
+					$ascii = ord($passwd[$i]);
+					if ($ascii >=  32 && $ascii <=  47) $symbol = true;
+					if ($ascii >=  48 && $ascii <=  57) $number = true;
+					if ($ascii >=  58 && $ascii <=  64) $symbol= true;
+					if ($ascii >=  65 && $ascii <=  90) $upper = true;
+					if ($ascii >=  91 && $ascii <=  96) $symbol = true;
+					if ($ascii >=  97 && $ascii <= 122) $lower = true;
+					if ($ascii >= 123 && $ascii <= 126) $symbol = true;
+				}
+				if ($upper && $lower && $number && symbol) return true;
+				break;
+			default:
+				return false;
+				break;
+		}
+		return false;
+	}
+
 }
 
-// Automatically instantiate the class.
-$password = new password();
 
 ?>

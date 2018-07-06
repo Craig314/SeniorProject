@@ -1,9 +1,13 @@
 <?php
-
 /*
 
-Header file for modules.  This contains quite a bit of common code
-that a module uses.
+SEA-CORE International Ltd.
+SEA-CORE Development Group
+
+PHP Web Application Module Header
+
+This is the header file for modules.  This contains quite a bit
+of common code that a module uses.
 
 The module must define the following functions:
 
@@ -42,7 +46,6 @@ Notes:
 
 Session must already be running for this to function correctly.
 
-
 */
 
 
@@ -55,20 +58,13 @@ require_once 'security.php';
 require_once 'html.php';
 require_once 'ajax.php';
 
+
 // This is to be filled later.
 $moduleData = NULL;
 
 // Restart the session.
 $session->restart();
 
-
-function checkMandatory()
-{
-	global $moduleId;
-	global $moduleName;
-	global $moduleFile;
-
-}
 
 // This functions checks to make sure that the request is
 // appoperite for the user making the request. If the

@@ -1,3 +1,13 @@
+/*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
+
+Cascading Style Sheet for Application Portal
+
+*/
+
+
 div.iconimg {
     width: 128px;
     height: 128px;
@@ -17,7 +27,7 @@ div.icon {
     display: inline;
     margin: 10px 20px;
     padding: 2px;
-    //border: 1px solid lightgrey;
+    /* border: 1px solid lightgrey; */
   }
 
 div.iconfont {

@@ -1,6 +1,8 @@
 <?php
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application Core Database Driver
 
@@ -9,6 +11,7 @@ create a connection to that specific type of database at the switch statement
 around line 66.
 
 */
+
 
 require_once 'confbase.php';
 require_once 'error.php';
@@ -121,7 +124,14 @@ class databaseCore implements databaseCoreInterface
 			if ($error[1] != 0)
 			{
 				$str = 'SQL Failue: (' . $error[1] . ':' . $error[0] . ') ' . $error[2];
-				$herr->errorPutMessage(handleErrors::ETDBASE, $str, handleErrors::ESFAIL);
+				if (defined(COMMAND_LINE_PROGRAM))
+				{
+					printErrorContinue($str);
+				}
+				else
+				{
+					$herr->errorPutMessage(handleErrors::ETDBASE, $str, handleErrors::ESFAIL);
+				}
 				if (is_a($mixvar, 'PDOStatement', false))
 				{
 					$mixvar->closeCursor;
@@ -130,7 +140,14 @@ class databaseCore implements databaseCoreInterface
 		}
 		else if (is_string($mixvar))
 		{
-			$herr->puterrmsg(handleErrors::ETDBASE, $mixvar, handleErrors::ESFAIL);
+			if (defined(COMMAND_LINE_PROGRAM))
+			{
+				printErrorContinue($mixvar);
+			}
+			else
+			{
+				$herr->puterrmsg(handleErrors::ETDBASE, $mixvar, handleErrors::ESFAIL);
+			}
 		}
 
 		// Always return false
@@ -494,7 +511,6 @@ class databaseCore implements databaseCoreInterface
 
 // Auto instantiate the class.
 $dbcore = new databaseCore();
-
 
 
 ?>

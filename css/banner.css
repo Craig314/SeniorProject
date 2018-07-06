@@ -1,0 +1,54 @@
+/*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
+
+Cascading Style Sheet for the Banner Page
+
+*/
+
+
+html, body {
+	height: 100%;
+	width: 100%;
+	margin: 0;
+}
+
+.color-red {
+	color: red;
+	text-decoration-color: red;
+}
+
+.color-blue {
+	color: blue;
+	text-decoration-color: blue;
+}
+
+.color-black {
+	color: black;
+	text-decoration-color: black;
+}
+
+.color-inherit {
+	color: inherit;
+	text-decoration-color: inherit;
+}
+
+.center {
+	text-align: center;
+}
+
+.pg_center {
+	width: 75%;
+	margin: auto;
+}
+
+.passwd {
+	width: 60%;
+	margin: auto;
+}
+
+.border_center {
+	width: 800px;
+	margin: auto;
+}

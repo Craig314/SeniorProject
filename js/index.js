@@ -1,9 +1,13 @@
 /*
 
+SEA-CORE International Ltd.
+SEA-CORE Development Group
+
 JavaScript File for index.php test file
 Written by Daniel Rudy
 
 */
+
 
 var id='field1';
 
@@ -34,4 +38,3 @@ function setStatusDefault()
 	document.getElementById('dcmST-' + id).setAttribute('class', 'form-group');
 	document.getElementById('dcmMS-' + id).innerHTML = '';
 }
-

@@ -1,12 +1,16 @@
 <?php
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application Configuration Database Driver
 
 */
 
+
 require_once 'database.php';
+
 
 interface database_config_interface
 {
@@ -56,6 +60,7 @@ interface database_config_interface
 	public function deleteProfile($profid);
 
 }
+
 
 class database_config implements database_config_interface
 {
@@ -118,7 +123,7 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('dispname', $dispname, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('value', $value, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('admin', $admin, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdate($table, 'setting', $setting, databaseCore::PTINT, $qxa));
 	}
@@ -133,7 +138,7 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('dispname', $dispname, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('value', $value, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('admin', $admin, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
@@ -180,7 +185,7 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.flagdesc_app';
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'flag', $flag, databaseCore::PTINT, $qxa));
 	}
 
@@ -191,7 +196,7 @@ class database_config implements database_config_interface
 		$table = $this->tablebase . '.flagdesc_app';
 		$qxa = $dbcore->buildArray('flag', $flag, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
@@ -237,7 +242,7 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.flagdesc_core';
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'flag', $flag, databaseCore::PTINT, $qxa));
 	}
 
@@ -248,7 +253,7 @@ class database_config implements database_config_interface
 		$table = $this->tablebase . '.flagdesc_core';
 		$qxa = $dbcore->buildArray('flag', $flag, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
@@ -294,7 +299,7 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.module';
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
-		$qxa = $dbcore->buildArray('desc', $file, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $file, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('filename', $file, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('iconname', $icon, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, databaseCore::PTINT, $qxa));
@@ -315,7 +320,7 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.module';
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('filename', $file, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('iconname', $icon, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT, $qxa);
@@ -332,7 +337,7 @@ class database_config implements database_config_interface
 		$table = $this->tablebase . '.module';
 		$qxa = $dbcore->buildArray('moduleid', $modid, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('filename', $file, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('iconname', $icon, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT, $qxa);
@@ -411,7 +416,7 @@ class database_config implements database_config_interface
 	public function queryProfile($profid)
 	{
 		global $dbcore;
-		$table = $this->tablebase . '.modaccess';
+		$table = $this->tablebase . '.profile';
 		$column = '*';
 		$qxa = $dbcore->buildarray('profileid', $profid, databaseCore::PTINT);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
@@ -421,7 +426,7 @@ class database_config implements database_config_interface
 	public function queryProfileAll()
 	{
 		global $dbcore;
-		$table = $this->tablebase . '.modaccess';
+		$table = $this->tablebase . '.profile';
 		$column = 'profileid, name, desc, portal';
 		return($dbcore->launchQueryDumpTable($table, $column));
 	}
@@ -430,9 +435,9 @@ class database_config implements database_config_interface
 	public function updateProfile($profid, $name, $desc, $portal, $bmc, $bma)
 	{
 		global $dbcore;
-		$table = $this->tablebase . '.modaccess';
+		$table = $this->tablebase . '.profile';
 		$qxa = $dbcore->buildarray('name', $name, databaseCore::PTSTR);
-		$qxa = $dbcore->buildarray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildarray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildarray('portal', $portal, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildarray('bitmap_core', $bmc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildarray('bitmap_app', $bma, databaseCore::PTSTR, $qxa);
@@ -443,10 +448,10 @@ class database_config implements database_config_interface
 	public function insertProfile($profid, $name, $desc, $portal, $bmc, $bma)
 	{
 		global $dbcore;
-		$table = $this->tablebase . '.modaccess';
+		$table = $this->tablebase . '.profile';
 		$qxa = $dbcore->buildarray('profileid', $profid, databaseCore::PTINT);
 		$qxa = $dbcore->buildarray('name', $name, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildarray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildarray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildarray('portal', $portal, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildarray('bitmap_core', $bmc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildarray('bitmap_app', $bma, databaseCore::PTSTR, $qxa);
@@ -457,12 +462,14 @@ class database_config implements database_config_interface
 	public function deleteProfile($profid)
 	{
 		global $dbcore;
-		$table = $this->tablebase . '.modaccess';
+		$table = $this->tablebase . '.profile';
 		return($dbcore->launchDeleteSingle($table, 'profileid', $profid, databaseCore::PTINT));
 	}
 }
 
+
 // Autoinstantiate the class
 $dbconf = new database_config();
+
 
 ?>

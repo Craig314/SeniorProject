@@ -1,6 +1,9 @@
 <?php
 
 /*
+SEA-CORE International Ltd.
+SEA-CORE Development Group
+
 
 PHP Web Application Misculanious Security Routines
 
@@ -11,7 +14,6 @@ following libraries:
 account.php		Account handling/checking
 password.php	Password generation/encryption
 session.php		Session handling/checking
-
 
 */
 

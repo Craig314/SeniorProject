@@ -1,6 +1,8 @@
 <?php
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application Time-Date Library
 
@@ -18,6 +20,7 @@ Although the datatype will go further, this seems to be a reasonable limit.
 
 */
 
+
 require_once "confload.php";
 
 
@@ -25,11 +28,13 @@ interface timedate_interface
 {
 	static public function getTimeUnix();
 	static public function unix2db($unixtime);
+	static public function unix2canonical($unixtime);
 	static public function db2unix($dbasetime);
 	static public function unix2tod($unixtime);
 	static public function unixDiffTime($time1, $time2);
 	static public function unixDiffDate($time1, $time2);
 }
+
 
 class timedate implements timedate_interface
 {
@@ -56,6 +61,15 @@ class timedate implements timedate_interface
 		$dt = DateTime::createFromFormat('U', $unixtime);
 		$dt->setTimezone(timedate::setTimeZone());
 		return $dt->format('Y-m-d H:i:s');
+	}
+
+	// Converts a Unix time to the canonical time format of
+	// MM-DD-YYYY HH-mm-SS
+	static public function unix2canonical($unixtime)
+	{
+		$dt = DateTime::createFromFormat('U', $unixtime);
+		$dt->setTimezone(timedate::setTimeZone());
+		return $dt->format('m-d-Y H:i:s');
 	}
 
 	// Converts a database time stamp format of YYYY-MM-DD HH-mm-SS
@@ -104,4 +118,6 @@ class timedate implements timedate_interface
 		return($dti->format('%Y-%M-%D %H:%I:%S'));
 	}
 }
+
+
 ?>

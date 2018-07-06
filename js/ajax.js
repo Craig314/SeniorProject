@@ -1,11 +1,15 @@
 /*
 
+SEA-CORE International Ltd.
+SEA-CORE Development Group
+
 AJAX Command and Response System
 
 Sends and receivces commands, status codes, and data,
 to and from, the server.
 
 */
+
 
 // Some of the HTTP Status Codes.  Taken from
 // https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
@@ -30,13 +34,6 @@ var serverCommands = {
 	'logout': -3,
 	'goHome': -4,
 };
-
-
-
-
-
-
-
 
 // AJAX Control Data Class
 var serverLinkObject = ({
@@ -92,13 +89,6 @@ var serverLinkObject = ({
 		return this.link;
 	},
 });
-
-
-
-
-
-
-
 
 // Class to handle the actual sending of commands and the responses
 // of those requests.
@@ -171,13 +161,6 @@ var ajaxServerCommand = {
 		this.sendCommand(cmd);
 	},
 };
-
-
-
-
-
-
-
 
 // This directly handles communications to/from the server.
 var ajaxServerSend = {
@@ -269,13 +252,6 @@ var ajaxServerSend = {
 	},
 }
 
-
-
-
-
-
-
-
 // This class contains routines that process AJAX data from the server.  This
 // should only be called from ajaxServerSend::responseHandler.
 var ajaxProcessData = ({
@@ -290,6 +266,7 @@ var ajaxProcessData = ({
 		entity = str.indexOf("CODE");
 		if (entity != 0) return;
 		cst = str.indexOf(" ") + 1;
+		if (cst < 0) return;
 		est = str.indexOf(" ", cst);
 		if (est < 0)
 			codenum = parseInt(str.slice(cst));
@@ -302,7 +279,7 @@ var ajaxProcessData = ({
 			case 302:   // Found
 			case 303:	// See Other
 				var urlpos;
-				urlpos = str.indexof("https://");
+				urlpos = str.indexOf("https://");
 				if (urlpos < 0) urlpos = str.indexOf("http://");
 				if (urlpos < 0) {
 					writeError("Unknown protocol for redirect returned by server.");
@@ -331,29 +308,30 @@ var ajaxProcessData = ({
 		entity = str.indexOf("CMD");
 		if (entity != 0) return;
 		cst = str.indexOf(" ") + 1;
+		if (cst < 0) return;
 		est = str.indexOf(" ", cst);
 		if (est < 0) cmdnum = parseInt(str.slice(cst));
 			else cmdnum = parseInt(str.slice(cst, est));
 		switch (cmdnum) {
 			case 950:   // OK, call clearForm (if available), display to responseTarget
-				var txt = str.slice(8);
+				var txt = str.slice(est + 1);
 				writeError("");
 				writeResponse(txt);
 				if (typeof clearForm === 'function') clearForm();
 				break;
 			case 951:   // Ok, display to responseTarget
-				var txt = str.slice(8);
+				var txt = str.slice(est + 1);
 				writeError("");
 				writeResponse(txt);
 				break;
 			case 952:   // Error, call clearForm (if available), display to errorTarget
-				var txt = str.slice(8);
+				var txt = str.slice(est + 1);
 				writeError(txt);
 				writeResponse("");
 				if (typeof clearForm === 'function') clearForm();
 				break;
 			case 953:   // Error, display to errorTarget
-				var txt = str.slice(8);
+				var txt = str.slice(est + 1);
 				writeError(txt);
 				writeResponse("");
 				break;
@@ -362,16 +340,24 @@ var ajaxProcessData = ({
 				writeResponse("");
 				break;
 			case 955:   // Clear all messages, write HTML
-				var txt = str.slice(8);
+				var txt = str.slice(est + 1);
 				writeError("");
 				writeResponse("");
 				writeHTML(txt);
+				break;
+			case 956:	// Error, call clearForm, display to errorTarget, clear HTML
+				var txt = str.slice(est + 1);
+				writeError(txt);
+				writeResponse("");
+				writeHTML("");
+				if (typeof clearForm === 'function') clearForm();
 				break;
 			default:
 				// If the command is none of the above, then we are dealing
 				// with a possible custom command, or an invalid command.
 				if (typeof customCmdProc === 'function') {
-					var result = customCmdProc(cmdnum);
+					var txt = str.slice(est + 1);
+					var result = customCmdProc(cmdnum, txt);
 					if (result == false) alert("Unknown command " + cmdnum + " returned by server.");
 				}
 				else alert("Unknown command " + cmdnum + " returned by server.");
@@ -450,6 +436,7 @@ var ajaxProcessData = ({
 		entity = str.indexOf("JSON");
 		if (entity != 0) return;
 		cst = str.indexOf(" ") + 1;
+		if (cst < 0) return;
 		est = str.indexOf(" ", cst);
 		if (est < 0) {
 			writeError("JSON data format error from server.");
@@ -556,13 +543,6 @@ var ajaxProcessData = ({
 	
 });
 
-
-
-
-
-
-
-
 // Writes an error message to the error target field.
 function writeError(msg) {
 	document.getElementById(serverLinkObject.getTargetError()).innerHTML = msg;
@@ -577,5 +557,3 @@ function writeResponse(msg) {
 function writeHTML(msg) {
 	document.getElementById(serverLinkObject.getTargetMain()).innerHTML = msg;
 }
-
-

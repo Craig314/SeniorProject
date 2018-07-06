@@ -1,9 +1,10 @@
 <?php
-
 /*
 
-PHP Web Application Shared Memory Access
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
+PHP Web Application Shared Memory Access
 
 To use this class, insert the following line into your code:
 
@@ -35,7 +36,9 @@ This class is available on both Unix and Windows platforms.
 
 */
 
+
 require_once 'utility.php';
+
 
 interface sharedMemoryInterface
 {
@@ -44,6 +47,7 @@ interface sharedMemoryInterface
 	public function putdata($data);
 	public function getdata();
 }
+
 
 class sharedMemory implements sharedMemoryInterface
 {
@@ -171,5 +175,6 @@ class sharedMemory implements sharedMemoryInterface
 		return $data;
 	}
 }
+
 
 ?>

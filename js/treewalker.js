@@ -1,12 +1,16 @@
 /*
 
-Treewalker
+SEA-CORE International Ltd.
+SEA-CORE Development Group
+
+Treewalker Form Data Collector
 
 This walks the DOM tree looking for any and all input fields.  It will
 convert the input data into the proper format for sending to the server
 via a POST operation.
 
 */
+
 
 function treeWalker(nodeId) {
 	var nodeObject = document.getElementById(nodeId);

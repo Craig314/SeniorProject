@@ -1,6 +1,8 @@
 <?php
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application Base Configuration File
 
@@ -10,6 +12,7 @@ should be in here as all other settings are stored in the database.  This
 allows for a module to configure settings.
 
 */
+
 
 // Debugging
 const APP_DEBUG_STATUS = true;
@@ -33,8 +36,6 @@ const APP_DATABASE_APPLICATION = 'application';	// Name of application database
 
 // Database: Activation (Remove for production use)
 const APP_DATABASE_ACTIVATE = 'activation';
-
-
 
 
 ?>

@@ -1,6 +1,8 @@
 <?php
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application Load Configuration Database
 
@@ -11,15 +13,18 @@ performs the specified operation on loading.
 
 */
 
+
 require_once 'confbase.php';
 require_once 'dbaseconf.php';
 require_once 'shmem.php';
+
 
 // Define the global configuration variable.
 $CONFIGVAR = NULL;
 
 // Begin shared memory processing.
 processSharedMemoryInitial();
+
 
 // Perform the initial processing of the shared memory region.
 function processSharedMemoryInitial()
@@ -114,5 +119,6 @@ function loadConfigurationVariable($shmem)
 	}
 	$CONFIGVAR = $result;
 }
+
 
 ?>

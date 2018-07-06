@@ -1,6 +1,8 @@
 <?php
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application HTML Generation/Handling Library
 
@@ -51,12 +53,14 @@ interface html_interface
 	//const TYPE_ = ;
 
 	static public function initialize();
-	static public function redirect($filename, $usetoken = false);
+	static public function redirect($filename);
 	static public function ishttps();
 	static public function buildURL($filename);
 	static public function getBaseURL();
-	static public function checkRequestPort($usetoken = false);
+	static public function checkRequestPort();
+	static public function sendCode($code);
 
+	static public function insertToken($token);
 	static public function insertFieldHidden($data);
 	static public function insertFieldText($data);
 	static public function insertFieldPassword($data);
@@ -208,15 +212,15 @@ class html implements html_interface
 		{
 			switch ($data['state'])
 			{
-				case html::STAT_OK:
+				case self::STAT_OK:
 					$stx = ' has-success has-feedback';
 					$gix = ' glyphicon-ok';
 					break;
-				case html::STAT_WARN:
+				case self::STAT_WARN:
 					$stx = ' has-warning has-feedback';
 					$gix = ' glyphicon-warning-sign';
 					break;
-				case html::STAT_ERROR:
+				case self::STAT_ERROR:
 					$stx = ' has-error has-feedback';
 					$gix = ' glyphicon-remove';
 					break;
@@ -240,13 +244,13 @@ class html implements html_interface
 		{
 			switch($type)
 			{
-				case html::DEFTYPE_TEXTBOX:
+				case self::DEFTYPE_TEXTBOX:
 					$default = ' placeholder="' . $data['default'] . '"';
 					break;
-				case html::DEFTYPE_PULLDOWN:
+				case self::DEFTYPE_PULLDOWN:
 					$default = $data['default'];
 					break;
-				case html::DEFTYPE_CHECKBOX:
+				case self::DEFTYPE_CHECKBOX:
 					if ($data['default'] == true) $default = ' checked';
 					else $default = '';
 					break;
@@ -271,9 +275,9 @@ class html implements html_interface
 		{
 			$lclass = ' class="control-label col-xs-' . $data['lsize'] . ' text-right"';
 		}
-		else if (html::$lsize_default !== false)
+		else if (self::$lsize_default !== false)
 		{
-			$lclass = ' class="control-label col-xs-' . html::$lsize_default . ' text-right"';
+			$lclass = ' class="control-label col-xs-' . self::$lsize_default . ' text-right"';
 		}
 		else
 		{
@@ -291,12 +295,12 @@ class html implements html_interface
 			$lclassL = ' class="control-label col-xs-' . $data['lsize'] . ' text-left"';
 			$lclassR = ' class="control-label col-xs-' . $data['lsize'] . ' text-right"';
 		}
-		else if (html::$lsize_default !== false)
+		else if (self::$lsize_default !== false)
 		{
-			$lsize = html::$lsize_default;
-			$lclass = ' class="control-label col-xs-' . html::$lsize_default . '"';
-			$lclassL = ' class="control-label col-xs-' . html::$lsize_default . ' text-left"';
-			$lclassR = ' class="control-label col-xs-' . html::$lsize_default . ' text-right"';
+			$lsize = self::$lsize_default;
+			$lclass = ' class="control-label col-xs-' . self::$lsize_default . '"';
+			$lclassL = ' class="control-label col-xs-' . self::$lsize_default . ' text-left"';
+			$lclassR = ' class="control-label col-xs-' . self::$lsize_default . ' text-right"';
 		}
 		else
 		{
@@ -311,8 +315,8 @@ class html implements html_interface
 	static private function helperFieldSizeText($data, &$fclass)
 	{
 		if (!empty($data['fsize'])) $fclass = ' class="input-group col-xs-' . $data['fsize'] . '"';
-			else if (html::$fsize_default !== false)
-				$fclass = ' class="input-group col-xs-' . html::$lsize_default . '"';
+			else if (self::$fsize_default !== false)
+				$fclass = ' class="input-group col-xs-' . self::$lsize_default . '"';
 			else
 				$fclass = ' class="input-group"';
 	}
@@ -325,10 +329,10 @@ class html implements html_interface
 			$fsize = $data['fsize'];
 			$fclass = ' class="col-xs-' . $data['fsize'] . '"';
 		}
-		else if (html::$fsize_default !== false)
+		else if (self::$fsize_default !== false)
 		{
-			$fsize = html::$fsize_default;
-			$fclass = ' class="col-xs-' . html::$lsize_default . '"';
+			$fsize = self::$fsize_default;
+			$fclass = ' class="col-xs-' . self::$lsize_default . '"';
 		}
 		else
 		{
@@ -424,18 +428,18 @@ class html implements html_interface
 		$dcmMS = NULL;
 
 		// Parameters
-		html::helperNameId($data, $name, $forx);
-		html::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
-		html::helperOnClick($data, $onclick);
-		html::helperDisabled($data, $disabled);
-		html::helperValue($data, $value);
-		html::helperState($data, $stx, $gix);
-		html::helperDefault($data, html::DEFTYPE_TEXTBOX, $default);
-		html::helperLabel($data, $label);
-		html::helperLabelSizeText($data, $lclass);
-		html::helperFieldSizeText($data, $fclass);
-		html::helperTooltip($data, $tooltip);
-		html::helperIcon($data, $icons, $icond);
+		self::helperNameId($data, $name, $forx);
+		self::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
+		self::helperOnClick($data, $onclick);
+		self::helperDisabled($data, $disabled);
+		self::helperValue($data, $value);
+		self::helperState($data, $stx, $gix);
+		self::helperDefault($data, self::DEFTYPE_TEXTBOX, $default);
+		self::helperLabel($data, $label);
+		self::helperLabelSizeText($data, $lclass);
+		self::helperFieldSizeText($data, $fclass);
+		self::helperTooltip($data, $tooltip);
+		self::helperIcon($data, $icons, $icond);
 
 		// Combine
 		$printout = $name . $value . $default . $onclick . $tooltip . $disabled;
@@ -484,21 +488,18 @@ class html implements html_interface
 		$port = $CONFIGVAR['server_http_port']['value'];
 		$url .= $CONFIGVAR['server_hostname']['value'];
 		if ($port != $defaultPort) $url .= ':' . $port;
-		html::$base_url2 = $url . '/';
-		html::$base_url = $url;
+		self::$base_url2 = $url . '/';
+		self::$base_url = $url;
 		
 		// Set default sizes
-		html::$lsize_default = $CONFIGVAR['html_default_label_size']['value'];
-		html::$fsize_default = $CONFIGVAR['html_default_field_size']['value'];
+		self::$lsize_default = $CONFIGVAR['html_default_label_size']['value'];
+		self::$fsize_default = $CONFIGVAR['html_default_field_size']['value'];
 	}
 
 	// Redirects the client web browser to the specified file name.
-	static public function redirect($filename, $usetoken = false)
+	static public function redirect($filename)
 	{
-		if ($usetoken)
-			header("Location: " . html::$base_url . $filename . "?token=" . $_SESSION['token']);
-		else
-			header("Location: " . html::$base_url . $filename);
+		header("Location: " . self::$base_url . $filename);
 	}
 
 	// Checks to see if the connection is secure.
@@ -519,44 +520,62 @@ class html implements html_interface
 	// Returns a fully qualified URL based on the given filename.
 	static public function buildURL($filename)
 	{
-		return html::$base_url . $filename;
+		return self::$base_url . $filename;
 	}
 
 	// Returns the base URL.
 	static public function getBaseURL()
 	{
-		return html::$base_url;
+		return self::$base_url;
 	}
 
 	// Checks the requested port against the application port
 	// and redirects if necessary.
-	static public function checkRequestPort($usetoken = false)
+	static public function checkRequestPort()
 	{
 		global $CONFIGVAR;
 
 		if ($CONFIGVAR['server_secure']['value'] == 1)
 		{
-			if (!html::ishttps())
+			if (!self::ishttps())
 			{
-				html::redirect($_SERVER['SCRIPT_NAME'], $usetoken);
+				self::redirect($_SERVER['SCRIPT_NAME']);
 				exit;
 			}
 			$port = $CONFIGVAR['server_https_port']['value'];
 		}
 		else
 		{
-			if (html::ishttps())
+			if (self::ishttps())
 			{
-				html::redirect($_SERVER['SCRIPT_NAME'], $usetoken);
+				self::redirect($_SERVER['SCRIPT_NAME']);
 				exit;
 			}
 			$port = $CONFIGVAR['server_http_port']['value'];
 		}
 		if ($_SERVER['SERVER_PORT'] != $port)
 		{
-			html::redirect($_SERVER['SCRIPT_NAME'], $usetoken);
+			self::redirect($_SERVER['SCRIPT_NAME']);
 			exit;
 		}
+	}
+
+	// Sends a response code to the client.
+	static public function sendCode($code)
+	{
+		http_response_code($code);
+	}
+
+	// Inserts a security token in the page.
+	static public function insertToken($token)
+	{
+?>
+	<div>
+		<form id="token_form">
+			<input type="hidden" name="token_data" id="token_data" value="<?php echo $token; ?>">
+		</form>
+	</div>
+<?php
 	}
 
 	// Incorporates a hidden form with a hidden field to pass
@@ -573,24 +592,24 @@ class html implements html_interface
 		if (!empty($data['data'])) $data = $value['data'];
 			else $value = '';
 ?>
-<div>
-	<form <?php echo $fname; ?>>
-		<input type="hidden" <?php echo $name; ?> value="<?php echo $value; ?>">
-	</form>
-</div>
+	<div>
+		<form <?php echo $fname; ?>>
+			<input type="hidden" <?php echo $name; ?> value="<?php echo $value; ?>">
+		</form>
+	</div>
 <?php
 	}
 	
 	// Inserts a text field
 	static public function insertFieldText($data)
 	{
-		html::insertFieldTextCommon('text', $data);
+		self::insertFieldTextCommon('text', $data);
 	}
 
 	// Inserts a password field
 	static public function insertFieldPassword($data)
 	{
-		html::insertFieldTextCommon('password', $data);
+		self::insertFieldTextCommon('password', $data);
 	}
 
 	// Inserts a drop down list control.
@@ -627,15 +646,15 @@ class html implements html_interface
 		$icons = NULL;
 
 		// Parameters
-		html::helperNameId($data, $name, $forx);
-		html::helperDisabled($data, $disabled);
-		html::helperState($data, $stx, $gix);
-		html::helperDefault($data, html::DEFTYPE_PULLDOWN, $default);
-		html::helperLabel($data, $label);
-		html::helperLabelSizeText($data, $lclass);
-		html::helperFieldSizeText($data, $fclass);
-		html::helperTooltip($data, $tooltip);
-		html::helperIcon($data, $icons, $icond);
+		self::helperNameId($data, $name, $forx);
+		self::helperDisabled($data, $disabled);
+		self::helperState($data, $stx, $gix);
+		self::helperDefault($data, self::DEFTYPE_PULLDOWN, $default);
+		self::helperLabel($data, $label);
+		self::helperLabelSizeText($data, $lclass);
+		self::helperFieldSizeText($data, $fclass);
+		self::helperTooltip($data, $tooltip);
+		self::helperIcon($data, $icons, $icond);
 
 		// Combine
 		$printout = $name . $tooltip . $disabled;
@@ -662,7 +681,7 @@ class html implements html_interface
 <?php
 					foreach($vx as $kxa => $vxa)
 					{
-						html::insertFieldSelectHelper($kxa, $vxa, $default);
+						self::insertFieldSelectHelper($kxa, $vxa, $default);
 					}
 ?>
 						</optgroup>
@@ -670,7 +689,7 @@ class html implements html_interface
 				}
 				else
 				{
-					html::insertFieldSelectHelper($kx, $vx, $default);
+					self::insertFieldSelectHelper($kx, $vx, $default);
 				}
 			}
 		}
@@ -716,15 +735,15 @@ class html implements html_interface
 		$toggle = NULL;
 
 		// Parameters
-		html::helperNameId($data, $name, $forx);
-		html::helperDisabled($data, $disabled);
-		html::helperDefault($data, html::DEFTYPE_CHECKBOX, $default);
-		html::helperLabel($data, $label);
-		html::helperLabelSizeCheck($data, $lsize, $lclass, $lclass_l, $lclass_r);
-		html::helperFieldSizeCheck($data, $fsize, $fclass);
-		html::helperTooltip($data, $tooltip);
-		html::helperSide($data, $side);
-		html::helperToggle($data, $toggle);
+		self::helperNameId($data, $name, $forx);
+		self::helperDisabled($data, $disabled);
+		self::helperDefault($data, self::DEFTYPE_CHECKBOX, $default);
+		self::helperLabel($data, $label);
+		self::helperLabelSizeCheck($data, $lsize, $lclass, $lclass_l, $lclass_r);
+		self::helperFieldSizeCheck($data, $fsize, $fclass);
+		self::helperTooltip($data, $tooltip);
+		self::helperSide($data, $side);
+		self::helperToggle($data, $toggle);
 
 		// Compute Padding
 		$pad_total = $fsize + $lsize;
@@ -878,18 +897,18 @@ class html implements html_interface
 		$dcmMS = NULL;
 
 		// Parameters
-		html::helperNameId($data, $name, $forx);
-		html::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
-		html::helperOnClick($data, $onclick);
-		html::helperDisabled($data, $disabled);
-		html::helperState($data, $stx, $gix);
-		html::helperDefault($data, html::DEFTYPE_TEXTBOX, $default);
-		html::helperLabel($data, $label);
-		html::helperLabelSizeText($data, $lclass);
-		html::helperFieldSizeText($data, $fclass);
-		html::helperTooltip($data, $tooltip);
-		html::helperIcon($data, $icons, $icond);
-		html::helperRow($data, $rows);
+		self::helperNameId($data, $name, $forx);
+		self::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
+		self::helperOnClick($data, $onclick);
+		self::helperDisabled($data, $disabled);
+		self::helperState($data, $stx, $gix);
+		self::helperDefault($data, self::DEFTYPE_TEXTBOX, $default);
+		self::helperLabel($data, $label);
+		self::helperLabelSizeText($data, $lclass);
+		self::helperFieldSizeText($data, $fclass);
+		self::helperTooltip($data, $tooltip);
+		self::helperIcon($data, $icons, $icond);
+		self::helperRow($data, $rows);
 
 		// Combine
 		$printout = $name . $default . $onclick . $tooltip . $disabled;
@@ -1057,7 +1076,7 @@ class html implements html_interface
 		echo $indent . "\t<ul>\n";
 		foreach($data as $vx)
 		{
-			if (is_array($vx)) html::insertList($vx, $indent . "\t");
+			if (is_array($vx)) self::insertList($vx, $indent . "\t");
 			else
 			{
 				echo $indent . "\t\t<li>" . $vx . "</li>\n";
@@ -1136,7 +1155,7 @@ class html implements html_interface
 	{
 ?>
 <div class="image-border-top">
-	<img src="<?php echo html::$base_url; ?>/images/border1a.gif" alt="border1a">
+	<img src="<?php echo self::$base_url; ?>/images/border1a.gif" alt="border1a">
 </div>
 <?php
 	}
@@ -1146,7 +1165,7 @@ class html implements html_interface
 	{
 ?>
 <div class="image-border-top">
-	<img src="<?php echo html::$base_url; ?>/images/border2a.gif" alt="border2a">
+	<img src="<?php echo self::$base_url; ?>/images/border2a.gif" alt="border2a">
 </div>
 <?php
 	}
@@ -1156,7 +1175,7 @@ class html implements html_interface
 	{
 ?>
 <div class="image-border-bottom">
-	<img src="<?php echo html::$base_url; ?>/images/border1b.gif" alt="border1b">
+	<img src="<?php echo self::$base_url; ?>/images/border1b.gif" alt="border1b">
 </div>
 <?php
 	}
@@ -1166,7 +1185,7 @@ class html implements html_interface
 	{
 ?>
 <div class="image-border-bottom">
-	<img src="<?php echo html::$base_url; ?>/images/border2b.gif" alt="border2b">
+	<img src="<?php echo self::$base_url; ?>/images/border2b.gif" alt="border2b">
 </div>
 <?php
 	}
@@ -1212,64 +1231,64 @@ class html implements html_interface
 				unset($vx['type']);
 				switch ($type)
 				{
-					case html::TYPE_HIDE:
-						html::insertFieldHidden($vx);
+					case self::TYPE_HIDE:
+						self::insertFieldHidden($vx);
 						break;
-					case html::TYPE_TEXT:
-						html::insertFieldText($vx);
+					case self::TYPE_TEXT:
+						self::insertFieldText($vx);
 						break;
-					case html::TYPE_PASS:
-						html::insertFieldPassword($vx);
+					case self::TYPE_PASS:
+						self::insertFieldPassword($vx);
 						break;
-					case html::TYPE_AREA:
-						html::insertFieldTextArea($vx);
+					case self::TYPE_AREA:
+						self::insertFieldTextArea($vx);
 						break;
-					case html::TYPE_CHECK:
-						html::insertFieldCheckbox($vx);
+					case self::TYPE_CHECK:
+						self::insertFieldCheckbox($vx);
 						break;
-					case html::TYPE_RADIO:
+					case self::TYPE_RADIO:
 						break;
-					case html::TYPE_PULLDN:
-						html::insertFieldDropList($vx);
+					case self::TYPE_PULLDN:
+						self::insertFieldDropList($vx);
 						break;
-					case html::TYPE_BUTTON:
-						html::insertButtons($vx);
+					case self::TYPE_BUTTON:
+						self::insertButtons($vx);
 						break;
-					case html::TYPE_FORMOPEN:
-						html::openForm($vx);
+					case self::TYPE_FORMOPEN:
+						self::openForm($vx);
 						break;
-					case html::TYPE_FORMCLOSE:
-						html::closeForm();
+					case self::TYPE_FORMCLOSE:
+						self::closeForm();
 						break;
-					case html::TYPE_FSETOPEN:
-						html::openFieldset($vx);
+					case self::TYPE_FSETOPEN:
+						self::openFieldset($vx);
 						break;
-					case html::TYPE_FSETCLOSE:
-						html::closeFieldset();
+					case self::TYPE_FSETCLOSE:
+						self::closeFieldset();
 						break;
-					case html::TYPE_BLIST:
-						html::insertList($vx['data']);
+					case self::TYPE_BLIST:
+						self::insertList($vx['data']);
 						break;
-					case html::TYPE_TOPB1:
-						html::border1top();
+					case self::TYPE_TOPB1:
+						self::border1top();
 						break;
-					case html::TYPE_TOPB2:
-						html::border2top();
+					case self::TYPE_TOPB2:
+						self::border2top();
 						break;
-					case html::TYPE_BOTB1:
-						html::border1bottom();
+					case self::TYPE_BOTB1:
+						self::border1bottom();
 						break;
-					case html::TYPE_BOTB2:
-						html::border2bottom();
+					case self::TYPE_BOTB2:
+						self::border2bottom();
 						break;
-					case html::TYPE_WD50OPEN:
-						html::width50open();
+					case self::TYPE_WD50OPEN:
+						self::width50open();
 						break;
-					case html::TYPE_WD75OPEN:
-						html::width75open();
+					case self::TYPE_WD75OPEN:
+						self::width75open();
 						break;
-					case html::TYPE_WDCLOSE:
-						html::widthClose();
+					case self::TYPE_WDCLOSE:
+						self::widthClose();
 						break;
 					default:
 				}
@@ -1500,7 +1519,9 @@ class html implements html_interface
 
 }
 
+
 // Initialize the HTML library.
 html::initialize();
+
 
 ?>

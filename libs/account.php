@@ -1,11 +1,14 @@
 <?php
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 Accounts Library
 
 
 */
+
 
 require_once "confload.php";
 
@@ -16,9 +19,10 @@ interface accountInterface
 	public function checkSpecialProfile();
 	public function checkAccountVendor();
 	public function checkAccountAdmin();
-	public function checkSpecial();
+	public function checkAccountSpecial();
 	public function checkCredentials();
 }
+
 
 class account implements accountInterface
 {
@@ -81,10 +85,24 @@ class account implements accountInterface
 	// Checks to see if the current user is on any kind of special
 	// account.  Note that the user ID and the profile ID must
 	// match up.
-	public function checkAccountSpecial()
+	public function checkAccountSpecial($session = true, $userid = 0, $profid = 0)
 	{
-		if (checkAccountVendor()) return true;
-		if (checkAccountAdmin()) return true;
+		global $CONFIGVAR;
+
+		if ($session)
+		{
+			if ($this->checkAccountVendor()) return true;
+			if ($this->checkAccountAdmin()) return true;
+		}
+		else
+		{
+			if ($userid == $CONFIGVAR['account_id_admin']['value'] &&
+				$profid == $CONFIGVAR['profile_id_admin']['value'])
+				return true;
+			if ($userid == $CONFIGVAR['account_id_vendor']['value'] &&
+				$profid == $CONFIGVAR['profile_id_vendor']['value'])
+				return true;
+		}
 		return false;
 	}
 
@@ -129,7 +147,9 @@ class account implements accountInterface
 
 }
 
+
 // Automatically instantiate the class
 $account = new account();
+
 
 ?>

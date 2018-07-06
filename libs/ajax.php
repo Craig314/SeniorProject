@@ -1,9 +1,8 @@
 <?php
-
-require_once 'confload.php';
-require_once 'html.php';
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application AJAX Handling Library
 
@@ -12,6 +11,11 @@ system.  This allows various codes, commands, and other data to be sent
 from the server to the client.
 
 */
+
+
+require_once 'confload.php';
+require_once 'html.php';
+
 
 interface ajaxInterface
 {
@@ -31,6 +35,7 @@ interface ajaxInterface
 	const CMD_ERRDISP		= 953;	// Status Error, Display
 	const CMD_CLRMSG		= 954;	// Clear Messages
 	const CMD_CLRMSGHTML	= 955;	// Clear Messeges, Write HTML
+	const CMD_ERRCLRCHTML	= 956;	// Status Error, Clear Form, Display, Clear HTML
 
 	// HTTP Status Codes: Special
 	const CODE_OK			= 200;	// Status OK
@@ -64,6 +69,7 @@ interface ajaxInterface
 	public function sendQueue();
 
 }
+
 
 class ajaxClass implements ajaxInterface
 {
@@ -174,6 +180,7 @@ class ajaxClass implements ajaxInterface
 	}
 
 }
+
 
 // Auto instantiate the class
 $ajax = new ajaxClass();

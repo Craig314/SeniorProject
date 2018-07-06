@@ -1,7 +1,8 @@
 <?php
-
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 String Verification Library
 
@@ -10,7 +11,10 @@ sure that they make sense and that invalid input is flagged as
 an error.
 
 */
+
+
 require_once 'error.php';
+
 
 interface verifyStringInterface
 {
@@ -32,14 +36,14 @@ interface verifyStringInterface
 	// Start custom checks at 100
 
 	public function errstat();
-	public function strchk($data, $name, $field, $id, $type, $blank = true, $max = 0, $min = 0);
+	public function strchk($data, $field, $id, $type, $blank = true, $max = 0, $min = 0);
 }
 
 
 class verifyString implements verifyStringInterface
 {
 
-	private $etype = handlerErrors::ETFORM;
+	private $etype = handleErrors::ETFORM;
 	private $estate = handleErrors::ESFAIL;
 
 	// Returns the verify string error status.
@@ -54,7 +58,7 @@ class verifyString implements verifyStringInterface
 	// $field is the name of the field (used in error messages).
 	// $type is one of the type constants.
 	// $min/$max are min and max string lengths.
-	public function strchk($data, $name, $field, $id, $type, $blank = true, $max = 0, $min = 0)
+	public function strchk($data, $field, $id, $type, $blank = true, $max = 0, $min = 0)
 	{
 		global $herr;
 
@@ -449,6 +453,7 @@ class verifyString implements verifyStringInterface
 		}
 	}
 }
+
 
 // Auto instantiate the class.
 $vfystr = new verifyString();

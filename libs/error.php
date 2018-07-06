@@ -1,6 +1,8 @@
 <?php
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application Error Handling Library
 
@@ -8,8 +10,8 @@ Error messages are collected into an array as they are
 encountered.  Then they are pulled out and sent to
 the user.
 
-
 */
+
 
 interface handleErrorsInterface
 {
@@ -34,6 +36,7 @@ interface handleErrorsInterface
 	public function puterrmsg($message);
 
 }
+
 
 class handleErrors implements handleErrorsInterface
 {
@@ -76,7 +79,8 @@ class handleErrors implements handleErrorsInterface
 		{
 			foreach($this->errmsg as $kx => $vx)
 			{
-				$str .= $vx['msg'] . $this->lnterm;
+				if ($vx['field'] != '') $str .= $vx['field'] . ': ';
+				$str .=  $vx['message'] . $this->lnterm;
 			}
 		}
 		return $str;
@@ -111,7 +115,7 @@ class handleErrors implements handleErrorsInterface
 				'value'		=> $value,
 			)
 		);
-		if ($state != errorHandling::ESOK) $this->status = true;
+		if ($state != handleErrors::ESOK) $this->status = true;
 	}
 
 	// Adds an error message with default values.
@@ -131,6 +135,7 @@ class handleErrors implements handleErrorsInterface
 		$this->status = true;
 	}
 }
+
 
 // Auto instantiate the class
 $herr = new handleErrors();

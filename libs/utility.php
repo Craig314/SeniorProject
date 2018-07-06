@@ -1,6 +1,8 @@
 <?php
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application Utility Routine Library
 
@@ -9,6 +11,7 @@ perform generic tasks designed to make things easier.  Note that these
 routines are not encapsulated by any object oriented overhead.
 
 */
+
 
 // An enhanced version of isset.
 // Returns true if a variable is set, not null, and not empty.
@@ -35,12 +38,19 @@ function nts_to_str($str)
 	return $result;
 }
 
-// Prints an error message and terminates.
+// Prints an error message and terminates execution.
 // Does not return.
 function printErrorImmediate($message)
 {
-	echo $message;
+	echo $message . "\n";
 	exit(1);
 }
+
+// Prints an error message and continues execution.
+function printErrorContinue($message)
+{
+	echo $message . "\n";
+}
+
 
 ?>

@@ -1,6 +1,8 @@
 <?php
-
 /*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
 PHP Web Application Session Handling Library
 
@@ -8,24 +10,26 @@ This library contains session functions that make the application more secure.
 
 */
 
+
 require_once 'confload.php';
 require_once 'utility.php';
 
 
 interface sessionInterface
 {
-	public function start($userName, $userId, $profileId, $loginStatus);
+	public function start();
 	public function regenerateId();
 	public function validate();
 	public function restart();
 }
+
 
 class session implements sessionInterface
 {
 	// Configures a new session and stores various values in
 	// the $_SESSION variable to authenticate the user.
 	// This should only be called on successful login.
-	public function start($userName, $userId, $profileId, $loginStatus)
+	public function start()
 	{
 		global $CONFIGVAR;
 
@@ -44,10 +48,6 @@ class session implements sessionInterface
 		if (!$result) printErrorImmediate('Security Error: Set Cookie Failed');
 		
 		// These are to ensure the user is logged into the system.
-		$_SESSION['loginStatus'] = $loginStatus;
-		$_SESSION['userName'] = $userName;
-		$_SESSION['userId'] = $userId;
-		$_SESSION['profileId'] = $profileId;
 
 		// These are needed to verify that the user's session has
 		// not been hijacked.
@@ -143,7 +143,9 @@ class session implements sessionInterface
 
 }
 
+
 // Automatically instantiate the class
 $session = new session();
+
 
 ?>

@@ -1,9 +1,15 @@
 /*
 
+SEA-CORE International Ltd.
+SEA-CORE Development Group
+
+Periodic Heartbeat
+
 Initiates periodic communication with the server to keep the
 session alive.
 
 */
+
 
 var timer_heartbeat;
 var timer_initial = window.setTimeout(heartbeatBootstrap(), 60000);
@@ -20,4 +26,3 @@ function heartbeatTimer() {
 	if (typeof ajaxServerCommand.heartbeat !== 'function') return;
 	ajaxServerCommand.heartbeat();
 }
-

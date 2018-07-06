@@ -1,7 +1,12 @@
+/*
 
+SEA-CORE International Ltd.
+SEA-CORE Development Group
 
-// JavaScript file for the page header default functionality.
-// This is in jQuery.
+JavaScript file for the page header default functionality.
+This is in jQuery.
+
+*/
 
 
 // Logout Function
@@ -69,4 +74,3 @@ function windowResize() {
 	var content_height = window_height - (header_height + funbar_height + 2);
 	$(".main-wrapper-div").height(content_height - 30);
 }
-
