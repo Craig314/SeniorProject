@@ -87,12 +87,12 @@ function dbaseTableUsers($userid, $profid, $username)
 	$result = $dbuser->queryUsers($username);
 	if ($result != false && is_array($result))
 	{
-		$result = $dbuser->updateUsers($username, $userid, $profid);
+		$result = $dbuser->updateUsers($username, $userid, $profid, 0);
 		if ($result == false) printErrorImmediate('');
 	}
 	else
 	{
-		$result = $dbuser->insertUsers($username, $userid, $profid);
+		$result = $dbuser->insertUsers($username, $userid, $profid, 0);
 		if ($result == false) printErrorImmediate('');
 	}
 }
@@ -108,12 +108,12 @@ function dbaseTableContact($userid)
 	$result = $dbuser->queryContact($userid);
 	if ($result != false && is_array($result))
 	{
-		$result = $dbuser->updateContact($userid, $name, $address, $email, '', '', '');
+		$result = $dbuser->updateContact($userid, 0, $name, $address, $email, '', '', '');
 		if ($result == false) printErrorImmediate('Contact table update record failed.');
 	}
 	else
 	{
-		$result = $dbuser->insertContact($userid, $name, $address, $email, '', '', '');
+		$result = $dbuser->insertContact($userid, 0, $name, $address, $email, '', '', '');
 		if ($result == false) printErrorImmediate('Contact table insert record failed.');
 	}
 }

@@ -45,7 +45,7 @@ $baseUrl = html::getBaseURL();
 $userMax = $CONFIGVAR['security_username_maxlen']['value'];
 $passMax = $CONFIGVAR['security_passwd_maxlen']['value'];
 
-
+processSharedMemoryReload();
 
 // Verify that we are on the correct port using the
 // correct protocol.
@@ -63,10 +63,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
 			loginShowNative(false, $modeOption);
 			break;
 		case 1:
-			loginShowOption(false);
-			loginShowNative(true, $modeOption);
-			loginShowOAuth(true);
-			loginShowOpenID(true);
+			if ($CONFIGVAR['oauth_enable']['value'] == 0 &&
+				$CONFIGVAR['openid_enable']['value'] == 0)
+			{
+				loginShowNative(false, 0);
+			}
+			else
+			{
+				loginShowOption(false);
+				loginShowNative(true, $modeOption);
+				if ($CONFIGVAR['oauth_enable']['value'] == 0) loginShowOAuth(true);
+				if ($CONFIGVAR['openid_enable']['value'] == 0) loginShowOpenID(true);
+			}
 			break;
 		default:
 			loginShowNative(false, $modeOption);
@@ -266,7 +274,7 @@ function native_login()
 	}
 
 	// The user has successfully logged in. Now we load in their contact info.
-	$rxa_contact = $dbuser->queryContact($userid);
+	$rxa_contact = $dbuser->queryContact($userid, 0);
 	if ($rxa_contact == false)
 		error_exit('Stored Data Conflict<br>Contact Your Administrator<br>XX29174');
 
@@ -378,6 +386,10 @@ function loginShowOption($hidden)
 							</div>
 						</div>
 					</div>
+<?php
+	if ($CONFIGVAR['oauth_enable']['value'] != 0)
+	{
+?>
 					<div class="row">
 						<div class="button">
 							<div class="form-group">
@@ -387,6 +399,11 @@ function loginShowOption($hidden)
 							</div>
 						</div>
 					</div>
+<?php
+	}
+	if ($CONFIGVAR['openid_enable']['value'] != 0)
+	{
+?>
 					<div class="row">
 						<div class="button">
 							<div class="form-group">
@@ -396,6 +413,9 @@ function loginShowOption($hidden)
 							</div>
 						</div>
 					</div>
+<?php
+	}
+?>
 				</form>
 			</div>
 		</div>

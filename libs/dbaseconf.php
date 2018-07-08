@@ -52,6 +52,17 @@ interface database_config_interface
 	public function insertModaccess($profid, $modid);
 	public function deleteModaccess($profid, $modid);
 
+	// Table: oauth
+	public function queryOAuth($provider);
+	public function queryOAuthAll($provider);
+	public function updateOAuth($provider, $module, $expire, $clid,
+		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
+		$resurl2, $resurl3, $resurl4);
+	public function insertOAuth($provider, $module, $expire, $clid,
+		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
+		$resurl2, $resurl3, $resurl4);
+	public function deleteOAuth($provider);
+
 	// Table: profile
 	public function queryProfile($profid);
 	public function queryProfileAll();
@@ -66,6 +77,7 @@ class database_config implements database_config_interface
 {
 
 	private $tablebase = 'configuration';
+
 
 
 	/* ******** CONFIGURATION TABLE ******** */
@@ -150,6 +162,7 @@ class database_config implements database_config_interface
 		$table = $this->tablebase . '.config';
 		return($dbcore->launchDeleteSingle($table, 'setting', $setting, databaseCore::PTINT));
 	}
+
 
 
 	/* ******** FLAGDESC_APP TABLE ******** */
@@ -257,6 +270,8 @@ class database_config implements database_config_interface
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
+
+
 	// Deletes the specified flag from the database.
 	public function deleteFlagdescCore($flag)
 	{
@@ -355,6 +370,8 @@ class database_config implements database_config_interface
 		return($dbcore->launchDeleteSingle($table, 'moduleid', $modid, databaseCore::PTINT));
 	}
 
+
+
 	/* ******** MODACCESS TABLE ******** */
 
 	/* The modaccess table maps which user profiles have access to
@@ -404,6 +421,86 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
 		return($dbcore->launchDeleteMultiple($table, $qxa));
 	}
+
+
+
+	/* ******** OAUTH TABLE ******** */
+
+	/* The OAuth table provides information about OAuth providers and
+	   how to communicate with them.  */
+
+	// Queries a specific provider.
+	public function queryOAuth($provider)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$column = '*';
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTSTR);
+		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	// Queries all providers.
+	public function queryOAuthAll($provider)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$column = 'provider,module,expire,clientid,authtype';
+		return($dbcore->launchQueryDumpTable($table, $column));
+	}
+
+	// Updates the data associated with the specified OAuth provider.
+	public function updateOAuth($provider, $module, $expire, $clid,
+		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
+		$resurl2, $resurl3, $resurl4)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('module', $module, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('clientid', $clid, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('clientsecret', $clsecret, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('authtype', $authtype, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('authurl', $authurl, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('redirecturl', $redirecturl, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('resourceurl1', $resurl1, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('resourceurl2', $resurl2, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('resourceurl3', $resurl3, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('resourceurl4', $resurl4, databaseCore::PTSTR, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'provider', $provier, databaseCore::PTSTR, $qxa));
+	}
+
+	// Inserts a new OAuth provider in the database.
+	public function insertOAuth($provider, $module, $expire, $clid,
+		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
+		$resurl2, $resurl3, $resurl4)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('module', $module, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('clientid', $clid, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('clientsecret', $clsecret, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('authtype', $authtype, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('authurl', $authurl, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('redirecturl', $redirecturl, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('resourceurl1', $resurl1, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('resourceurl2', $resurl2, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('resourceurl3', $resurl3, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('resourceurl4', $resurl4, databaseCore::PTSTR, $qxa);
+		return($dbcore->launchInsert($table, $rxa));
+	}
+
+	// Removes an OAuth provider from the database.
+	public function deleteOAuth($provider)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		return($dbcore->lauchDeleteSingle($table, 'provider', $provider, databaseCore::PTSTR));
+	}
+
 
 
 	/* ******** PROFILE TABLE ******** */

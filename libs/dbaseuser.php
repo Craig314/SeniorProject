@@ -15,10 +15,12 @@ require_once 'database.php';
 interface database_userdata_interface
 {
 	// Table: contact
-	public function queryContact($userid);
-	public function updateContact($userid, $name, $address, $email, $hphone, $wphone, $cphone);
-	public function insertContact($userid, $name, $address, $email, $hphone, $wphone, $cphone);
-	public function deleteContact($userid);
+	public function queryContact($userid, $method);
+	public function updateContact($userid, $method, $name, $address, $email,
+		$hphone, $wphone, $cphone);
+	public function insertContact($userid, $method, $name, $address, $email,
+		$hphone, $wphone, $cphone);
+	public function deleteContact($userid, $method);
 
 	// Table: login
 	public function queryLogin($userid);
@@ -36,8 +38,8 @@ interface database_userdata_interface
 	// Table: users
 	public function queryUsers($username);
 	public function queryUsersAll();
-	public function updateUsers($username, $userid, $profid);
-	public function insertUsers($username, $userid, $profid);
+	public function updateUsers($username, $userid, $profid, $method);
+	public function insertUsers($username, $userid, $profid, $method);
 	public function deleteUsers($username);
 }
 
@@ -56,7 +58,7 @@ class database_user implements database_userdata_interface
 	   name, last name, etc... */
 
 	// Returns the contact information for the specified user ID.
-	public function queryContact($userid)
+	public function queryContact($userid, $method)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
@@ -66,25 +68,30 @@ class database_user implements database_userdata_interface
 	}
 
 	// Updates the contact information for the specified user ID.
-	public function updateContact($userid, $name, $address, $email, $hphone, $wphone, $cphone)
+	public function updateContact($userid, $method, $name, $address, $email,
+		$hphone, $wphone, $cphone)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
+		$qxk = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
+		$qxk = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxk);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('address', $address, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('email', $email, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('hphone', $hphone, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('cphone', $cphone, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('wphone', $wphone, databaseCore::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateMultiple($table, $qxk, $qxa));
 	}
 
 	// Inserts new contact information.
-	public function insertContact($userid, $name, $address, $email, $hphone, $wphone, $cphone)
+	public function insertContact($userid, $method, $name, $address, $email,
+		$hphone, $wphone, $cphone)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
 		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('address', $address, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('email', $email, databaseCore::PTSTR, $qxa);
@@ -95,11 +102,13 @@ class database_user implements database_userdata_interface
 	}
 
 	// Deletes the contact information for the specified user ID.
-	public function deleteContact($userid)
+	public function deleteContact($userid, $method)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
-		return($dbcore->launchDeleteSingle($table, 'userid', $userid, databaseCore::PTINT));
+		$qxk = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
+		$qxk = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxk);
+		return($dbcore->launchDeleteSingle($table, $qxk));
 	}
 
 
@@ -245,23 +254,25 @@ class database_user implements database_userdata_interface
 	}
 
 	// Updates the users table for the specified username.
-	public function updateUsers($username, $userid, $profid)
+	public function updateUsers($username, $userid, $profid, $method)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.users';
 		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'username', $username, databaseCore::PTSTR, $qxa));
 	}	
 
 	// Inserts a user.
-	public function insertUsers($username, $userid, $profid)
+	public function insertUsers($username, $userid, $profid, $method)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.users';
 		$qxa = $dbcore->buildArray('username', $username, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}	
 
