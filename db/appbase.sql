@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`setting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains configuration information about the application.\r\nThe following numerical ranges are defined:\r\n0-9  Server\r\n10-19 HTML\r\n20-29 SSL\r\n30-49 Security\r\n50-59 Session\r\n60-69 Time/Timezone\r\n70-79 Account/Profile\r\n1000+ Application Specific';
 
--- Dumping data for table configuration.config: ~36 rows (approximately)
+-- Dumping data for table configuration.config: ~38 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
 	(0, 0, 'server_document_root', 'Appliation Root Directory', '/Servers/webdocs', 'This sets the application root directory on the server.', 1),
@@ -66,7 +66,9 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(70, 1, 'account_id_vendor', 'Vendor Account ID', '-1', 'The account ID number of the vendor account.', 0),
 	(71, 1, 'account_id_admin', 'Admin Account ID', '-2', 'The account ID number of the administrator account.', 0),
 	(72, 1, 'profile_id_vendor', 'Vendor Profile ID', '-1', 'The profile ID number of the vendor account.', 0),
-	(73, 1, 'profile_id_admin', 'Admin Profile ID', '-2', 'The profile ID number of the administrator account.', 0);
+	(73, 1, 'profile_id_admin', 'Admin Profile ID', '-2', 'The profile ID number of the administrator account.', 0),
+	(80, 2, 'oauth_enable', 'OAuth Login Enabled', '0', 'Specifies whether OAuth is a login method.', 1),
+	(90, 2, 'openid_enable', 'OpenID Login Enabled', '0', 'Specifies whether OpenID is a login method.', 1);
 /*!40000 ALTER TABLE `config` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.flagdesc_app
@@ -125,6 +127,38 @@ CREATE TABLE IF NOT EXISTS `module` (
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 
+-- Dumping structure for table configuration.oauth
+CREATE TABLE IF NOT EXISTS `oauth` (
+  `provider` varchar(32) NOT NULL COMMENT 'Key Field: The OAuth provider',
+  `module` varchar(32) NOT NULL COMMENT 'The OAuth API module in the OAuth directory to use.',
+  `expire` bigint(20) unsigned NOT NULL COMMENT 'The default expire time if it is not given in the token.',
+  `clientid` varchar(32) NOT NULL COMMENT 'The Client ID of this application that is given by the provider.',
+  `clientsecret` varchar(64) DEFAULT NULL COMMENT 'The Client Secret that is supplied by the provider.',
+  `scope` varchar(256) NOT NULL COMMENT 'The scope of the request.',
+  `authtype` varchar(16) NOT NULL COMMENT 'The type of authorization requested.',
+  `authurl` varchar(512) NOT NULL COMMENT 'The URL that the application will redirect the client to when logging in.',
+  `redirecturl` varchar(512) NOT NULL COMMENT 'The URL that the provider redirects to when the user logs in and authorizes this application to access their data.',
+  `resourceurl1` varchar(512) NOT NULL COMMENT 'The resource URL that the application uses to access the provider''s APIs.',
+  `resourceurl2` varchar(512) DEFAULT NULL COMMENT 'The resource URL that the application uses to access the provider\\\\\\\\',
+  `resourceurl3` varchar(512) DEFAULT NULL COMMENT 'The resource URL that the application uses to access the provider\\\\\\\\',
+  `resourceurl4` varchar(512) DEFAULT NULL COMMENT 'The resource URL that the application uses to access the provider\\\\\\\\',
+  PRIMARY KEY (`provider`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains OAuth information about this client';
+
+-- Dumping data for table configuration.oauth: ~0 rows (approximately)
+/*!40000 ALTER TABLE `oauth` DISABLE KEYS */;
+/*!40000 ALTER TABLE `oauth` ENABLE KEYS */;
+
+-- Dumping structure for table configuration.openid
+CREATE TABLE IF NOT EXISTS `openid` (
+  `provider` varchar(32) NOT NULL COMMENT 'Key Field: The OpenID provider.',
+  PRIMARY KEY (`provider`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This hold information on each provider for the OpenID login protocol.';
+
+-- Dumping data for table configuration.openid: ~0 rows (approximately)
+/*!40000 ALTER TABLE `openid` DISABLE KEYS */;
+/*!40000 ALTER TABLE `openid` ENABLE KEYS */;
+
 -- Dumping structure for table configuration.profile
 CREATE TABLE IF NOT EXISTS `profile` (
   `profileid` int(10) NOT NULL COMMENT 'The unique profile ID',
@@ -153,21 +187,21 @@ USE `userdata`;
 -- Dumping structure for table userdata.contact
 CREATE TABLE IF NOT EXISTS `contact` (
   `userid` int(11) NOT NULL COMMENT 'The numeric user ID from the users table.',
+  `method` int(11) NOT NULL COMMENT 'The type of user ID (0: native, 1: OAuth, 2: OpenID)',
   `name` varchar(50) DEFAULT NULL COMMENT 'The name of the user.',
   `address` varchar(100) DEFAULT NULL COMMENT 'The user''s home address.',
   `email` varchar(50) DEFAULT NULL COMMENT 'The user''s email address.',
   `hphone` varchar(30) DEFAULT NULL COMMENT 'Home phone number',
   `cphone` varchar(30) DEFAULT NULL COMMENT 'Mobile phone number',
   `wphone` varchar(30) DEFAULT NULL COMMENT 'Work phone number',
-  PRIMARY KEY (`userid`),
-  CONSTRAINT `FK_contact_login` FOREIGN KEY (`userid`) REFERENCES `login` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
+  PRIMARY KEY (`userid`,`method`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the user contact information.';
 
 -- Dumping data for table userdata.contact: ~2 rows (approximately)
 /*!40000 ALTER TABLE `contact` DISABLE KEYS */;
-INSERT INTO `contact` (`userid`, `name`, `address`, `email`, `hphone`, `cphone`, `wphone`) VALUES
-	(-2, 'Application Admin', 'SEA-CORE International LTD.', 'seacoregroup@gmail.com', '', '', ''),
-	(-1, 'Application Vendor', 'SEA-CORE International LTD.', 'seacoregroup@gmail.com', '', '', '');
+INSERT INTO `contact` (`userid`, `method`, `name`, `address`, `email`, `hphone`, `cphone`, `wphone`) VALUES
+	(-2, 0, 'Application Admin', 'SEA-CORE International LTD.', 'seacoregroup@gmail.com', '', '', ''),
+	(-1, 0, 'Application Vendor', 'SEA-CORE International LTD.', 'seacoregroup@gmail.com', '', '', '');
 /*!40000 ALTER TABLE `contact` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.login
@@ -190,27 +224,59 @@ CREATE TABLE IF NOT EXISTS `login` (
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `active`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
 	(-2, 1, 0, 0, -1, 0, -1, 'SHA256', 100, 'fa5e2b860bf98843ee48d897b75eab462a678614c0e5a504f384d745405dff09', 'cd9ce68a11ecfe09b55edcc1a34c9ac580ba97c10a2f13f4c57717b54dcd86a5'),
-	(-1, 1, 0, 1530778102, 1530852195, 0, -1, 'SHA256', 100, 'e85fd8fd956ca25b28488c20969a87ec87b851a1c8e40634577e5570d31dc7e8', '89b8ab210266813d474d8920651627ad37765ea0199aeea175c2d13bcb029311');
+	(-1, 1, 0, 1530778102, 1530977988, 0, -1, 'SHA256', 100, 'e85fd8fd956ca25b28488c20969a87ec87b851a1c8e40634577e5570d31dc7e8', '89b8ab210266813d474d8920651627ad37765ea0199aeea175c2d13bcb029311');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
+
+-- Dumping structure for table userdata.oauth
+CREATE TABLE IF NOT EXISTS `oauth` (
+  `userid` int(11) NOT NULL COMMENT 'The numerical user ID from the users table.',
+  `state` varchar(16) NOT NULL COMMENT 'Random set of bytes for the connection.',
+  `provider` varchar(32) NOT NULL COMMENT 'The OAuth provider identifier.',
+  `token` varchar(32) NOT NULL COMMENT 'The OAuth token.',
+  `tokentype` varchar(32) NOT NULL COMMENT 'The OAuth token type.',
+  `issue` bigint(20) NOT NULL COMMENT 'The time that the OAuth token was issued.',
+  `expire` bigint(20) NOT NULL COMMENT 'The time that the OAuth token will expire.',
+  `refresh` varchar(50) NOT NULL,
+  `scope` varchar(256) NOT NULL COMMENT 'The allowed access scope that the user permits to their information.',
+  PRIMARY KEY (`userid`),
+  KEY `FK_oauth_configuration.oauth` (`provider`),
+  KEY `state` (`state`),
+  CONSTRAINT `FK_oauth_configuration.oauth` FOREIGN KEY (`provider`) REFERENCES `configuration`.`oauth` (`provider`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains per-user OAuth data.';
+
+-- Dumping data for table userdata.oauth: ~0 rows (approximately)
+/*!40000 ALTER TABLE `oauth` DISABLE KEYS */;
+/*!40000 ALTER TABLE `oauth` ENABLE KEYS */;
+
+-- Dumping structure for table userdata.openid
+CREATE TABLE IF NOT EXISTS `openid` (
+  `userid` int(11) NOT NULL,
+  `provider` varchar(32) NOT NULL,
+  PRIMARY KEY (`userid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Holds OpenID information for the user.';
+
+-- Dumping data for table userdata.openid: ~0 rows (approximately)
+/*!40000 ALTER TABLE `openid` DISABLE KEYS */;
+/*!40000 ALTER TABLE `openid` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.users
 CREATE TABLE IF NOT EXISTS `users` (
   `username` varchar(32) NOT NULL COMMENT 'The name that the user logs in with.',
-  `userid` int(11) NOT NULL COMMENT 'The numeric user ID.',
+  `userid` int(11) NOT NULL DEFAULT '0' COMMENT 'The numeric user ID.',
   `profileid` int(11) NOT NULL COMMENT 'The numeric profile ID.',
+  `method` int(11) NOT NULL DEFAULT '0' COMMENT 'The login method.  0: native, 1: OAuth, 2: OpenID',
   PRIMARY KEY (`username`),
   KEY `username` (`username`),
   KEY `FK_users_login` (`userid`),
   KEY `FK_users_profile` (`profileid`),
-  CONSTRAINT `FK_users_login` FOREIGN KEY (`userid`) REFERENCES `login` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_users_profile` FOREIGN KEY (`profileid`) REFERENCES `configuration`.`profile` (`profileid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table maps the user''s login name to their User ID and Profile ID.';
 
 -- Dumping data for table userdata.users: ~2 rows (approximately)
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` (`username`, `userid`, `profileid`) VALUES
-	('admin', -2, -2),
-	('vendor', -1, -1);
+INSERT INTO `users` (`username`, `userid`, `profileid`, `method`) VALUES
+	('admin', -2, -2, 0),
+	('vendor', -1, -1, 0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
