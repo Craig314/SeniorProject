@@ -85,7 +85,7 @@ function loadInitialContent()
 
 		//loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
-		loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
+		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
 			$left, '', '', '', '', '', '');
 	}
 	else
@@ -116,7 +116,7 @@ function loadAdditionalContent()
 Module Template<br>
 Additional HTML Content Here
 <?php
-	exit;
+	exit(0);
 }
 
 // Called when the initial command processor doesn't have the

@@ -39,6 +39,10 @@ Notes:
 
 This restarts the session so the $_SESSION superglobal array can be accessed.
 
+AJAX cannot be used in this file since AJAX requires the initial page to load
+first which has not happened yet when this file executes.  That is why we are
+using html static methods for redirect and internal error message displays.
+
 */
 
 
@@ -59,6 +63,23 @@ $moduleData = NULL;
 // Restart the session.
 $session->restart();
 
+// Sends an error message to the client.  Does not clear forms.
+function handleError($message)
+{
+	global $ajax;
+
+	$ajax->sendCommand(ajaxClass::CMD_ERRDISP, $message);
+	exit(1);
+}
+
+// Sends an error message to the client.  Does clear forms.
+function handleErrorClear($message)
+{
+	global $ajax;
+
+	$ajax->sendCommand(ajaxClass::CMD_ERRCLRDISP, $message);
+	exit(1);
+}
 
 // This functions checks to make sure that the request is
 // appoperite for the user making the request. If the
@@ -70,26 +91,23 @@ function checkUserSecurity()
 	global $CONFIGVAR;
 	global $moduleId;
 	global $moduleData;
+	global $vendor;
+	global $admin;
 
-	// Check user credentials
-	if ($account->checkCredentials() == false) redirectLogin();
+	// The vendor account always has access.
+	if ($vendor != 0) return;
 
-	// Check for banner page
-	if ($_SESSION['banner'] != true) redirectBanner();
+	// If only the vendor account has access and we get to this
+	// point, then the user is not on the vendor account.
+	if ($moduleData['vendor'] != 0) redirectPortal();
+
+	// The admin account has access to everything that is not vendor
+	// only.  So check for the admin account.
+	if ($admin != 0) return;
 
 	// Check if all users have access.  If all users do have access,
 	// then don't bother with the rest of the checks.
 	if ($moduleData['allusers'] == 1) return;
-
-	// Check vendor only access.  If the admin cannot access the
-	// module, then only then vendor can.
-	if ($moduleId['admin'] == 0)
-	{
-		if (!$account->checkAccountVendor()) redirectPortal();
-	}
-
-	// Check if this is the admin account.
-	if ($account->checkAccountAdmin()) return;
 
 	// Now check if the user has access according to their profile.
 	if ($dbconf->queryModaccess($module_id, $_SESSION['profileId']) == false)
@@ -100,9 +118,20 @@ function checkUserSecurity()
 // their portal page as defined in their profile.
 function redirectPortal()
 {
+	global $CONFIGVAR;
+	global $dbconf;
+	global $herr;
+
+	exit;
 	$rxq = $dbconf->queryProfile($_SESSION['profileId']);
-	if ($rxq == false) printErrorImmediate('Database Error: Unable to get profile information');
-	if ($rxq[''] == 1)
+	if ($rxq == false)
+	{
+		if ($herr->checkState())
+			printErrorImmediate($herr->errorGetMessage());
+		else
+			printErrorImmediate('Database Error: Unable to get profile information');
+	}
+	if ($rxq['portal'] == 1)
 		html::redirect('/modules/' . $CONFIGVAR['html_linkportal_page']['value']);
 	else
 		html::redirect('/modules/' . $CONFIGVAR['html_gridportal_page']['value']);
@@ -113,6 +142,9 @@ function redirectPortal()
 // the banner page.
 function redirectBanner()
 {
+	global $CONFIGVAR;
+
+	exit;
 	html::redirect('/' . $CONFIGVAR['html_banner_page']['value']);
 	exit;
 }
@@ -121,6 +153,9 @@ function redirectBanner()
 // the login page.
 function redirectLogin()
 {
+	global $CONFIGVAR;
+
+	exit;
 	html::redirect('/' . $CONFIGVAR['html_login_page']['value']);
 	exit;
 }
@@ -133,13 +168,36 @@ if (!isset($moduleTitle) || empty($moduleTitle))
 if (!isset($moduleFilename) || empty($moduleFilename))
 	printErrorImmediate('Internal Error: Module Filename is not set.');
 
-// Loads the module data for this module.
-$moduleData = $dbconf->queryModule($moduleId);
-if ($moduleData === false) printErrorImmediate('Module database query failed.');
+// Check to make sure that the user is logged in.
+if ($account->checkCredentials() == false) redirectLogin();
 
-// We need to make sure that the user has access.
-// This function does not return if this check fails.
-checkUserSecurity();
+// Check to make sure that the user has seen the banner page.
+if ($_SESSION['banner'] != true) redirectBanner();
+
+// Set flags indicating that the logged in user is on a
+// special account.
+$admin = $account->checkAccountAdmin();
+$vendor = $account->checkAccountVendor();
+$special = $account->checkAccountSpecial();
+
+// Loads the module data for this module, unless it is one of the
+// portals, then there is no data in the database.
+if ($moduleId != $CONFIGVAR['html_grid_mod_id']['value'] &&
+	$moduleId != $CONFIGVAR['html_link_mod_id']['value'])
+{
+	$moduleData = $dbconf->queryModule($moduleId);
+	if ($moduleData === false)
+	{
+		if ($herr->checkState())
+			printErrorImmediate($herr->errorGetMessage());
+		else
+			printErrorImmediate('Module database query failed.');
+	}
+
+	// We need to make sure that the user has access.
+	// This function does not return if this check fails.
+	checkUserSecurity();
+}
 
 // Sets the base URL
 $baseUrl = html::getBaseURL();
@@ -185,7 +243,7 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 				setcookie(session_name(), '', time() - 42000, $cookie['path'],
 				$cookie['domain'], $cookie['secure'], $cookie['httponly']);
 				session_destroy();
-				$ajax->redirect($CONFIGVAR['html_login_page']['value']);
+				$ajax->redirect('/' . $CONFIGVAR['html_login_page']['value']);
 				exit(0);
 				break;
 			case -4:      // HOME

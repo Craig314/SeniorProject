@@ -33,9 +33,9 @@ class account implements accountInterface
 	{
 		global $CONFIGVAR;
 
-		$userId = $_SESSION['user_id'];
-		if ($userId == $CONFIGVAR['user_id_vendor']['value']) return true;
-		if ($userId == $CONFIGVAR['user_id_admin']['value']) return true;
+		$userId = $_SESSION['userId'];
+		if ($userId == $CONFIGVAR['account_id_vendor']['value']) return true;
+		if ($userId == $CONFIGVAR['account_id_admin']['value']) return true;
 		return false;
 	}
 
@@ -47,7 +47,7 @@ class account implements accountInterface
 	{
 		global $CONFIGVAR;
 
-		$profId = $_SESSION['profile_id'];
+		$profId = $_SESSION['profileId'];
 		if ($profId == $CONFIGVAR['profile_id_vendor']['value']) return true;
 		if ($profId == $CONFIGVAR['profile_id_admin']['value']) return true;
 		return false;
@@ -59,12 +59,12 @@ class account implements accountInterface
 	{
 		global $CONFIGVAR;
 
-	$userId = $_SESSION['user_id'];
-	$profId = $_SESSION['profile_id'];
-	if ($userId == $CONFIGVAR['user_id_vendor']['value']
-		&& $profId == $CONFIGVAR['profile_id_vendor']['value'])
-		return true;
-	return false;
+		$userId = $_SESSION['userId'];
+		$profId = $_SESSION['profileId'];
+		if ($userId == $CONFIGVAR['account_id_vendor']['value']
+			&& $profId == $CONFIGVAR['profile_id_vendor']['value'])
+			return true;
+		return false;
 	}
 
 	// Checks to see if the current user is the admin account.
@@ -74,9 +74,9 @@ class account implements accountInterface
 	{
 		global $CONFIGVAR;
 
-		$userId = $_SESSION['user_id'];
-		$profId = $_SESSION['profile_id'];
-		if ($userId == $CONFIGVAR['user_id_admin']['value']
+		$userId = $_SESSION['userId'];
+		$profId = $_SESSION['profileId'];
+		if ($userId == $CONFIGVAR['account_id_admin']['value']
 			&& $profId == $CONFIGVAR['profile_id_admin']['value'])
 			return true;
 		return false;
@@ -114,16 +114,15 @@ class account implements accountInterface
 		if (isset($_SESSION))
 		{
 			// Check Login Status
-			if (isset($_SESSION['loginStatus']))
+			if (isset($_SESSION['login']))
 			{
-				if ($_SESSION['loginStatus'] != true) return false;
+				if ($_SESSION['login'] != true) return false;
 			}
 			else return false;
-
 			// Check for userName
-			if (isset($_SESSION['userName']))
+			if (isset($_SESSION['nameUser']))
 			{
-				if ($_SESSION['userName'] === false) return false;
+				if ($_SESSION['nameUser'] === false) return false;
 			}
 			else return false;
 

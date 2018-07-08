@@ -23,14 +23,15 @@ from a web server.
 // Command Line Program
 const COMMAND_LINE_PROGRAM = true;
 
-require_once '../libs/utility.php';
-require_once '../libs/confload.php';
-require_once '../libs/dbaseuser.php';
-require_once '../libs/password.php';
+const DIR = '../libs/';
+require_once DIR . 'utility.php';
+require_once DIR . 'confload.php';
+require_once DIR . 'dbaseuser.php';
+require_once DIR . 'password.php';
 
 // Configuration Settings
 const ACCOUNT_NAME = 'vendor';	// Must be either "vendor" or "admin" (case sensitive)
-const PROFILE_NAME = 'Vendor';  // Must be either "Vendor" or "Admin" (case sensitive)
+const PROFILE_NAME = 'Vendor';	// Must be either "Vendor" or "Admin" (case sensitive)
 
 
 
@@ -62,7 +63,7 @@ function dbaseTableLogin($userid, $passwd)
 	$hexpass = NULL;
 	$digest = NULL;
 	$count = $CONFIGVAR['security_hash_rounds']['value'];
-	$password->encryptNew($passwd, $hexsalt, $hexpass, $digest, $count);
+	password::encryptNew($passwd, $hexsalt, $hexpass, $digest, $count);
 
 	$result = $dbuser->queryLogin($userid);
 
@@ -105,7 +106,7 @@ function dbaseTableContact($userid)
 	$address = 'SEA-CORE International LTD.';
 	$email = 'seacoregroup@gmail.com';
 
-	$result = $dbuser->queryContact($userid);
+	$result = $dbuser->queryContact($userid, 0);
 	if ($result != false && is_array($result))
 	{
 		$result = $dbuser->updateContact($userid, 0, $name, $address, $email, '', '', '');

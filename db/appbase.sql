@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`setting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains configuration information about the application.\r\nThe following numerical ranges are defined:\r\n0-9  Server\r\n10-19 HTML\r\n20-29 SSL\r\n30-49 Security\r\n50-59 Session\r\n60-69 Time/Timezone\r\n70-79 Account/Profile\r\n1000+ Application Specific';
 
--- Dumping data for table configuration.config: ~38 rows (approximately)
+-- Dumping data for table configuration.config: ~40 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
 	(0, 0, 'server_document_root', 'Appliation Root Directory', '/Servers/webdocs', 'This sets the application root directory on the server.', 1),
@@ -42,6 +42,8 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(13, 0, 'html_banner_page', 'Application Banner Page', 'banner.php', 'The page that is displayed right after the user is authenticated on the main login page.', 0),
 	(14, 0, 'html_gridportal_page', 'Application Grid Portal Page', 'gridportal.php', 'The grid portal page.  This shows the available modules in grid format.', 0),
 	(15, 0, 'html_linkportal_page', 'Application Link Portal Page', 'linkportal.php', 'The link portal page.  This shows the available modules in link format.', 0),
+	(16, 1, 'html_grid_mod_id', 'Application Grid Portal Module ID', '1', 'The module ID for the grid portal page.', 0),
+	(17, 1, 'html_link_mod_id', 'Application Link Portal Module ID', '2', 'The module ID for the link portal page.', 0),
 	(20, 0, 'openssl_digests', 'OpenSSL Digests', 'SHA256 SHA1 RIPEMD160 MD5', 'A list of acceptable message digest algorithms which are used for password hashing.', 1),
 	(25, 0, 'login_banner_title', 'Login Banner Title', '! ! ! ! WARNING ! ! ! !\r\n', 'The banner title that is displayed when the user logs into the system.', 1),
 	(26, 0, 'login_banner_subtitle', 'Login Banner Subtitle', 'THIS IS A PRIVATE COMPUTER SYSTEM<br>\r\nUNAUTHORIZED ACCESS IS STRICTLY PROHIBITED\r\n', 'The banner subtitle that is displayed when the user logs into the system.', 1),
@@ -63,10 +65,10 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(52, 1, 'session_nonce_len', 'Session Nonce Length', '32', 'The length of the session nonce in bytes.', 0),
 	(53, 1, 'session_cookie_expire_time', 'Session Cookie Timeout', '600', 'The time in seconds before the client cookie expires on a per page basis.', 1),
 	(60, 10, 'timezone_default', 'Time Displacement From UTC', '-8:00', 'This sets the timezone displacement from UTC.', 1),
-	(70, 1, 'account_id_vendor', 'Vendor Account ID', '-1', 'The account ID number of the vendor account.', 0),
-	(71, 1, 'account_id_admin', 'Admin Account ID', '-2', 'The account ID number of the administrator account.', 0),
-	(72, 1, 'profile_id_vendor', 'Vendor Profile ID', '-1', 'The profile ID number of the vendor account.', 0),
-	(73, 1, 'profile_id_admin', 'Admin Profile ID', '-2', 'The profile ID number of the administrator account.', 0),
+	(70, 1, 'account_id_vendor', 'Vendor Account ID', '1', 'The account ID number of the vendor account.', 0),
+	(71, 1, 'account_id_admin', 'Admin Account ID', '2', 'The account ID number of the administrator account.', 0),
+	(72, 1, 'profile_id_vendor', 'Vendor Profile ID', '1', 'The profile ID number of the vendor account.', 0),
+	(73, 1, 'profile_id_admin', 'Admin Profile ID', '2', 'The profile ID number of the administrator account.', 0),
 	(80, 2, 'oauth_enable', 'OAuth Login Enabled', '0', 'Specifies whether OAuth is a login method.', 1),
 	(90, 2, 'openid_enable', 'OpenID Login Enabled', '0', 'Specifies whether OpenID is a login method.', 1);
 /*!40000 ALTER TABLE `config` ENABLE KEYS */;
@@ -123,8 +125,13 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~0 rows (approximately)
+-- Dumping data for table configuration.module: ~4 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
+INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
+	(2147483600, 'Testing Module 1', 'This module is used for testing purposes.', 'testmod.php', 'icon_gears', 1, 1, 0, 0),
+	(2147483601, 'Testing Module 2', 'This module is used for testing purposes.', 'testmod.php', 'icon_gears', 1, 0, 0, 1),
+	(2147483602, 'Testing Module 3', 'This module is used for testing purposes.', 'testmod.php', 'icon_gears', 0, 0, 0, 0),
+	(2147483603, 'Testing Module 4', 'This module is used for testing purposes.', 'testmod.php', 'icon_gears', 1, 0, 0, 0);
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.oauth
@@ -170,13 +177,12 @@ CREATE TABLE IF NOT EXISTS `profile` (
   PRIMARY KEY (`profileid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='All user accounts must be assigned one of the profiles which are defined in this table.';
 
--- Dumping data for table configuration.profile: ~4 rows (approximately)
+-- Dumping data for table configuration.profile: ~3 rows (approximately)
 /*!40000 ALTER TABLE `profile` DISABLE KEYS */;
 INSERT INTO `profile` (`profileid`, `name`, `description`, `portal`, `bitmap_core`, `bitmap_app`) VALUES
-	(-2, 'Admin', 'Profile for use only by the application admin.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
-	(-1, 'Vendor', 'Profile for use only by the application vendor.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
 	(0, 'NONE', NULL, 1, NULL, NULL),
-	(1, 'manager', NULL, 1, NULL, NULL);
+	(1, 'Vendor', 'Profile for use only by the application vendor.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
+	(2, 'Admin', 'Profile for use only by the application admin.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
 /*!40000 ALTER TABLE `profile` ENABLE KEYS */;
 
 
@@ -200,8 +206,8 @@ CREATE TABLE IF NOT EXISTS `contact` (
 -- Dumping data for table userdata.contact: ~2 rows (approximately)
 /*!40000 ALTER TABLE `contact` DISABLE KEYS */;
 INSERT INTO `contact` (`userid`, `method`, `name`, `address`, `email`, `hphone`, `cphone`, `wphone`) VALUES
-	(-2, 0, 'Application Admin', 'SEA-CORE International LTD.', 'seacoregroup@gmail.com', '', '', ''),
-	(-1, 0, 'Application Vendor', 'SEA-CORE International LTD.', 'seacoregroup@gmail.com', '', '', '');
+	(1, 0, 'Application Vendor', 'SEA-CORE International LTD.', 'seacoregroup@gmail.com', '', '', ''),
+	(2, 0, 'Application Admin', 'SEA-CORE International LTD.', 'seacoregroup@gmail.com', '', '', '');
 /*!40000 ALTER TABLE `contact` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.login
@@ -223,8 +229,8 @@ CREATE TABLE IF NOT EXISTS `login` (
 -- Dumping data for table userdata.login: ~2 rows (approximately)
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `active`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
-	(-2, 1, 0, 0, -1, 0, -1, 'SHA256', 100, 'fa5e2b860bf98843ee48d897b75eab462a678614c0e5a504f384d745405dff09', 'cd9ce68a11ecfe09b55edcc1a34c9ac580ba97c10a2f13f4c57717b54dcd86a5'),
-	(-1, 1, 0, 1530778102, 1530977988, 0, -1, 'SHA256', 100, 'e85fd8fd956ca25b28488c20969a87ec87b851a1c8e40634577e5570d31dc7e8', '89b8ab210266813d474d8920651627ad37765ea0199aeea175c2d13bcb029311');
+	(1, 1, 0, 0, -1, 0, -1, 'SHA256', 100, '5166bc62b67e7012197588dc5cf2aeac919b5df0392648284998f8c07a3bb9a0', 'f9c4b6ac8d605c32b3843055da85622e662420978fb52d3d773fc15407f6be6c'),
+	(2, 1, 0, 0, -1, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.oauth
@@ -262,8 +268,8 @@ CREATE TABLE IF NOT EXISTS `openid` (
 -- Dumping structure for table userdata.users
 CREATE TABLE IF NOT EXISTS `users` (
   `username` varchar(32) NOT NULL COMMENT 'The name that the user logs in with.',
-  `userid` int(11) NOT NULL DEFAULT '0' COMMENT 'The numeric user ID.',
-  `profileid` int(11) NOT NULL COMMENT 'The numeric profile ID.',
+  `userid` int(11) NOT NULL COMMENT 'The numeric user ID.',
+  `profileid` int(11) NOT NULL DEFAULT '0' COMMENT 'The numeric profile ID.',
   `method` int(11) NOT NULL DEFAULT '0' COMMENT 'The login method.  0: native, 1: OAuth, 2: OpenID',
   PRIMARY KEY (`username`),
   KEY `username` (`username`),
@@ -275,8 +281,8 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Dumping data for table userdata.users: ~2 rows (approximately)
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` (`username`, `userid`, `profileid`, `method`) VALUES
-	('admin', -2, -2, 0),
-	('vendor', -1, -1, 0);
+	('admin', 2, 2, 0),
+	('vendor', 1, 1, 0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

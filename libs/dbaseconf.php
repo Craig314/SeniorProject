@@ -304,7 +304,7 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
-		$column = 'moduleid, name, desc, active';
+		$column = '*';
 		return($dbcore->launchQueryDumpTable($table, $column));
 	}
 

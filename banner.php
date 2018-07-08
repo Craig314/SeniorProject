@@ -94,6 +94,7 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 			case 2:
 				if ($_SESSION['passChange'] == true)
 					error_exit('Cannot Continue: Your password must be changed.');
+				$_SESSION['banner'] = true;
 				switch((int)$_SESSION['portalType'])
 				{
 					case 0:
