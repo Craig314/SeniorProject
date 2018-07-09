@@ -39,6 +39,7 @@ interface html_interface
 	const TYPE_PULLDN		= 6;
 	const TYPE_BLIST		= 7;
 	const TYPE_BUTTON		= 8;
+	const TYPE_RADTABLE		= 9;
 	const TYPE_FORMOPEN		= 20;
 	const TYPE_FORMCLOSE	= 21;
 	const TYPE_FSETOPEN		= 22;
@@ -52,6 +53,7 @@ interface html_interface
 	const TYPE_WDCLOSE		= 49;
 	//const TYPE_ = ;
 
+	// Utility
 	static public function initialize();
 	static public function redirect($filename);
 	static public function ishttps();
@@ -60,6 +62,7 @@ interface html_interface
 	static public function checkRequestPort();
 	static public function sendCode($code);
 
+	// HTML Input Controls
 	static public function insertToken($token);
 	static public function insertFieldHidden($data);
 	static public function insertFieldText($data);
@@ -67,8 +70,11 @@ interface html_interface
 	static public function insertFieldDropList($data);
 	static public function insertFieldCheckbox($data);
 	static public function insertFieldTextArea($data);
+	static public function insertRadioButtons($data);
+	static public function insertSelectionTable($data);
 	static public function insertList($data, $indent = "");
 
+	// Other HTML Constructs
 	static public function openForm($data);
 	static public function closeForm();
 	static public function openFieldset($data);
@@ -81,6 +87,7 @@ interface html_interface
 	static public function width75open();
 	static public function widthClose();
 
+	// Templates and Engines
 	static public function pageAutoGenerate($data);
 	static public function loadTemplatePage($title, $url, $fname, $left, $right, $funcbar,
 		$js_files, $css_files, $html_flags);
@@ -585,11 +592,9 @@ class html implements html_interface
 	// data - field data
 	static public function insertFieldHidden($data)
 	{
-		if (!empty($data['fname'])) $fname = 'id="' . $data['fname'] . '"';
-			else $fname = '';
 		if (!empty($data['name'])) $name = 'name="' . $data['name'] . '" id="' . $data['name'] . '"';
 			else $name = '';
-		if (!empty($data['data'])) $data = $value['data'];
+		if (!empty($data['data'])) $value = $data['data'];
 			else $value = '';
 ?>
 	<div>
@@ -1065,6 +1070,98 @@ class html implements html_interface
 		}
 	}
 
+	// Inserts a group of radio buttons.
+	static public function insertRadioButtons($data)
+	{
+		// Parameters
+		if (isset($data['name'])) $name = 'name="' . $data['name'] .'"';
+			else $name = '';
+		if (isset($data['data']))
+		{
+			foreach($data['data'] as $kx => $vx)
+			{
+?>
+		<div class="radio">
+			<label><input type="radio" <?php echo $name; ?> value="<?php echo $vx; ?>"><?php echo $kx; ?></label>
+		</div>
+<?php
+			}
+		}
+	}
+
+	// Inserts a selection table with radio buttons and field names.
+	static public function insertSelectionTable($data)
+	{
+		// Parameters
+		if (isset($data['name'])) $name = 'name="' . $data['name'] .'"';
+			else $name = '';
+
+		// Title Row
+		if (isset($data['titles']))
+		{
+?>
+		<table class="table table-hover">
+			<thead> 
+				<tr>
+					<th class="text-center">Select</th>
+<?php
+			foreach($data['titles'] as $kx)
+			{
+?>
+					<th class="text-center"><?php echo $kx; ?></th>
+<?php
+			}
+?>
+				</tr>
+			</thead>
+<?php
+		}
+
+		// Table Data
+		if (isset($data['tdata']))
+		{
+?>
+			<tbody>
+<?php
+			// Row
+			foreach($data['tdata'] as $kxr)
+			{
+?>
+				<tr>
+<?php
+				// Column
+				$count = 0;
+				foreach($kxr as $kxc)
+				{
+					if ($count == 0)
+					{
+?>
+					<td class="text-center">
+						<div class="radio">
+							<label><input type="radio" <?php echo $name; ?> value="<?php echo $kxc; ?>"></label>
+						</div>
+					</td>
+<?php
+					}
+					else
+					{
+?>
+					<td class="text-center"><?php echo $kxc; ?></td>
+<?php
+					}
+					$count++;
+				}
+?>
+				</tr>
+<?php
+			}
+?>
+			</tbody>
+		</table>
+<?php
+		}
+	}
+
 	// Inserts a static bulleted list.
 	// This function is recursive.
 	static public function insertList($data, $indent = "")
@@ -1247,12 +1344,16 @@ class html implements html_interface
 						self::insertFieldCheckbox($vx);
 						break;
 					case self::TYPE_RADIO:
+						self::insertRadioButtons($vx);
 						break;
 					case self::TYPE_PULLDN:
 						self::insertFieldDropList($vx);
 						break;
 					case self::TYPE_BUTTON:
 						self::insertButtons($vx);
+						break;
+					case self::TYPE_RADTABLE:
+						self::insertSelectionTable($vx);
 						break;
 					case self::TYPE_FORMOPEN:
 						self::openForm($vx);

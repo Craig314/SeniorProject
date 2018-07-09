@@ -232,7 +232,7 @@ function content()
 				),
 			),
 		),
-		array(
+		array(		// Buttons
 			'type' => html::TYPE_BUTTON,
 			'width' => 1,
 			'direction' => 0,
@@ -335,6 +335,69 @@ function content()
 				'list item 4',
 				'list item 5',
 			)
+		),
+		array('type' => html::TYPE_FSETCLOSE),
+
+
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Block 5: Radio Selection Table',
+		),
+		array('type' => html::TYPE_RADTABLE,
+			'name' => 'RadioSelectionTable',
+			'titles' => array(
+				'Data 1',
+				'Data 2',
+				'Data 3',
+				'Data 4'
+			),
+			'tdata' => array(
+				array(
+					'one',
+					'1.1',
+					'1.2',
+					'1.3',
+					'1.4',
+				),
+				array(
+					'two',
+					'2.1',
+					'2.2',
+					'2.3',
+					'2.4',
+				),
+				array(
+					'three',
+					'3.1',
+					'3.2',
+					'3.3',
+					'3.4',
+				),
+				array(
+					'four',
+					'4.1',
+					'4.2',
+					'4.3',
+					'4.4',
+				),
+			),
+		),
+		array('type' => html::TYPE_FSETCLOSE),
+
+
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Block 6: Radio Buttons',
+		),
+		array(
+			'type' => html::TYPE_RADIO,
+			'name' => 'RadioButtons',
+			'data' => array(
+				'Button 1' => 'btn1',
+				'Button 2' => 'btn2',
+				'Button 3' => 'btn3',
+				'Button 4' => 'btn4',
+			),
 		),
 		array('type' => html::TYPE_FSETCLOSE),
 		array('type' => html::TYPE_FORMCLOSE),

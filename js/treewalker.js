@@ -7,7 +7,11 @@ Treewalker Form Data Collector
 
 This walks the DOM tree looking for any and all input fields.  It will
 convert the input data into the proper format for sending to the server
-via a POST operation.
+via a POST operation.  In order for this to work properly, this requires
+that the name attribute be set on all supported input elements.
+
+On the server side, rawurldecode (for PHP) needs to be called on the
+string to decode any special characters.
 
 */
 
@@ -58,7 +62,7 @@ function treeWalker(nodeId) {
 				case "url":
 				case "week":
 					if (params.length > 0) params += "&";
-					params += nodeObject.name + "=" + nodeObject.value;
+					params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
 					break;
 
 				// Boolean input types
@@ -66,7 +70,7 @@ function treeWalker(nodeId) {
 				case "radio":
 					if (nodeObject.checked == true) {
 						if (params.length > 0) params += "&";
-						params += nodeObject.name + "=" + nodeObject.value;
+						params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
 					}
 					break;
 
@@ -76,20 +80,20 @@ function treeWalker(nodeId) {
 
 				// Unrecognized input type
 				default:
-					console.log("Unsupported input type " + nodeObject.type.toLowerCase());
+					console.log("Unsupported input type: " + nodeObject.type.toLowerCase());
 			}
 		}
 
 		// Look for any objects in the DOM with a tag name of TEXTAREA.
 		if (nodeObject.nodeName.toLowerCase() === "textarea") {
 			if (params.length > 0) params += "&";
-			params += nodeObject.name + "=" + nodeObject.value;
+			params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
 		}
 
 		// Selected Lists
 		if (nodeObject.nodeName.toLowerCase() === "select") {
 			if (params.length > 0) params += "&";
-			params += nodeObject.name + "=" + nodeObject.value;
+			params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
 		}
 	}
 }
