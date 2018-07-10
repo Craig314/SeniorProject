@@ -28,6 +28,7 @@ $modeOption = 1;
 
 
 const BASEDIR = 'libs/';
+require_once BASEDIR . 'confbase.php';
 require_once BASEDIR . 'confload.php';
 require_once BASEDIR . 'dbaseuser.php';
 require_once BASEDIR . 'dbaseconf.php';
@@ -40,17 +41,33 @@ require_once BASEDIR . 'html.php';
 require_once BASEDIR . 'ajax.php';
 require_once BASEDIR . 'account.php';
 
-// Global Variables
-$baseUrl = html::getBaseURL();
-$userMax = $CONFIGVAR['security_username_maxlen']['value'];
-$passMax = $CONFIGVAR['security_passwd_maxlen']['value'];
-
-processSharedMemoryReload();
+// For developmental use only.
+if (APP_DEBUG_STATUS === true)
+{
+	processSharedMemoryReload();
+}
 
 // Verify that we are on the correct port using the
 // correct protocol.
 html::checkRequestPort();
 
+// Global Variables
+$baseUrl = html::getBaseURL();
+$userMax = $CONFIGVAR['security_username_maxlen']['value'];
+$passMax = $CONFIGVAR['security_passwd_maxlen']['value'];
+
+// Start the session and load some default values.
+$session->start();
+$_SESSION['banner'] = false;
+$_SESSION['login'] = false;
+$_SESSION['loginLast'] = -1;
+$_SESSION['loginTime'] = -1;
+$_SESSION['nameUser'] = '';
+$_SESSION['nameReal'] = '';
+$_SESSION['userId'] = $CONFIGVAR['account_id_none']['value'];
+$_SESSION['profileId'] = $CONFIGVAR['profile_id_none']['value'];
+$_SESSION['passChange'] = false;
+$_SESSION['portalType'] = -1;
 
 // Now we process requests.
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
@@ -302,10 +319,7 @@ function native_login()
 	$dbuser->updateLoginFail($userid, 0);
 	$dbuser->updateLoginLastlog($userid, $loginTime);
 
-	// Start the session.
-	$session->start();
-	
-	// Load initial state into session variables
+	// Load updated information into session variables
 	$_SESSION['banner'] = false;
 	$_SESSION['login'] = true;
 	$_SESSION['loginLast'] = $lastLoginTime;

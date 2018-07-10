@@ -79,6 +79,12 @@ else
 function content()
 {
 	$data = array(
+		array(
+			'type' => html::TYPE_HEADING,
+			'message1' => 'HTML Generator',
+			'message2' => 'System Test',
+			'warning' => 'Test Warning',
+		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
 		array('type' => html::TYPE_FORMOPEN),

@@ -24,9 +24,15 @@ the features/abilities they represent are being used:
 // These variables must be set for every module. The variable moduleId
 // must be a unique positive integer. Module IDs < 1000 are reserved for
 // system use.  Therefore application module IDs will start at 1000.
-$moduleFilename = '';
-$moduleTitle = '';
-$moduleId = 0;
+$moduleFilename = 'modedit.php';
+$moduleTitle = 'Module Data Editor';
+$moduleId = 3;
+
+// These are the data editing modes.
+const MODE_VIEW	= 0;
+const MODE_UPDATE	= 1;
+const MODE_INSERT	= 2;
+const MODE_DELETE	= 3;
 
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
@@ -71,12 +77,19 @@ function loadInitialContent()
 		// The function bar sits below the navigation bar.  It has the same
 		// properties as the navigation bar, with the addition that you can
 		// use nested associtive arrays to group buttons together.
-		// $funcBar = array();
+		$funcBar = array(
+			'Add' => 'addModule',
+			'Edit' => 'editModule',
+			'Delete' => 'deleteModule',
+			'View' => 'viewModule',
+		);
 
 		// jsfiles is an associtive array which contains additional
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
-		// $jsFiles = array();
+		$jsFiles = array(
+			'/js/modedit.js',
+		);
 
 		// cssfiles is an associtive array which contains additional
 		// cascading style sheets that should be included in the head
@@ -95,7 +108,7 @@ function loadInitialContent()
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
-			$left, '', '', '', '', '');
+			$left, '', $funcBar, $jsFiles, '', '');
 	}
 	else
 	{
@@ -114,22 +127,59 @@ function loadInitialContent()
 function loadAdditionalContent()
 {
 	global $baseUrl;
+	global $dbconf;
+	global $herr;
+
+	// Dump the module database and process it.
+	$rxm = $dbconf->queryModuleAll();
+	if ($rxm == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('There are no modules in the database to edit.');
+	}
+
+	// Generate selection table.
+	$list = array(
+		'type' => html::TYPE_RADTABLE,
+		'titles' => array(
+			'Name',
+			'ID',
+			'File',
+			'Icon',
+			'Active',
+			'Vendor',
+			'All Users',
+		),
+		'tdata' => array(),
+	);
+	foreach($rxm as $kx => $vx)
+	{
+		$tdata = array(
+			$vx['moduleid'],	// Needed for the radio button.
+			$vx['name'],
+			$vx['moduleid'],
+			$vx['filename'],
+			$vx['iconname'],
+			$vx['active'],
+			$vx['vendor'],
+			$vx['allusers'],
+		);
+		array_push($list['tdata'], $tdata);
+	}
 
 	// Generate rest of page.
 	$data = array(
 		array(
 			'type' => html::TYPE_HEADING,
-			'message1' => 'Module Template Page',
-			'message2' => '',	// Delete if not needed.
-			'warning' => '',
+			'message1' => 'Module Data Editor',
+			'warning' => 'Editing a module can have drastic consequences on application functionality.<br>Proceed With Caution.',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
 		array('type' => html::TYPE_FORMOPEN),
-
-		// Enter custom data here.
-
-
+		$list,
 		array('type' => html::TYPE_FORMCLOSE),
 		array('type' => html::TYPE_WDCLOSE),
 		array('type' => html::TYPE_BOTB1)
@@ -212,7 +262,7 @@ function formPage($mode, $rxa)
 			'message2' => $msg2,
 			'warning' => $warn,
 		),
-		array('type' => html::TYPE_TOPB1),
+		array('type' => html::TYPE_TOPB2),
 		array('type' => html::TYPE_WD75OPEN),
 		array('type' => html::TYPE_FORMOPEN),
 

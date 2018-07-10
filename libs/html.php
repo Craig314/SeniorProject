@@ -29,6 +29,12 @@ interface html_interface
 	const STAT_ERROR = 3;
 	const STAT_GENERAL = 4;
 
+	// Predefined button set types for insertActionButtons.
+	const BTNTYP_VIEW		= 0;
+	const BTNTYP_UPDATE		= 1;
+	const BTNTYP_INSERT		= 2;
+	const BTNTYP_DELETE		= 3;
+
 	// Field type definitions used by pageAutoGenerate.
 	const TYPE_HIDE			= 0;
 	const TYPE_TEXT			= 1;
@@ -39,7 +45,9 @@ interface html_interface
 	const TYPE_PULLDN		= 6;
 	const TYPE_BLIST		= 7;
 	const TYPE_BUTTON		= 8;
-	const TYPE_RADTABLE		= 9;
+	const TYPE_ACTBTN		= 9;
+	const TYPE_RADTABLE		= 10;
+	const TYPE_HEADING		= 11;
 	const TYPE_FORMOPEN		= 20;
 	const TYPE_FORMCLOSE	= 21;
 	const TYPE_FSETOPEN		= 22;
@@ -51,7 +59,6 @@ interface html_interface
 	const TYPE_WD50OPEN		= 40;
 	const TYPE_WD75OPEN		= 41;
 	const TYPE_WDCLOSE		= 49;
-	//const TYPE_ = ;
 
 	// Utility
 	static public function initialize();
@@ -67,12 +74,15 @@ interface html_interface
 	static public function insertFieldHidden($data);
 	static public function insertFieldText($data);
 	static public function insertFieldPassword($data);
-	static public function insertFieldDropList($data);
-	static public function insertFieldCheckbox($data);
 	static public function insertFieldTextArea($data);
+	static public function insertFieldCheckbox($data);
 	static public function insertRadioButtons($data);
-	static public function insertSelectionTable($data);
+	static public function insertFieldDropList($data);
 	static public function insertList($data, $indent = "");
+	static public function insertButtons($data);
+	static public function insertActionButtons($data);
+	static public function insertSelectionTable($data);
+	static public function insertHeadingBanner($data);
 
 	// Other HTML Constructs
 	static public function openForm($data);
@@ -617,21 +627,8 @@ class html implements html_interface
 		self::insertFieldTextCommon('password', $data);
 	}
 
-	// Inserts a drop down list control.
-	// name - Name and ID for the field
-	// label - Text label for the field
-	// icon - Icon to use.  For complete list, goto
-	//   http://www.w3schools.com/bootstrap/bootstrap_ref_comp_glyphs.asp
-	// state - State to display
-	//   0 - normal
-	//   1 - Ok
-	//   2 - Warning
-	//   3 - Error
-	// lsize - Size of the label (Bootstrap)
-	// fsize - Size of the field (Bootstrap)
-	// default - Default list item selection
-	// optlist - Options list of key=value pairs
-	static public function insertFieldDropList($data)
+	// Inserts a mutli-line text box.
+	static public function insertFieldTextArea($data)
 	{
 		// Check Input
 		if (!is_array($data)) return;
@@ -639,6 +636,7 @@ class html implements html_interface
 		// Setup
 		$name = NULL;
 		$forx = NULL;
+		$onclick = NULL;
 		$disabled = NULL;
 		$stx = NULL;
 		$gix = NULL;
@@ -649,65 +647,44 @@ class html implements html_interface
 		$tooltip = NULL;
 		$icond = NULL;
 		$icons = NULL;
+		$rows = 1;
+		$dcmGL = NULL;
+		$dcmST = NULL;
+		$dcmMS = NULL;
 
 		// Parameters
 		self::helperNameId($data, $name, $forx);
+		self::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
+		self::helperOnClick($data, $onclick);
 		self::helperDisabled($data, $disabled);
 		self::helperState($data, $stx, $gix);
-		self::helperDefault($data, self::DEFTYPE_PULLDOWN, $default);
+		self::helperDefault($data, self::DEFTYPE_TEXTBOX, $default);
 		self::helperLabel($data, $label);
 		self::helperLabelSizeText($data, $lclass);
 		self::helperFieldSizeText($data, $fclass);
 		self::helperTooltip($data, $tooltip);
 		self::helperIcon($data, $icons, $icond);
+		self::helperRow($data, $rows);
 
 		// Combine
-		$printout = $name . $tooltip . $disabled;
+		$printout = $name . $default . $onclick . $tooltip . $disabled;
 
 		// Render
-
 ?>
 		<div class="row">
-			<div class="form-group<?php echo $stx; ?>">
+			<div <?php echo $dcmST; ?>class="form-group<?php echo $stx; ?>">
 				<label <?php echo $lclass . $forx ?>><?php echo $label; ?></label>
 				<div<?php echo $fclass; ?>>
 					<span<?php echo $icons; ?>><i<?php echo $icond; ?>></i></span>
-					<select class="form-control"<?php echo $printout; ?>>
-						<option value="----">----</option>
-<?php
-		if (!empty($data['optlist']))
-		{
-			foreach($data['optlist'] as $kx => $vx)
-			{
-				if (is_array($vx))
-				{
-?>
-						<optgroup label="<?php echo $kx; ?>">
-<?php
-					foreach($vx as $kxa => $vxa)
-					{
-						self::insertFieldSelectHelper($kxa, $vxa, $default);
-					}
-?>
-						</optgroup>
-<?php
-				}
-				else
-				{
-					self::insertFieldSelectHelper($kx, $vx, $default);
-				}
-			}
-		}
-?>
-					</select>
-					<span class="glyphicon<?php echo $gix; ?> form-control-feedback"></span>
+					<textarea rows="<?php echo $rows; ?>" class="form-control"<?php echo $printout;?>></textarea>
+					<span <?php echo $dcmGL; ?> class="glyphicon<?php echo $gix; ?> form-control-feedback"></span>
+					<span <?php echo $dcmMS; ?>></span>
 				</div>
 			</div>
 		</div>
 <?php
 	}
 
-	// Inserts a checkbox
 	// Uses the following parameters:
 	// ** name, label, lsize, fsize, default, disable, tooltip
 	// sidemode - Left/Right mode (boolean true/false)
@@ -876,8 +853,40 @@ class html implements html_interface
 		}
 	}
 
-	// Inserts a mutli-line text box.
-	static public function insertFieldTextArea($data)
+	// Inserts a group of radio buttons.
+	static public function insertRadioButtons($data)
+	{
+		// Parameters
+		if (isset($data['name'])) $name = 'name="' . $data['name'] .'"';
+			else $name = '';
+		if (isset($data['data']))
+		{
+			foreach($data['data'] as $kx => $vx)
+			{
+?>
+		<div class="radio">
+			<label><input type="radio" <?php echo $name; ?> value="<?php echo $vx; ?>"><?php echo $kx; ?></label>
+		</div>
+<?php
+			}
+		}
+	}
+
+	// Inserts a drop down list control.
+	// name - Name and ID for the field
+	// label - Text label for the field
+	// icon - Icon to use.  For complete list, goto
+	//   http://www.w3schools.com/bootstrap/bootstrap_ref_comp_glyphs.asp
+	// state - State to display
+	//   0 - normal
+	//   1 - Ok
+	//   2 - Warning
+	//   3 - Error
+	// lsize - Size of the label (Bootstrap)
+	// fsize - Size of the field (Bootstrap)
+	// default - Default list item selection
+	// optlist - Options list of key=value pairs
+	static public function insertFieldDropList($data)
 	{
 		// Check Input
 		if (!is_array($data)) return;
@@ -885,7 +894,6 @@ class html implements html_interface
 		// Setup
 		$name = NULL;
 		$forx = NULL;
-		$onclick = NULL;
 		$disabled = NULL;
 		$stx = NULL;
 		$gix = NULL;
@@ -896,44 +904,83 @@ class html implements html_interface
 		$tooltip = NULL;
 		$icond = NULL;
 		$icons = NULL;
-		$rows = 1;
-		$dcmGL = NULL;
-		$dcmST = NULL;
-		$dcmMS = NULL;
 
 		// Parameters
 		self::helperNameId($data, $name, $forx);
-		self::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
-		self::helperOnClick($data, $onclick);
 		self::helperDisabled($data, $disabled);
 		self::helperState($data, $stx, $gix);
-		self::helperDefault($data, self::DEFTYPE_TEXTBOX, $default);
+		self::helperDefault($data, self::DEFTYPE_PULLDOWN, $default);
 		self::helperLabel($data, $label);
 		self::helperLabelSizeText($data, $lclass);
 		self::helperFieldSizeText($data, $fclass);
 		self::helperTooltip($data, $tooltip);
 		self::helperIcon($data, $icons, $icond);
-		self::helperRow($data, $rows);
 
 		// Combine
-		$printout = $name . $default . $onclick . $tooltip . $disabled;
+		$printout = $name . $tooltip . $disabled;
 
 		// Render
+
 ?>
 		<div class="row">
-			<div <?php echo $dcmST; ?>class="form-group<?php echo $stx; ?>">
+			<div class="form-group<?php echo $stx; ?>">
 				<label <?php echo $lclass . $forx ?>><?php echo $label; ?></label>
 				<div<?php echo $fclass; ?>>
 					<span<?php echo $icons; ?>><i<?php echo $icond; ?>></i></span>
-					<textarea rows="<?php echo $rows; ?>" class="form-control"<?php echo $printout;?>></textarea>
-					<span <?php echo $dcmGL; ?> class="glyphicon<?php echo $gix; ?> form-control-feedback"></span>
-					<span <?php echo $dcmMS; ?>></span>
+					<select class="form-control"<?php echo $printout; ?>>
+						<option value="----">----</option>
+<?php
+		if (!empty($data['optlist']))
+		{
+			foreach($data['optlist'] as $kx => $vx)
+			{
+				if (is_array($vx))
+				{
+?>
+						<optgroup label="<?php echo $kx; ?>">
+<?php
+					foreach($vx as $kxa => $vxa)
+					{
+						self::insertFieldSelectHelper($kxa, $vxa, $default);
+					}
+?>
+						</optgroup>
+<?php
+				}
+				else
+				{
+					self::insertFieldSelectHelper($kx, $vx, $default);
+				}
+			}
+		}
+?>
+					</select>
+					<span class="glyphicon<?php echo $gix; ?> form-control-feedback"></span>
 				</div>
 			</div>
 		</div>
 <?php
 	}
 
+	// Inserts a static bulleted list.
+	// This function is recursive.
+	static public function insertList($data, $indent = "")
+	{
+		// Check Input
+		if (!is_array($data)) return;
+
+		// Render
+		echo $indent . "\t<ul>\n";
+		foreach($data as $vx)
+		{
+			if (is_array($vx)) self::insertList($vx, $indent . "\t");
+			else
+			{
+				echo $indent . "\t\t<li>" . $vx . "</li>\n";
+			}
+		}
+		echo $indent . "\t</ul>\n";
+	}
 
 	// Inserts one or more button controls.
 	static public function insertButtons($data)
@@ -974,7 +1021,7 @@ class html implements html_interface
 		if (!empty($data['direction']))
 			$direction = $data['direction'];
 		else
-			// Defaults to verticle
+			// Defaults to vertical
 			$direction = 0;
 		
 		// If set, no spacing in horizontal mode
@@ -1025,7 +1072,7 @@ class html implements html_interface
 			$printout = $btnclass . $btnname . $btnvalue . $btnclick;
 			switch($direction)
 			{
-				case 0:	// Verticle
+				case 0:	// Vertical
 ?>
 		<div class="row">
 			<div class="button">
@@ -1070,21 +1117,84 @@ class html implements html_interface
 		}
 	}
 
-	// Inserts a group of radio buttons.
-	static public function insertRadioButtons($data)
+	// Inserts action buttons
+	static public function insertActionButtons($data)
 	{
-		// Parameters
-		if (isset($data['name'])) $name = 'name="' . $data['name'] .'"';
-			else $name = '';
-		if (isset($data['data']))
+		if (isset($data['dispname']))
+			$dispname = $data['dispname'];
+		else
+			$dispname = '';
+		if ($isset($data['action']))
+			$action = $data['action'];
+		else
+			$action = '';
+		if (isset($data['btnset']))
 		{
-			foreach($data['data'] as $kx => $vx)
+			switch($data['btnset'])
 			{
+				case self::BTNTYP_VIEW:
 ?>
-		<div class="radio">
-			<label><input type="radio" <?php echo $name; ?> value="<?php echo $vx; ?>"><?php echo $kx; ?></label>
+		<div class="row">
+			<div class="button">
+				<div class="form-group">
+					<span class="col-xs-4"></span>
+					<input type="button" class="btn btn-success col-xs-4" name="initialview" value="Go Back" onclick="sendCommand(-1)">
+					<span class="col-xs-4"></span>
+				</div>
+			</div>
 		</div>
 <?php
+
+					break;
+				case self::BTNTYP_UPDATE:
+?>
+			<div class="row">
+				<div class="button">
+					<div class="form-group">
+						<span class="col-xs-1"></span>
+						<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Submit Changes" onclick="submitForm(<?php echo $action; ?>)">
+						<span class="col-xs-1"></span>
+						<input type="button" class="btn btn-info col-xs-3" name="Reset" value="Reset" onclick="clearForm()">
+						<span class="col-xs-1"></span>
+						<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="sendCommand(-1)">
+					</div>
+				</div>
+			</div>
+<?php
+					break;
+				case self::BTNTYP_INSERT:
+?>
+		<div class="row">
+			<div class="button">
+				<div class="form-group">
+					<span class="col-xs-1"></span>
+					<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Add<?php echo ' ' . $dispname; ?>" onclick="submitForm(<?php echo $action; ?>)">
+					<span class="col-xs-1"></span>
+					<input type="button" class="btn btn-info col-xs-3" name="Reset" value="Reset" onclick="clearForm()">
+					<span class="col-xs-1"></span>
+					<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="sendCommand(-1)">
+				</div>
+			</div>
+		</div>
+<?php
+					break;
+				case self::BTNTYP_DELETE:
+?>
+			<div class="row">
+				<div class="button">
+					<div class="form-group">
+						<span class="col-xs-2"></span>
+						<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Delete<?php echo ' ' . $dispname; ?>" onclick="submitForm(<?php echo $action; ?>)">
+						<span class="col-xs-2"></span>
+						<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="sendCommand(-1)">
+						<span class="col-xs-2"></span>
+					</div>
+				</div>
+			</div>
+<?php
+					break;
+				default:
+					break;
 			}
 		}
 	}
@@ -1162,24 +1272,34 @@ class html implements html_interface
 		}
 	}
 
-	// Inserts a static bulleted list.
-	// This function is recursive.
-	static public function insertList($data, $indent = "")
+	// Inserts the heading banner
+	static public function insertHeadingBanner($data)
 	{
-		// Check Input
-		if (!is_array($data)) return;
-
-		// Render
-		echo $indent . "\t<ul>\n";
-		foreach($data as $vx)
+		if (isset($data['message1']))
+			$msg1 = $data['message1'];
+		else
+			$msg1 = '';
+		if (isset($data['message2']))
+			$msg2 = ' ' . $data['message2'];
+		else
+			$msg2 = '';
+		if (isset($data['warning']))
+			$warn = $data['warning'];
+		else
+			$warn = '';
+		
+		if (!empty($msg1) || !empty($msg2))
 		{
-			if (is_array($vx)) self::insertList($vx, $indent . "\t");
-			else
-			{
-				echo $indent . "\t\t<li>" . $vx . "</li>\n";
-			}
+?>
+		<h1 class="center"><?php echo $msg1; ?><span class="color-blue"><?php echo $msg2; ?></span></h1>
+<?php
 		}
-		echo $indent . "\t</ul>\n";
+		if (!empty($warn))
+		{
+?>
+		<h4 class="center color-red">WARNING<br><?php echo $warn; ?></h4>
+<?php
+		}
 	}
 
 	// Opens a form element.
@@ -1349,11 +1469,20 @@ class html implements html_interface
 					case self::TYPE_PULLDN:
 						self::insertFieldDropList($vx);
 						break;
+					case self::TYPE_BLIST:
+						self::insertList($vx['data']);
+						break;
 					case self::TYPE_BUTTON:
 						self::insertButtons($vx);
 						break;
 					case self::TYPE_RADTABLE:
 						self::insertSelectionTable($vx);
+						break;
+					case self::TYPE_ACTBTN:
+						self::insertActionButtons($vx);
+						break;
+					case self::TYPE_HEADING:
+						self::insertHeadingBanner($vx);
 						break;
 					case self::TYPE_FORMOPEN:
 						self::openForm($vx);
@@ -1366,9 +1495,6 @@ class html implements html_interface
 						break;
 					case self::TYPE_FSETCLOSE:
 						self::closeFieldset();
-						break;
-					case self::TYPE_BLIST:
-						self::insertList($vx['data']);
 						break;
 					case self::TYPE_TOPB1:
 						self::border1top();

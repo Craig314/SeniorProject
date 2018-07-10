@@ -65,10 +65,12 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(52, 1, 'session_nonce_len', 'Session Nonce Length', '32', 'The length of the session nonce in bytes.', 0),
 	(53, 1, 'session_cookie_expire_time', 'Session Cookie Timeout', '600', 'The time in seconds before the client cookie expires on a per page basis.', 1),
 	(60, 10, 'timezone_default', 'Time Displacement From UTC', '-8:00', 'This sets the timezone displacement from UTC.', 1),
-	(70, 1, 'account_id_vendor', 'Vendor Account ID', '1', 'The account ID number of the vendor account.', 0),
-	(71, 1, 'account_id_admin', 'Admin Account ID', '2', 'The account ID number of the administrator account.', 0),
-	(72, 1, 'profile_id_vendor', 'Vendor Profile ID', '1', 'The profile ID number of the vendor account.', 0),
-	(73, 1, 'profile_id_admin', 'Admin Profile ID', '2', 'The profile ID number of the administrator account.', 0),
+	(70, 1, 'account_id_none', 'Null Account ID', '0', 'The account ID number for a NULL user which has not yet logged in.', 0),
+	(71, 1, 'account_id_vendor', 'Vendor Account ID', '1', 'The account ID number of the vendor account.', 0),
+	(72, 1, 'account_id_admin', 'Admin Account ID', '2', 'The account ID number of the administrator account.', 0),
+	(75, 1, 'profile_id_none', 'Null Profile ID', '0', 'The profile ID number for a NULL user who has not yet logged in.', 0),
+	(76, 1, 'profile_id_vendor', 'Vendor Profile ID', '1', 'The profile ID number of the vendor account.', 0),
+	(77, 1, 'profile_id_admin', 'Admin Profile ID', '2', 'The profile ID number of the administrator account.', 0),
 	(80, 2, 'oauth_enable', 'OAuth Login Enabled', '0', 'Specifies whether OAuth is a login method.', 1),
 	(90, 2, 'openid_enable', 'OpenID Login Enabled', '0', 'Specifies whether OpenID is a login method.', 1);
 /*!40000 ALTER TABLE `config` ENABLE KEYS */;

@@ -66,7 +66,7 @@ function loadInitialContent()
 		// template.  The key is the display name.  The value is the function
 		// to be called.  Note that this uses the jQuery function call format.
 		$left = array(
-		'Home' => 'returnHome',
+			'Home' => 'returnHome',
 		);
 		//$right = array(
 		//);
@@ -80,7 +80,7 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
-			'js/gridportal.js'
+			'/js/portal.js'
 		);
 	
 		// cssFiles is an associtive array which contains additional
@@ -99,7 +99,7 @@ function loadInitialContent()
 		// 	'tooltip',
 		// );
 	
-		//loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
+		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
 	    '', '', '', $jsFiles, $cssFiles, '');
@@ -224,6 +224,9 @@ function commandProcessor($commandId)
 {
 	switch ((int)$commandId)
 	{
+		case 5:
+			loadModule();
+			break;
 		default:
 			// If we get here, then the command is undefined.
 			$ajax->sendCode(ajaxClass::CODE_NOTIMP,
@@ -245,6 +248,71 @@ function writeModuleIcon($url, $id, $iname, $dname, $desc)
 		<div class="icontxt iconfont"><?php echo $dname; ?></div>
 	</div>
 <?php
+}
+
+// Loads the selected module.
+function loadModule()
+{
+	global $baseUrl;
+	global $dbconf;
+	global $herr;
+	global $vendor;
+	global $admin;
+
+	// Check input.
+	if (!isset($_POST['MODULE']))
+	{
+		$ajax->SendCode(ajaxClass::CODE_BADREQ, 'Missing module identifier');
+		exit(1);
+	}
+	else
+	{
+		if (!is_numeric($_POST['MODULE']))
+		{
+			$ajax->SendCode(ajaxClass::CODE_BADREQ, 'Malformed module identifier');
+			exit(1);
+		}
+		else
+		{
+			$modId = $_POST['MODULE'];
+		}
+	}
+
+	// Load module data.
+	$rxa = $dbconf->queryModule($modId);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: Unable to get module information.');
+	}
+
+	// Perform security checks.
+	if ($vendor != 0) redirect($rxa['filename']);
+	if ($rxa['vendor'] != 0) handleError('You do not have access to the requested module.');
+	if ($admin != 0) redirect($rxa['filename']);
+	if ($rxa['allusers'] != 0) redirect($rxa['filename']);
+	$rxm = $dbconf->queryModaccess($_SESSION['profileId'], $modId);
+	if ($rxm == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('You do not have access to the requested module.');
+	}
+
+	// Redirect.
+	redirect($rxa['filename']);
+}
+
+// Redirect
+function redirect($filename)
+{
+	global $ajax;
+
+	$ajax->redirect('/modules/' . $filename);
+	exit(0);
 }
 
 

@@ -62,3 +62,33 @@ body {
 .padding10 {
 	padding-left: 10%;
 }
+
+.color-red {
+	color: red;
+	text-decoration-color: red;
+}
+
+.color-blue {
+	color: blue;
+	text-decoration-color: blue;
+}
+
+.color-black {
+	color: black;
+	text-decoration-color: black;
+}
+
+.color-inherit {
+	color: inherit;
+	text-decoration-color: inherit;
+}
+
+.center {
+	text-align: center;
+}
+
+.border_center {
+	width: 800px;
+	margin: auto;
+}
+
