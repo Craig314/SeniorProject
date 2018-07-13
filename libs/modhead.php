@@ -55,6 +55,7 @@ require_once 'security.php';
 require_once 'html.php';
 require_once 'ajax.php';
 require_once 'error.php';
+require_once 'vfystr.php';
 
 
 // This is to be filled later.
@@ -62,6 +63,9 @@ $moduleData = NULL;
 
 // Restart the session.
 $session->restart();
+
+// Regenerate the session ID if needed.
+$session->regenerateId();
 
 // Sends an error message to the client.  Does not clear forms.
 function handleError($message)
@@ -78,6 +82,24 @@ function handleErrorClear($message)
 	global $ajax;
 
 	$ajax->sendCommand(ajaxClass::CMD_ERRCLRDISP, $message);
+	exit(1);
+}
+
+// Sends a successful response message.
+function sendResponse($message)
+{
+	global $ajax;
+
+	$ajax->sendCommand(ajaxClass::CMD_OKDISP, $message);
+	exit(1);
+}
+
+// Sends a successful response message and clears the form.
+function sendResponseClear($message)
+{
+	global $ajax;
+
+	$ajax->sendCommand(ajaxClass::CMD_OKCLRDISP, $message);
 	exit(1);
 }
 
@@ -114,6 +136,22 @@ function checkUserSecurity()
 		redirectPortal();
 }
 
+// Checks to make sure that the token is present and the same
+// as when the page was first sent to the user.
+function checkTokenSecurity()
+{
+	global $CONFIGVAR;
+
+	if ($CONFIGVAR['session_use_tokens']['value'] != 0)
+	{
+		if (!isset($_POST['token']))
+			printErrorImmediate('Security Error: Missing Access Token.');
+		$result = strcasecmp($_SESSION['token'], $_POST['token']);
+		if ($result != 0)
+			printErrorImmediate('Security Error: Invalid Access Token.');
+	}
+}
+
 // Helper function for userCheckSecurity.  Redirects the user to
 // their portal page as defined in their profile.
 function redirectPortal()
@@ -122,16 +160,7 @@ function redirectPortal()
 	global $dbconf;
 	global $herr;
 
-	exit;
-	$rxq = $dbconf->queryProfile($_SESSION['profileId']);
-	if ($rxq == false)
-	{
-		if ($herr->checkState())
-			printErrorImmediate($herr->errorGetMessage());
-		else
-			printErrorImmediate('Database Error: Unable to get profile information');
-	}
-	if ($rxq['portal'] == 1)
+	if ($_SESSION['portalType'] == 1)
 		html::redirect('/modules/' . $CONFIGVAR['html_linkportal_page']['value']);
 	else
 		html::redirect('/modules/' . $CONFIGVAR['html_gridportal_page']['value']);
@@ -144,7 +173,6 @@ function redirectBanner()
 {
 	global $CONFIGVAR;
 
-	exit;
 	html::redirect('/' . $CONFIGVAR['html_banner_page']['value']);
 	exit;
 }
@@ -155,8 +183,23 @@ function redirectLogin()
 {
 	global $CONFIGVAR;
 
-	exit;
 	html::redirect('/' . $CONFIGVAR['html_login_page']['value']);
+	exit;
+}
+
+// Redirects the user to their portal page as defined in their
+// profile using Ajax.
+function redirectPortalAjax()
+{
+	global $CONFIGVAR;
+	global $dbconf;
+	global $herr;
+	global $ajax;
+
+	if ($_SESSION['portalType'] == 1)
+		$ajax->redirect('/modules/' . $CONFIGVAR['html_linkportal_page']['value']);
+	else
+		$ajax->redirect('/modules/' . $CONFIGVAR['html_gridportal_page']['value']);
 	exit;
 }
 
@@ -223,6 +266,9 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 		// We need to make sure that the user has access.
 		checkUserSecurity();
 
+		// In additon, we also need to check the tokens as well.
+		checkTokenSecurity();
+
 		// Command Dispatcher
 		// Should be integers and all the commands that the server
 		// will recognize from the client will go here.
@@ -247,7 +293,7 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 				exit(0);
 				break;
 			case -4:      // HOME
-				redirectPortal();
+				redirectPortalAjax();
 				exit(0);
 				break;
 			default:

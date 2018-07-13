@@ -16,6 +16,7 @@ aspects of a web application.
 
 
 require_once 'confload.php';
+require_once 'session.php';
 
 
 interface html_interface
@@ -361,7 +362,7 @@ class html implements html_interface
 	// Helper: Tooltips
 	static private function helperTooltip($data, &$tooltip)
 	{
-		if (!empty($data['tooltip'])) $tooltip = ' data-toggle="tooltip" title="' . $data['tooltip'] . '"';
+		if (!empty($data['tooltip'])) $tooltip = ' data-toggle="tooltip" data-html="true" title="' . $data['tooltip'] . '"';
 			else $tooltip = '';
 	}
 
@@ -602,6 +603,8 @@ class html implements html_interface
 	// data - field data
 	static public function insertFieldHidden($data)
 	{
+		if (!empty($data['fname'])) $fname = 'name="' . $data['fname'] . '"';
+			else $fname = '';
 		if (!empty($data['name'])) $name = 'name="' . $data['name'] . '" id="' . $data['name'] . '"';
 			else $name = '';
 		if (!empty($data['data'])) $value = $data['data'];
@@ -666,6 +669,10 @@ class html implements html_interface
 		self::helperIcon($data, $icons, $icond);
 		self::helperRow($data, $rows);
 
+		// Value
+		if (!empty($data['value'])) $value = $data['value'];
+			else $value = '';
+
 		// Combine
 		$printout = $name . $default . $onclick . $tooltip . $disabled;
 
@@ -676,7 +683,7 @@ class html implements html_interface
 				<label <?php echo $lclass . $forx ?>><?php echo $label; ?></label>
 				<div<?php echo $fclass; ?>>
 					<span<?php echo $icons; ?>><i<?php echo $icond; ?>></i></span>
-					<textarea rows="<?php echo $rows; ?>" class="form-control"<?php echo $printout;?>></textarea>
+					<textarea rows="<?php echo $rows; ?>" class="form-control"<?php echo $printout;?>><?php echo $value; ?></textarea>
 					<span <?php echo $dcmGL; ?> class="glyphicon<?php echo $gix; ?> form-control-feedback"></span>
 					<span <?php echo $dcmMS; ?>></span>
 				</div>
@@ -856,18 +863,45 @@ class html implements html_interface
 	// Inserts a group of radio buttons.
 	static public function insertRadioButtons($data)
 	{
+		$disabled = NULL;
+
 		// Parameters
+		helperDisabled($data, $disabled);
 		if (isset($data['name'])) $name = 'name="' . $data['name'] .'"';
 			else $name = '';
+		if (!empty($data['default'])) $value = $data['default'];
+			else $value = '';
 		if (isset($data['data']))
 		{
+			$index = 0;
 			foreach($data['data'] as $kx => $vx)
 			{
+				if (is_array($data['tooltip']))
+				{
+					if (!empty($data['tooltip'][$index]))
+					{
+						$ttText = $data['tooltip'][$index];
+						$tooltip = ' data-toggle="tooltip" data-html="true" title="' . $ttText . '"'; 
+					}
+				}
+				else $tooltip = '';
+				if ($vx == $value)
+				{
 ?>
-		<div class="radio">
+		<div class="radio"<?php echo $tooltip; ?>>
+			<label><input type="radio" <?php echo $name; echo $disabled; ?> value="<?php echo $vx; ?>" checked><?php echo $kx; ?></label>
+		</div>
+<?php
+				}
+				else
+				{
+?>
+		<div class="radio"<?php echo $tooltip; ?>>
 			<label><input type="radio" <?php echo $name; ?> value="<?php echo $vx; ?>"><?php echo $kx; ?></label>
 		</div>
 <?php
+				}
+				$index++;
 			}
 		}
 	}
@@ -1124,7 +1158,7 @@ class html implements html_interface
 			$dispname = $data['dispname'];
 		else
 			$dispname = '';
-		if ($isset($data['action']))
+		if (isset($data['action']))
 			$action = $data['action'];
 		else
 			$action = '';
@@ -1138,7 +1172,7 @@ class html implements html_interface
 			<div class="button">
 				<div class="form-group">
 					<span class="col-xs-4"></span>
-					<input type="button" class="btn btn-success col-xs-4" name="initialview" value="Go Back" onclick="sendCommand(-1)">
+					<input type="button" class="btn btn-success col-xs-4" name="initialview" value="Go Back" onclick="ajaxServerCommand.sendCommand(-1)">
 					<span class="col-xs-4"></span>
 				</div>
 			</div>
@@ -1152,11 +1186,11 @@ class html implements html_interface
 				<div class="button">
 					<div class="form-group">
 						<span class="col-xs-1"></span>
-						<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Submit Changes" onclick="submitForm(<?php echo $action; ?>)">
+						<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Submit Changes" onclick="<?php echo $action; ?>">
 						<span class="col-xs-1"></span>
 						<input type="button" class="btn btn-info col-xs-3" name="Reset" value="Reset" onclick="clearForm()">
 						<span class="col-xs-1"></span>
-						<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="sendCommand(-1)">
+						<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="ajaxServerCommand.sendCommand(-1)">
 					</div>
 				</div>
 			</div>
@@ -1168,11 +1202,11 @@ class html implements html_interface
 			<div class="button">
 				<div class="form-group">
 					<span class="col-xs-1"></span>
-					<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Add<?php echo ' ' . $dispname; ?>" onclick="submitForm(<?php echo $action; ?>)">
+					<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Insert<?php echo ' ' . $dispname; ?>" onclick="<?php echo $action; ?>">
 					<span class="col-xs-1"></span>
 					<input type="button" class="btn btn-info col-xs-3" name="Reset" value="Reset" onclick="clearForm()">
 					<span class="col-xs-1"></span>
-					<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="sendCommand(-1)">
+					<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="ajaxServerCommand.sendCommand(-1)">
 				</div>
 			</div>
 		</div>
@@ -1184,9 +1218,9 @@ class html implements html_interface
 				<div class="button">
 					<div class="form-group">
 						<span class="col-xs-2"></span>
-						<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Delete<?php echo ' ' . $dispname; ?>" onclick="submitForm(<?php echo $action; ?>)">
+						<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Delete<?php echo ' ' . $dispname; ?>" onclick="<?php echo $action; ?>">
 						<span class="col-xs-2"></span>
-						<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="sendCommand(-1)">
+						<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="ajaxServerCommand.sendCommand(-1)">
 						<span class="col-xs-2"></span>
 					</div>
 				</div>
@@ -1202,6 +1236,8 @@ class html implements html_interface
 	// Inserts a selection table with radio buttons and field names.
 	static public function insertSelectionTable($data)
 	{
+		$tooltip = NULL;
+
 		// Parameters
 		if (isset($data['name'])) $name = 'name="' . $data['name'] .'"';
 			else $name = '';
@@ -1234,10 +1270,21 @@ class html implements html_interface
 			<tbody>
 <?php
 			// Row
+			$index = 0;
 			foreach($data['tdata'] as $kxr)
 			{
+				if (is_array($data['tooltip']))
+				{
+					if (!empty($data['tooltip'][$index]))
+					{
+						$ttText = $data['tooltip'][$index];
+						$tooltip = ' data-toggle="tooltip" data-html="true" title="' . $ttText . '"'; 
+					}
+					else $tooltip = '';
+				}
+				else $tooltip = '';
 ?>
-				<tr>
+				<tr<?php echo $tooltip; ?>>
 <?php
 				// Column
 				$count = 0;
@@ -1264,6 +1311,7 @@ class html implements html_interface
 ?>
 				</tr>
 <?php
+				$index++;
 			}
 ?>
 			</tbody>
@@ -1442,7 +1490,7 @@ class html implements html_interface
 		// different component generation methods.
 		foreach($data as $kx => $vx)
 		{
-			if (!empty($vx['type']))
+			if (isset($vx['type']))
 			{
 				$type = $vx['type'];
 				unset($vx['type']);
@@ -1537,6 +1585,8 @@ class html implements html_interface
 	static public function loadTemplatePage($title, $url, $fname, $left, $right, $funcbar,
 		$js_files, $css_files, $html_flags)
 	{
+		global $session;
+
 		// Set flags
 		if (is_array($left))       $flag_left = true;     else $flag_left = false;
 		if (is_array($right))      $flag_right = true;    else $flag_right = false;
@@ -1689,7 +1739,13 @@ class html implements html_interface
 			<div id="main" class="main-wrapper-div"></div>
 		</div>
 		<!-- End of main content area -->
-
+<?php
+		$token = $session->getToken();
+		if ($token != false)
+		{
+			self::insertToken($token);
+		}
+?>
 		<!-- Install Timer -->
 		<script type="text/javascript" src="<?php echo $url; ?>/js/timer.js"></script>
 		<!-- Install regular jQuery -->

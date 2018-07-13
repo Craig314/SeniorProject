@@ -4,7 +4,10 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application Module Template
+PHP Web Application Module Data Editor
+
+This edits the module definition data in the database.  This module is
+set for vendor only access.
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -21,12 +24,37 @@ the features/abilities they represent are being used:
 
 
 
-// These variables must be set for every module. The variable moduleId
-// must be a unique positive integer. Module IDs < 1000 are reserved for
-// system use.  Therefore application module IDs will start at 1000.
+// These variables must be set for every module.
+
+// The executable file for the module.  Filename and extension only,
+// no path component.
 $moduleFilename = 'modedit.php';
+
+// The name of the module.  It shows in the title bar of the web
+// browser and other places.
 $moduleTitle = 'Module Data Editor';
+
+// $moduleId must be a unique positive integer. Module IDs < 1000 are
+// reserved for system use.  Therefore application module IDs will
+// start at 1000.
 $moduleId = 3;
+
+// The capitalized short display name of the module.  This shows up
+// on buttons, and some error messages.
+$moduleDisplayUpper = 'Module';
+
+// The lowercase short display name of the module.  This shows up in
+// various messages.
+$moduleDisplayLower = 'module';
+
+// Set to true if this is a system module.
+$moduleSystem = true;
+
+// Flags in the permissions bitmap of what permissions the user
+// has in this module.  Currently not implemented.
+$modulePermissions = array();
+
+
 
 // These are the data editing modes.
 const MODE_VIEW	= 0;
@@ -41,8 +69,8 @@ $htmlInjectFile = false;
 
 // Order matter here.  The modhead library needs to be loaded first.
 // If additional libraries are needed, then load them afterwards.
-const DIR = '../libs/';
-require_once DIR . 'modhead.php';
+const BASEDIR = '../libs/';
+require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
 // This call comes from modhead.php.
@@ -77,17 +105,21 @@ function loadInitialContent()
 		// The function bar sits below the navigation bar.  It has the same
 		// properties as the navigation bar, with the addition that you can
 		// use nested associtive arrays to group buttons together.
+		// $funcBar = array();
 		$funcBar = array(
-			'Add' => 'addModule',
-			'Edit' => 'editModule',
-			'Delete' => 'deleteModule',
-			'View' => 'viewModule',
+			array(
+				'Insert' => 'insertDataItem',
+				'Update' => 'updateDataItem',
+				'Delete' => 'deleteDataItem',
+			),
+			'View' => 'viewDataItem',
+			'List' => 'listDataItems',
 		);
 
 		// jsfiles is an associtive array which contains additional
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
-		$jsFiles = array(
+			$jsFiles = array(
 			'/js/modedit.js',
 		);
 
@@ -99,16 +131,19 @@ function loadInitialContent()
 		// The final option, htmlFlags, is an array that holds the names
 		// of supported options.  Currently, those options are checkbox,
 		// datepick, and tooltip.
-		// $htmlFiles = array(
+		// $htmlFlags= array(
 		// 	'checkbox',
 		// 	'datepick',
 		// 	'tooltip',
 		// );
-	
+		$htmlFlags = array(
+			'tooltip',
+		);
+		
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
-			$left, '', $funcBar, $jsFiles, '', '');
+			$left, '', $funcBar, $jsFiles, '', $htmlFlags);
 	}
 	else
 	{
@@ -124,11 +159,13 @@ function loadInitialContent()
 
 // Called when server is issued command -1. This call comes from
 // modhead.php.
+// XXX: Requires customization.
 function loadAdditionalContent()
 {
 	global $baseUrl;
 	global $dbconf;
 	global $herr;
+	global $moduleTitle;
 
 	// Dump the module database and process it.
 	$rxm = $dbconf->queryModuleAll();
@@ -137,12 +174,13 @@ function loadAdditionalContent()
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
 		else
-			handleError('There are no modules in the database to edit.');
+			handleError('There are no ' . $moduleDisplayLower . 's in the database to edit.');
 	}
 
 	// Generate selection table.
 	$list = array(
 		'type' => html::TYPE_RADTABLE,
+		'name' => 'select_item',
 		'titles' => array(
 			'Name',
 			'ID',
@@ -153,6 +191,7 @@ function loadAdditionalContent()
 			'All Users',
 		),
 		'tdata' => array(),
+		'tooltip' => array(),
 	);
 	foreach($rxm as $kx => $vx)
 	{
@@ -167,18 +206,22 @@ function loadAdditionalContent()
 			$vx['allusers'],
 		);
 		array_push($list['tdata'], $tdata);
+		array_push($list['tooltip'], $vx['description']);
+
 	}
 
 	// Generate rest of page.
 	$data = array(
 		array(
 			'type' => html::TYPE_HEADING,
-			'message1' => 'Module Data Editor',
+			'message1' => $moduleTitle,
 			'warning' => 'Editing a module can have drastic consequences on application functionality.<br>Proceed With Caution.',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
-		array('type' => html::TYPE_FORMOPEN),
+		array('type' => html::TYPE_FORMOPEN,
+			'name' => 'select_table',	
+		),
 		$list,
 		array('type' => html::TYPE_FORMCLOSE),
 		array('type' => html::TYPE_WDCLOSE),
@@ -195,8 +238,31 @@ function loadAdditionalContent()
 // command number. This call comes from modhead.php.
 function commandProcessor($commandId)
 {
+	global $ajax;
+
 	switch ((int)$commandId)
 	{
+		case 1:		// View
+			viewRecordView();
+			break;
+		case 2:		// Update
+			updateRecordView();
+			break;
+		case 3:		// Insert
+			insertRecordView();
+			break;
+		case 4:		// Delete
+			deleteRecordView();
+			break;
+		case 12:	// Submit Update
+			updateRecordAction();
+			break;
+		case 13:	// Submit Insert
+			insertRecordAction();
+			break;
+		case 14:	// Submit Delete
+			deleteRecordAction();
+			break;
 		default:
 			// If we get here, then the command is undefined.
 			$ajax->sendCode(ajaxClass::CODE_NOTIMP,
@@ -207,55 +273,376 @@ function commandProcessor($commandId)
 	}
 }
 
+// Helper function for the view functions below that loads information
+// from the database and check for errors.
+// XXX: Requires customization.
+function databaseLoad()
+{
+	global $dbconf;
+	global $herr;
+	global $moduleDisplayLower;
+
+	$key = getPostValue('select_item', 'hidden');
+	if ($key == NULL)
+		handleError('You must select a ' . $moduleDisplayLower .
+			' from the list view.');
+	$rxa = $dbconf->queryModule($key);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to retrieve required ' .
+				$moduleDisplayLower . ' data.');
+	}
+	return $rxa;
+}
+
+// The View Record view.
+function viewRecordView()
+{
+	$rxa = databaseLoad();
+	formPage(MODE_VIEW, $rxa);
+}
+
+// The Edit Record view.
+function updateRecordView()
+{
+	$rxa = databaseLoad();
+	formPage(MODE_UPDATE, $rxa);
+}
+
+// The Add Record view.
+function insertRecordView()
+{
+	formPage(MODE_INSERT, NULL);
+}
+
+// The Delete Record view.
+function deleteRecordView()
+{
+	$rxa = databaseLoad();
+	formPage(MODE_DELETE, $rxa);
+}
+
+// Updates the record in the database.
+// XXX: Requires customization.
+function updateRecordAction()
+{
+	global $dbconf;
+	global $herr;
+	global $vfystr;
+	global $ajax;
+
+	// Set field list
+	$fieldlist = array(
+		'modid',
+		'modname',
+		'moddesc',
+		'modfile',
+		'modicon',
+	);
+
+	// Get data
+	$key = getPostValue('hidden');
+	$id = getPostValue('modid');
+	$name = getPostValue('modname');
+	$desc = getPostValue('moddesc');
+	$file = getPostValue('modfile');
+	$icon = getPostValue('modicon');
+	$act = getPostValue('modact');
+	$all = getPostValue('modalluser');
+	$vend = getPostValue('modvend');
+	$sys = getPostValue('modsys');
+
+	// Check key data.
+	if ($key == NULL)
+		handleError('Missing module selection data.');
+	if ($id == NULL)
+		handleError('Missing module selection data.');
+	if (!is_numeric($key))
+		handleError('Malformed key sequence.');
+	if (!is_numeric($id))
+		handleError('Malformed key sequence.');
+	if ($key != $id)
+		handleError('Database key mismatch.');
+
+	// Check mandatory fields.
+	$vfystr->strchk($name, 'Name', 'modname', verifyStringInterface::STR_ALPHA, true, 32, 3);
+	$vfystr->strchk($file, 'Filename', 'modfile', verifyStringInterface::STR_FILENAME, true, 50, 3);
+	$vfystr->strchk($icon, 'Icon', 'modicon', verifyStringInterface::STR_FILENAME, true, 50, 3);
+	
+	// Check optional fields.
+	$vfystr->strchk($desc, 'Description', 'moddesc', verifyStringInterface::STR_ASCII, false, 256, 0);
+
+	// Handle any errors from above.
+	if ($vfystr->errstat() == true)
+	{
+		if ($herr->checkState() == true)
+		{
+			$rxe = $herr->errorGetData();
+			$ajax->sendStatus($rxe, $fieldlist);
+			exit(1);
+		}
+	}
+
+	// Convert boolean values
+	if (!empty($act)) $act = 1; else $act = 0;
+	if (!empty($all)) $all = 1; else $all = 0;
+	if (!empty($vend)) $vend = 1; else $vend = 0;
+	if (!empty($sys)) $sys = 1; else $sys = 0;
+
+	// We are good, update the record.
+	$result = $dbconf->updateModule($id, $name, $desc, $file, $icon, (int)$act,
+		(int)$all, (int)$sys, (int)$vend);
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database: Record update failed.');
+	}
+	sendResponse('Module update completed: key = ' . $key);
+	exit(0);
+}
+
+// Inserts the record into the database.
+// XXX: Requires customization.
+function insertRecordAction()
+{
+	global $dbconf;
+	global $herr;
+	global $vfystr;
+	global $ajax;
+
+	// Set field list
+	$fieldlist = array(
+		'modid',
+		'modname',
+		'moddesc',
+		'modfile',
+		'modicon',
+	);
+
+	// Get data
+	$id = getPostValue('modid');
+	$name = getPostValue('modname');
+	$desc = getPostValue('moddesc');
+	$file = getPostValue('modfile');
+	$icon = getPostValue('modicon');
+	$act = getPostValue('modact');
+	$all = getPostValue('modalluser');
+	$vend = getPostValue('modvend');
+	$sys = getPostValue('modsys');
+
+	// Check mandatory fields.
+	$vfystr->strchk($id, 'Module ID', 'modid', verifyString::STR_PINTEGER, true, 10, 1);
+	$vfystr->strchk($name, 'Name', 'modname', verifyString::STR_ALPHA, true, 32, 3);
+	$vfystr->strchk($file, 'Filename', 'modfile', verifyString::STR_FILENAME, true, 50, 3);
+	$vfystr->strchk($icon, 'Icon', 'modicon', verifyString::STR_FILENAME, true, 50, 3);
+	
+	// Check optional fields.
+	$vfystr->strchk($desc, 'Description', 'moddesc', verifyString::STR_ASCII, false, 256, 0);
+
+	// Handle any errors from above.
+	if ($vfystr->errstat() == true)
+	{
+		if ($herr->checkState() == true)
+		{
+			$rxe = $herr->errorGetData();
+			$ajax->sendStatus($rxe, $fieldlist);
+			exit(1);
+		}
+	}
+
+	// Convert boolean values
+	if (!empty($act)) $act = 1; else $act = 0;
+	if (!empty($all)) $all = 1; else $all = 0;
+	if (!empty($vend)) $vend = 1; else $vend = 0;
+	if (!empty($sys)) $sys = 1; else $sys = 0;
+
+	// We are good, update the record.
+	$result = $dbconf->insertModule($id, $name, $desc, $file, $icon, (int)$act,
+		(int)$all, (int)$sys, (int)$vend);
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database: Record insert failed.');
+	}
+	sendResponse('Module insert completed: key = ' . $modid);
+	exit(0);
+}
+
+// Deletes the record from the database.
+// XXX: Requires customization.
+function deleteRecordAction()
+{
+	global $dbconf;
+	global $herr;
+
+	// Gather data...
+	$key = getPostValue('hidden');
+	$modid = getPostValue('modid');
+	$modsys = getPostValue('modsys');
+
+	// ...and check it.
+	if ($key == NULL)
+		handleError('Missing module selection data.');
+	if ($modid == NULL)
+		handleError('Missing module selection data.');
+	if ($modsys != NULL)
+		handleError('System modules cannot be deleted.');
+	if (!is_numeric($key))
+		handleError('Malformed key sequence.');
+	if (!is_numeric($modid))
+		handleError('Malformed key sequence.');
+	if ($key != $modid)
+		handleError('Database key mismatch.');
+	
+	// Now remove the module from the database.
+	$result = $dbconf->deleteModule($key);
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to delete module data.');
+	}
+	sendResponse('Module delete completed: key = ' . $key);
+	exit(0);
+}
+
 // Generate generic form page.
+// XXX: Requires customization.
 function formPage($mode, $rxa)
 {
-	// Set these
-	$dispName = '';
-	$hideName = '';
+	global $moduleDisplayUpper;
 
 	// Determine the editing mode.
 	switch($mode)
 	{
 		case MODE_VIEW:			// View
-			$msg1 = '';
-			$msg2 = '';
+			$msg1 = 'Viewing ' . $moduleDisplayUpper . ' Data For';
+			$msg2 = $rxa['name'];
 			$warn = '';
 			$btnset = html::BTNTYP_VIEW;
 			$action = '';
-			$hideValue = '';
+			$hideValue = $rxa['moduleid'];
+			$disable = true;
+			$default = true;
+			$key = true;
 			break;
 		case MODE_UPDATE:		// Update
-			$msg1 = '';
-			$msg2 = '';
-			$warn = '';
+			$msg1 = 'Updating ' . $moduleDisplayUpper . ' Data For';
+			$msg2 = $rxa['name'];
+			$warn = 'Editing module data can have drastic consequences<br>' .
+				'on application operation.';
 			$btnset = html::BTNTYP_UPDATE;
-			$action = '';
-			$hideValue = '';
+			$action = 'submitUpdate()';
+			$hideValue = $rxa['moduleid'];
+			$disable = false;
+			$default = true;
+			$key = true;
 			break;
 		case MODE_INSERT:		// Insert
-			$msg1 = '';
+			$msg1 = 'Inserting ' . $moduleDisplayUpper . ' Data';
 			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_INSERT;
-			$action = '';
+			$action = 'submitInsert()';
 			$hideValue = '';
+			$disable = false;
+			$default = false;
+			$key = false;
 			break;
 		case MODE_DELETE:		// Delete
-			$msg1 = '';
-			$msg2 = '';
-			$warn = '';
+			$msg1 = 'Deleting ' . $moduleDisplayUpper . ' Data For';
+			$msg2 = $rxa['name'];
+			if ($rxa['system'] != 0)
+				$warn = 'You cannot delete a system module.';
+			else
+				$warn = 'Deleting module data can have drastic consequences<br>' .
+					'on application operation.';
 			$btnset = html::BTNTYP_DELETE;
-			$action = '';
-			$hideValue = '';
+			$action = 'submitDelete()';
+			$hideValue = $rxa['moduleid'];
+			$disable = true;
+			$default = true;
+			$key = true;
 			break;
 		default:
 			handleError('Internal Error: Contact your administrator.  XX82747');
 			break;
 	}
 
+	// Hidden field to pass key data
+	if (!empty($hideValue))
+	{
+		$hidden = array(
+			'type' => html::TYPE_HIDE,
+			'fname'=> 'hiddenForm',
+			'name' => 'hidden',
+			'data' => $hideValue,
+		);
+	}
+	else $hidden = array();
+
+	// Load $rxa with dummy values for insert mode.
+	if ($mode == MODE_INSERT)
+	{
+		$rxa = array(
+			'moduleid' => '',
+			'name' => '',
+			'description' => '',
+			'filename' => '',
+			'iconname' => '',
+			'active' => '',
+			'allusers' => '',
+			'vendor' => '',
+			'system' => '',
+		);
+	}
+
+	// Custom field rendering code
+	$modid   = generateField(html::TYPE_TEXT, 'modid', 'Module ID', 3,
+		$rxa['moduleid'], 'The numeric ID of the module.', $default, $key);
+	$modname = generateField(html::TYPE_TEXT, 'modname', 'Name', 6, $rxa['name'],
+		'Display name of the module.', $default, $disable);
+	$moddesc = generateField(html::TYPE_AREA, 'moddesc', 'Description', 6,
+		$rxa['description'], 'The module\'s description.', $default, $disable);
+	$moddesc['rows'] = 5;
+	$modfile = generateField(html::TYPE_TEXT, 'modfile', 'Filename', 6,
+		$rxa['filename'], 'The module\'s executable filename.', $default,
+		$disable);
+	$modicon = generateField(html::TYPE_TEXT, 'modicon', 'Icon', 4,
+		$rxa['iconname'], 'The icon name that the module uses&#013' .
+		'when displayed on the portal page.', $default, $disable);
+	$modact  = generateField(html::TYPE_CHECK, 'modact', 'Active', 1,
+		$rxa['active'], 'Indicates if the module is active or not.',
+		$default, $disable);
+	$modact['sidemode'] = true;
+	$modact['side'] = 0;
+	$modall  = generateField(html::TYPE_CHECK, 'modalluser', 'All Users', 1,
+		$rxa['allusers'], 'Indicates if all users have access to this module.',
+		$default, $disable);
+	$modall['sidemode'] = true;
+	$modall['side'] = 1;
+	$modvend = generateField(html::TYPE_CHECK, 'modvend', 'Vendor Only', 1,
+		$rxa['vendor'], 'Indicates that only the vendor has access to this' .
+		' module.', $default, $disable);
+	$modvend['sidemode'] = true;
+	$modvend['side'] = 0;
+	$modsys  = generateField(html::TYPE_CHECK, 'modsys', 'System', 1,
+		$rxa['system'], 'Indicates that this is a system module.', $default,
+		$disable);
+	$modsys['sidemode'] = true;
+	$modsys['side'] = 1;
+
 	// Build out the form array.
 	$data = array(
+		$hidden,
 		array(
 			'type' => html::TYPE_HEADING,
 			'message1' => $msg1,
@@ -264,14 +651,25 @@ function formPage($mode, $rxa)
 		),
 		array('type' => html::TYPE_TOPB2),
 		array('type' => html::TYPE_WD75OPEN),
-		array('type' => html::TYPE_FORMOPEN),
+		array(
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'dataForm',
+		),
 
 		// Enter custom field data here.
-
+		$modid,
+		$modname,
+		$moddesc,
+		$modfile,
+		$modicon,
+		$modact,
+		$modall,
+		$modvend,
+		$modsys,
 
 		array(
 			'type' => html::TYPE_ACTBTN,
-			'dispname' => $dispName,
+			'dispname' => $moduleDisplayUpper,
 			'btnset' => $btnset,
 			'action' => $action,
 		),
@@ -282,6 +680,39 @@ function formPage($mode, $rxa)
 
 	// Render
 	html::pageAutoGenerate($data);
+}
+
+// Generates a generic field array from the different fields.
+// If more or different fields are needed, then one can just
+// add them manually.
+function generateField($type, $name, $label, $size = 0, $value = '',
+	$tooltip = '', $default = false, $disabled = false)
+{
+	$data = array(
+		'type' => $type,
+		'name' => $name,
+		'label' => $label,
+	);
+	if ($size != 0) $data['fsize'] = $size;
+	if ($disabled == true) $data['disable'] = true;
+	if ($default != false)
+	{
+		$data['value'] = $value;
+		$data['default'] = $value;
+	}
+	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
+	return $data;
+}
+
+// Returns the first argument match of a $_POST value.  If no
+// values are found, then returns null.
+function getPostValue(...$list)
+{
+	foreach($list as $param)
+	{
+		if (!empty($_POST[$param])) return $_POST[$param];
+	}
+	return NULL;
 }
 
 

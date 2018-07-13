@@ -21,6 +21,7 @@ interface sessionInterface
 	public function regenerateId();
 	public function validate();
 	public function restart();
+	public function getToken();
 }
 
 
@@ -139,6 +140,22 @@ class session implements sessionInterface
 		// Check if client user agent has changed
 		if ($_SESSION['userAgent'] != md5($_SERVER['HTTP_USER_AGENT']))
 			printErrorImmediate('Security Error: User Agent Mismatch.' . $hijack);
+	}
+
+	// If session tokens are being used, then return the session
+	// token, or false if session tokens are not being used.
+	public function getToken()
+	{
+		global $CONFIGVAR;
+
+		if ($CONFIGVAR['session_use_tokens']['value'] == 0) return false;
+		if (!isset($_SESSION['token']))
+			$_SESSION['token'] = bin2hex(openssl_random_pseudo_bytes
+				($CONFIGVAR['session_nonce_len']['value']));
+		if (empty($_SESSION['token']))
+			$_SESSION['token'] = bin2hex(openssl_random_pseudo_bytes
+				($CONFIGVAR['session_nonce_len']['value']));
+		return $_SESSION['token'];
 	}
 
 }

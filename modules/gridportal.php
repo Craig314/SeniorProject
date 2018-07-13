@@ -38,8 +38,8 @@ $htmlInjectFile = false;
 
 // Order matter here.  The modhead library needs to be loaded first.
 // If additional libraries are needed, then load them afterwards.
-const DIR = '../libs/';
-require_once DIR . 'modhead.php';
+const BASEDIR = '../libs/';
+require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
 // This call comes from modhead.php.
@@ -204,7 +204,7 @@ function loadAdditionalContent()
 		// is not displayed.
 		foreach($rxa as $kxb => $vxb)
 		{
-			if ($modId == $vxb[''] && $profId == $vxb[''])
+			if ($modId == $vxb['moduleid'] && $profId == $vxb['profileid'])
 			{
 				writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
 				$access = true;
@@ -212,9 +212,11 @@ function loadAdditionalContent()
 			}
 		}
 
-		// If $access is still false, then we print an error.
-		if (!$access) handleError('You do not have access to any modules.');
 	}
+
+	// If $access is still false, then we print an error.
+	if (!$access) handleError('You do not have access to any modules.');
+
 	exit(0);
 }
 

@@ -37,6 +37,9 @@ processSharedMemoryReload();
 // Restart the user session.
 $session->restart();
 
+// Regenerate the session ID if needed.
+$session->regenerateId();
+
 // Make sure that we are logged in.
 if (isset($_SESSION['login']))
 {
@@ -70,7 +73,9 @@ $passMin = $CONFIGVAR['security_passwd_minlen']['value'];
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
 {
 	// Called on a GET operation.
-	bannerShowHeader($bannerTitle, $bannerSubtitle, $bannerMessage);
+	if ($CONFIGVAR['session_use_tokens']['value'] != 0) $token = $_SESSION['token'];
+		else $token = false;
+	bannerShowHeader($bannerTitle, $bannerSubtitle, $bannerMessage, $token);
 	if ($_SESSION['passChange'] == true)
 	{
 		bannerShowPassword(false);
@@ -83,6 +88,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
 else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 {
 	// Called on a POST operation.
+
+	// Makes sure that the token set via the GET method matches on
+	// the user's POST method.
+	if ($CONFIGVAR['session_use_tokens']['value'] != 0)
+	{
+		if (!isset($_POST['token']))
+			printErrorImmediate('Security Error: Missing Access Token.');
+		$result = strcasecmp($_SESSION['token'], $_POST['token']);
+		if ($result != 0)
+			printErrorImmediate('Security Error: Invalid Access Token.');
+	}
+
 	if (isset($_POST['COMMAND']))
 	{
 		$command_id = (int)$_POST['COMMAND'];
@@ -297,7 +314,7 @@ function change_password()
 }
 
 // Sends the banner page header to the client.
-function bannerShowHeader($title, $subtitle, $message)
+function bannerShowHeader($title, $subtitle, $message, $token)
 {
 	global $baseUrl;
 ?>
@@ -311,6 +328,12 @@ function bannerShowHeader($title, $subtitle, $message)
 		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/css/banner.css">
 	</head>
 	<body href-link="banner.php" onload="initialRun()">
+<?php
+	if ($token != false)
+	{
+		html::insertToken($token);
+	}
+?>
 		<br><br>
 		<div class="center">
 			<h1 class="color-red"><?php echo $title; ?></h1>

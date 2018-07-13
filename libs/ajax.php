@@ -60,12 +60,13 @@ interface ajaxInterface
 	public function redirect($filename);
 	public function sendCode($code, $data = NULL);
 	public function sendCommand($cmd, $data = NULL);
-	public function sendStatus($data);
+	public function sendStatus($data, $list);
 	public function sendJSON($jnbr, $data);
 	public function loadQueueCode($code, $data = NULL);
 	public function loadQueueCommand($cmd, $data = NULL);
 	public function loadQueueStatus($data);
 	public function loadQueueJSON($jnbr, $data);
+	public function loadQueueFieldList($data);
 	public function sendQueue();
 
 }
@@ -104,16 +105,18 @@ class ajaxClass implements ajaxInterface
 	}
 
 	// Sends error status to the client.
-	public function sendStatus($data)
+	public function sendStatus($data, $list)
 	{
 		if (empty($data)) return;
-		$str = jason_encode($data);
-		if ($str === false)
+		$str1 = json_encode($data);
+		$str2 = json_encode($list);
+		if ($str1 === false || $str2 === false)
 		{
 			sendCommand(ajaxClass::CMD_ERRDISP, 'JSON encoding error: (' .
 				json_last_error() . ') ' . json_last_error_msg());
 			exit(1);
 		}
+		$str = $str1 . chr(29) . $str2;
 		echo ajaxClass::TYPE_STATUS . $str;
 	}
 
@@ -145,7 +148,7 @@ class ajaxClass implements ajaxInterface
 	public function loadQueueStatus($data)
 	{
 		if (empty($data)) return;
-		$str = jason_encode($data);
+		$str = json_encode($data);
 		if ($str === false)
 		{
 			sendCommand(ajaxClass::CMD_ERRDISP, 'JSON encoding error: (' .
@@ -156,10 +159,15 @@ class ajaxClass implements ajaxInterface
 		array_push($this->queue, $str);
 	}
 
+	// Loads the field list into the queue.
+	public function loadQueueFieldList($data)
+	{
+	}
+
 	// Loads JSON formatted data into the send queue.
 	public function loadQueueJSON($jnbr, $data)
 	{
-		$str = ajaxClass::TYPE_JASON . $jnbr . ' ' . $data;
+		$str = ajaxClass::TYPE_JSON . $jnbr . ' ' . $data;
 		array_push($this->queue, $str);
 	}
 

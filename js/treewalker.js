@@ -16,11 +16,29 @@ string to decode any special characters.
 */
 
 
-function treeWalker(nodeId) {
-	var nodeObject = document.getElementById(nodeId);
-	var nodeObjStart = nodeObject;
+function treeWalker(nodeArray) {
+	var nodeObject;
+	var nodeObjStart;
 	var params = "";
 
+	// Searches the array for a valid ID or name.  The first one found
+	// is the one that is used.  If none are found, then it returns
+	// a blank string.
+	for (i = 0; i < nodeArray.length; i++) {
+		nodeObject = document.getElementById(nodeArray[i]);
+		if (nodeObject == null) {
+			// The ID doesn't exist, so we try the name.
+			nameId = document.getElementsByName(nodeArray[i]);
+			if (nameId == null) continue;
+			nodeObject = nameId[0];
+		}
+		if (nodeObject != null) break;
+	}
+	if (nodeObject == null) return "";
+	nodeObjStart = nodeObject;
+
+	// Now we walk to DOM tree and look for any and all supported
+	// field types.
 	while (nodeObject) {
 		if (nodeObject.children.length > 0) {
 			// Check for children
@@ -34,19 +52,26 @@ function treeWalker(nodeId) {
 			// If we can't find either, then go up the tree.
 			do {
 				nodeObject = nodeObject.parentNode;
-				if (nodeObject === nodeObjStart)
-				return(params);
+				if (nodeObject === nodeObjStart) return(params);
 			} while (!nodeObject.nextElementSibling)
 			nodeObject = nodeObject.nextElementSibling;
 		}
+		if (nodeObject == null) return(params);
 
 		// Look for any objects in the DOM with a tag name of INPUT.
 		if (nodeObject.nodeName.toLowerCase() === "input") {
 			switch (nodeObject.type.toLowerCase()) {
 				// String input types
+				case "hidden":
+					// Token data is handled through AJAX.
+					if (nodeObject.id === 'token_data') return params;
+					else {
+						if (params.length > 0) params += "&";
+						params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
+					}
+					break;
 				case "text":
 				case "password":
-				case "hidden":
 				case "color":		// This and below: HTML 5
 				case "date":
 				case "datetime":
@@ -97,4 +122,3 @@ function treeWalker(nodeId) {
 		}
 	}
 }
-

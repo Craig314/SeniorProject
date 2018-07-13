@@ -330,6 +330,7 @@ function native_login()
 	$_SESSION['profileId'] = $profid;
 	$_SESSION['passChange'] = $changePass;
 	$_SESSION['portalType'] = $portalType;
+	$_SESSION['regenTimeLast'] = time() + $CONFIGVAR['session_regen_time']['value'];
 
 	// The user is now logged in.  Initiate forced redirect
 	// To configured banner page.

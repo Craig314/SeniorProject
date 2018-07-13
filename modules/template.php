@@ -21,12 +21,43 @@ the features/abilities they represent are being used:
 
 
 
-// These variables must be set for every module. The variable moduleId
-// must be a unique positive integer. Module IDs < 1000 are reserved for
-// system use.  Therefore application module IDs will start at 1000.
+// These variables must be set for every module.
+
+// The executable file for the module.  Filename and extension only,
+// no path component.
 $moduleFilename = '';
+
+// The name of the module.  It shows in the title bar of the web
+// browser and other places.
 $moduleTitle = '';
+
+// $moduleId must be a unique positive integer. Module IDs < 1000 are
+// reserved for system use.  Therefore application module IDs will
+// start at 1000.
 $moduleId = 0;
+
+// The capitalized short display name of the module.  This shows up
+// on buttons, and some error messages.
+$moduleDisplayUpper = '';
+
+// The lowercase short display name of the module.  This shows up in
+// various messages.
+$moduleDisplayLower = '';
+
+// Set to true if this is a system module.
+$moduleSystem = false;
+
+// Flags in the permissions bitmap of what permissions the user
+// has in this module.  Currently not implemented.
+$modulePermissions = array();
+
+
+
+// These are the data editing modes.
+const MODE_VIEW	= 0;
+const MODE_UPDATE	= 1;
+const MODE_INSERT	= 2;
+const MODE_DELETE	= 3;
 
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
@@ -35,8 +66,8 @@ $htmlInjectFile = false;
 
 // Order matter here.  The modhead library needs to be loaded first.
 // If additional libraries are needed, then load them afterwards.
-const DIR = '../libs/';
-require_once DIR . 'modhead.php';
+const BASEDIR = '../libs/';
+require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
 // This call comes from modhead.php.
@@ -72,11 +103,22 @@ function loadInitialContent()
 		// properties as the navigation bar, with the addition that you can
 		// use nested associtive arrays to group buttons together.
 		// $funcBar = array();
+		$funcBar = array(
+			array(
+				'Insert' => 'insertDataItem',
+				'Update' => 'updateDataItem',
+				'Delete' => 'deleteDataItem',
+			),
+			'View' => 'viewDataItem',
+			'List' => 'listDataItems',
+		);
 
 		// jsfiles is an associtive array which contains additional
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
-		// $jsFiles = array();
+		$jsFiles = array(
+			'/js/.js',
+		);
 
 		// cssfiles is an associtive array which contains additional
 		// cascading style sheets that should be included in the head
@@ -86,16 +128,19 @@ function loadInitialContent()
 		// The final option, htmlFlags, is an array that holds the names
 		// of supported options.  Currently, those options are checkbox,
 		// datepick, and tooltip.
-		// $htmlFiles = array(
+		// $htmlFlags= array(
 		// 	'checkbox',
 		// 	'datepick',
 		// 	'tooltip',
 		// );
-	
+		$htmlFlags = array(
+			'tooltip',
+		);
+
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
-			$left, '', '', '', '', '');
+			$left, '', $funcBar, $jsFiles, '', $htmlFlags);
 	}
 	else
 	{
@@ -147,6 +192,27 @@ function commandProcessor($commandId)
 {
 	switch ((int)$commandId)
 	{
+		case 1:		// View
+			viewRecordView();
+			break;
+		case 2:		// Update
+			updateRecordView();
+			break;
+		case 3:		// Insert
+			insertRecordView();
+			break;
+		case 4:		// Delete
+			deleteRecordView();
+			break;
+		case 12:	// Submit Update
+			updateRecordAction();
+			break;
+		case 13:	// Submit Insert
+			insertRecordAction();
+			break;
+		case 14:	// Submit Delete
+			deleteRecordAction();
+			break;
 		default:
 			// If we get here, then the command is undefined.
 			$ajax->sendCode(ajaxClass::CODE_NOTIMP,
@@ -157,62 +223,180 @@ function commandProcessor($commandId)
 	}
 }
 
+// Helper function for the view functions below that loads information
+// from the database and check for errors.
+// XXX: Requires customization.
+function databaseLoad()
+{
+	global $dbconf;
+	global $herr;
+	global $moduleDisplayLower;
+
+	$key = getPostValue('select_item', 'hidden');
+	if ($key == NULL)
+		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
+	// The below line requires customization for database loading.	
+	$rxa = '';	// ******** CUSTOMIZE THIS ********
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to retrieve required ' . $moduleDisplayLower . ' data.');
+	}
+	return $rxa;
+}
+
+// The View Record view.
+function viewRecordView()
+{
+	$rxa = databaseLoad();
+	formPage(MODE_VIEW, $rxa);
+}
+
+// The Edit Record view.
+function updateRecordView()
+{
+	$rxa = databaseLoad();
+	formPage(MODE_UPDATE, $rxa);
+}
+
+// The Add Record view.
+function insertRecordView()
+{
+	formPage(MODE_INSERT, NULL);
+}
+
+// The Delete Record view.
+function deleteRecordView()
+{
+	$rxa = databaseLoad();
+	formPage(MODE_DELETE, $rxa);
+}
+
+// Updates the record in the database.
+// XXX: Requires customization.
+function updateRecordAction()
+{
+	global $herr;
+	global $vfystr;
+	global $ajax;
+
+	exit(0);
+}
+
+// Inserts the record into the database.
+// XXX: Requires customization.
+function insertRecordAction()
+{
+	global $herr;
+	global $vfystr;
+	global $ajax;
+
+	exit(0);
+}
+
+// Deletes the record from the database.
+// XXX: Requires customization.
+function deleteRecordAction()
+{
+	global $herr;
+
+	exit(0);
+}
 // Generate generic form page.
 function formPage($mode, $rxa)
 {
-	// Set these
-	$dispName = '';
-	$hideName = '';
+	global $moduleDisplayUpper;
 
 	// Determine the editing mode.
 	switch($mode)
 	{
 		case MODE_VIEW:			// View
-			$msg1 = '';
+			$msg1 = 'Viewing ' . $moduleDisplayUpper . ' Data For';
 			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_VIEW;
 			$action = '';
 			$hideValue = '';
+			$disable = true;
+			$default = true;
+			$key = true;
 			break;
 		case MODE_UPDATE:		// Update
-			$msg1 = '';
+			$msg1 = 'Updating ' . $moduleDisplayUpper . ' Data For';
 			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_UPDATE;
 			$action = '';
-			$hideValue = '';
+			$hideValue = 'submitUpdate()';
+			$disable = false;
+			$default = true;
+			$key = true;
 			break;
 		case MODE_INSERT:		// Insert
-			$msg1 = '';
+			$msg1 = 'Inserting ' . $moduleDisplayUpper . ' Data For';
 			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_INSERT;
-			$action = '';
+			$action = 'submitInsert()';
 			$hideValue = '';
+			$disable = false;
+			$default = false;
+			$key = false;
 			break;
 		case MODE_DELETE:		// Delete
-			$msg1 = '';
+			$msg1 = 'Deleting ' . $moduleDisplayUpper . ' Data For';
 			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_DELETE;
-			$action = '';
+			$action = 'submitDelete()';
 			$hideValue = '';
+			$disable = true;
+			$default = true;
+			$key = true;
 			break;
 		default:
 			handleError('Internal Error: Contact your administrator.  XX82747');
 			break;
 	}
 
+	// Hidden field to pass key data
+	if (!empty($hideValue))
+	{
+		$hidden = array(
+			'type' => html::TYPE_HIDE,
+			'fname'=> 'hiddenForm',
+			'name' => 'hidden',
+			'data' => $hideValue,
+		);
+	}
+	else $hidden = array();
+
+	// Load $rxa with dummy values for insert mode.
+	if ($mode == MODE_INSERT)
+	{
+		// Variable $rxa is null when the exit mode is insert.
+		// Datafill this array with dummy values to prevent PHP
+		// from issuing errors.
+		$rxa = array(
+			'' => '',
+		);
+	}
+
+	// Custom field rendering code
+
+
 	// Build out the form array.
 	$data = array(
+		$hidden,
 		array(
 			'type' => html::TYPE_HEADING,
 			'message1' => $msg1,
 			'message2' => $msg2,
 			'warning' => $warn,
 		),
-		array('type' => html::TYPE_TOPB1),
+		array('type' => html::TYPE_TOPB2),
 		array('type' => html::TYPE_WD75OPEN),
 		array('type' => html::TYPE_FORMOPEN),
 
@@ -232,6 +416,35 @@ function formPage($mode, $rxa)
 
 	// Render
 	html::pageAutoGenerate($data);
+}
+
+// Generates a generic field array from the different fields.
+// If more or different fields are needed, then one can just
+// add them manually.
+function generateField($type, $name, $label, $size = 0, $value = '',
+	$tooltip = '', $default = false, $disabled = false)
+{
+	$data = array(
+		'type' => $type,
+		'name' => $name,
+		'label' => $label,
+	);
+	if ($size != 0) $data['fsize'] = $size;
+	if ($disabled == true) $data['disable'] = true;
+	if ($default != false) $data['value'] = $value;
+	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
+	return $data;
+}
+
+// Returns the first argument match of a $_POST value.  If no
+// values are found, then returns null.
+function getPostValue(...$list)
+{
+	foreach($list as $param)
+	{
+		if (!empty($_POST[$param])) return $_POST[$param];
+	}
+	return NULL;
 }
 
 

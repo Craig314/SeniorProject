@@ -100,11 +100,13 @@ var ajaxServerCommand = {
 	sendCommand: function(cmd) {
 		var param = "COMMAND=" + cmd;
 		var i;
-		if (arguments.length > 1)
-		{
+		var token = document.getElementById('token_data');
+		if (token != null) {
+			param += '&token=' + token.value;
+		}
+		if (arguments.length > 1) {
 			param += "&";
-			for (i = 1; i < arguments.length; i++)
-			{
+			for (i = 1; i < arguments.length; i++) {
 				param += arguments[i];
 				if (i < (arguments.length - 1)) param += "&";
 			}
@@ -116,6 +118,10 @@ var ajaxServerCommand = {
 	// server for processing.
 	sendCommandBulk: function(cmd, name, data) {
 		var param = "COMMAND=" + cmd + "&" + name + "=" + data;
+		var token = document.getElementById('token_data');
+		if (typeof token === 'object') {
+			param += '&token=' + token.value;
+		}
 		ajaxServerSend.post(serverLinkObject, param);
 	},
 
@@ -292,7 +298,11 @@ var ajaxProcessData = ({
 			default:
 				if (httpStatus[codenum] == "")
 					alert("Unknown code " + codenum + " returned by server.");
-				else writeError(httpStatus[codenum]);
+				else {
+					msg = str.slice(est);
+					if (msg.length > 0) msg = "<br>" + msg;
+					writeError(httpStatus[codenum] + msg);
+				}
 			break;
 		}
 	},
@@ -318,26 +328,31 @@ var ajaxProcessData = ({
 				writeError("");
 				writeResponse(txt);
 				if (typeof clearForm === 'function') clearForm();
+				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 951:   // Ok, display to responseTarget
 				var txt = str.slice(est + 1);
 				writeError("");
 				writeResponse(txt);
+				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 952:   // Error, call clearForm (if available), display to errorTarget
 				var txt = str.slice(est + 1);
 				writeError(txt);
 				writeResponse("");
 				if (typeof clearForm === 'function') clearForm();
+				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 953:   // Error, display to errorTarget
 				var txt = str.slice(est + 1);
 				writeError(txt);
 				writeResponse("");
+				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 954:   // Clear all messages
 				writeError("");
 				writeResponse("");
+				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 955:   // Clear all messages, write HTML
 				var txt = str.slice(est + 1);
@@ -371,58 +386,81 @@ var ajaxProcessData = ({
 		var cst;
 		var entity;
 		var i;
-		var text;
-		var objArray;
+		var text1;
+		var text2;
+		var fieldArray;
+		var statusArray;
 		var message;
 		entity = str.indexOf("STAT");
 		if (entity != 0) return;
-		cst = str.indexOf(" ")
+		cst = str.indexOf(" ");
 		if (cst < 0) {
 			writeError("JSON data format error from server.");
 			return;
 		}
-		text = str.slice(0, cst);
+		mark = str.indexOf(String.fromCharCode(29));
+		text1 = str.slice(cst + 1, mark);
 		try {
-			var objArray = JSON.parse(text);
+			console.log(text1);
+			var statusArray = JSON.parse(text1);
 		}
 		catch (error) {
 			writeError(error.message);
 			return;
 		}
+		console.log('GS Marker: ' + mark);
+		if (mark > 0)
+		{
+			text2 = str.slice(mark + 1);
+			try {
+				console.log(text2);
+				var fieldArray = JSON.parse(text2);
+			}
+			catch (error) {
+				writeError(error.message);
+				return;
+			}
+			for (i = 0; i < fieldArray.length; i++) {
+				this.setStatusTextDefault(fieldArray[i], '');
+			}
+		}
 		message = '';
-		for (i = 0; i < objArray.length; i++) {
-			this.setValueText(objArray[i].id, objArray[i].value);
-			switch (objArray[i].status) {
+		for (i = 0; i < statusArray.length; i++) {
+			this.setValueText(statusArray[i].id, statusArray[i].value);
+			switch (statusArray[i].status) {
 				case 0:			// Default Status
-					if (objArray[i].message.length() > 0)
-						this.setStatusTextDefault(objArray[i].id, objArray[i].message);
+					if (statusArray[i].message.length() > 0)
+						this.setStatusTextDefault(statusArray[i].id, statusArray[i].message);
 					else
-						this.setStatusTextDefault(objArray[i].id);
+						this.setStatusTextDefault(statusArray[i].id);
 					break;
 				case 1:			// Ok Status
-					if (objArray[i].message.length() > 0)
-						this.setStatusTextOk(objArray[i].id, objArray[i].message);
+					if (statusArray[i].message.length() > 0)
+						this.setStatusTextOk(statusArray[i].id, statusArray[i].message);
 					else
-						this.setStatusTextOk(objArray[i].id);
+						this.setStatusTextOk(statusArray[i].id);
 					break;
 				case 2:			// Warning Status
-					this.setStatusTextWarn(objArray[i].id, objArray[i].message);
+					this.setStatusTextWarn(statusArray[i].id, statusArray[i].message);
 					break;
 				case 3:			// Error Status
-					this.setStatusTextError(objArray[i].id, objArray[i].message);
+					this.setStatusTextError(statusArray[i].id, statusArray[i].message);
 					break;
 				case 4:			// General Error Message
-					message += '<br>' . objArray[i].message;
+					if (message.length > 0) message += '<br>';
+					message += statusArray[i].message;
 					break;
 				default:		// Default Status
-					if (objArray[i].message.length() > 0)
-						this.setStatusTextDefault(objArray[i].id, objArray[i].message);
+					if (statusArray[i].message.length() > 0)
+						this.setStatusTextDefault(statusArray[i].id, statusArray[i].message);
 					else
-						this.setStatusTextDefault(objArray[i].id);
+						this.setStatusTextDefault(statusArray[i].id);
 					break;
 			}
 		}
-		if (message.length > 0) writeError(message);	
+		if (message.length > 0) writeError(message);
+			else writeError('');
+		writeResponse('');
 	},
 
 	// Parses the JSON data from text format into object format
@@ -510,7 +548,7 @@ var ajaxProcessData = ({
 	setStatusTextOk: function(id) {
 		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon glyphicon-ok form-control-feedback');
 		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group has-success has-feedback');
-		if (arguments > 1)
+		if (arguments.length > 1)
 			document.getElementById('dcmMS-' + id).innerHTML = arguments[1];
 	},
 	
@@ -532,13 +570,13 @@ var ajaxProcessData = ({
 	setStatusTextDefault: function(id) {
 		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon form-control-feedback');
 		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group');
-		if (arguments > 1)
+		if (arguments.length > 1)
 			document.getElementById('dcmMS-' + id).innerHTML = arguments[1];
 	},
 
 	// Sets the value of a text field.
 	setValueText: function(id, value) {
-		if (value.length() > 0) document.getElementById(id).value = value;
+		if (value.length > 0) document.getElementById(id).value = value;
 	}
 	
 });

@@ -13,6 +13,7 @@ an error.
 */
 
 
+require_once 'utility.php';
 require_once 'error.php';
 
 
@@ -32,6 +33,7 @@ interface verifyStringInterface
 	const STR_FLOAT			= 11;	// Floating Point
 	const STR_DATE			= 12;	// Date
 	const STR_DATEUNIX		= 13;	// Unix Date Timestamp
+	const STR_FILENAME		= 14;	// Filename
 
 	// Start custom checks at 100
 
@@ -50,6 +52,8 @@ class verifyString implements verifyStringInterface
 	// Returns true if any errors occurred.
 	public function errstat()
 	{
+		global $herr;
+
 		return $herr->checkState();
 	}
 
@@ -76,7 +80,8 @@ class verifyString implements verifyStringInterface
 			{
 				$this->chklenmin($data, $field, $id, $min);
 				$this->chklenmax($data, $field, $id, $max);
-				$this->chkchrcssa($data, $field, $id);
+				if ($type != self::STR_PASSWD)
+					$this->chkchrcssa($data, $field, $id);
 			}
 		}
 		else
@@ -85,7 +90,8 @@ class verifyString implements verifyStringInterface
 			{
 				$this->chklenmin($data, $field, $id, $min);
 				$this->chklenmax($data, $field, $id, $max);
-				$this->chkchrcssa($data, $field, $id);
+				if ($type != self::STR_PASSWD)
+					$this->chkchrcssa($data, $field, $id);
 			}
 		}
 
@@ -134,6 +140,9 @@ class verifyString implements verifyStringInterface
 			case self::STR_DATEUNIX:
 				$this->validate_date_unix($data, $field, $id);
 				break;
+			case self::STR_FILENAME:
+				$this->validate_filename($data, $field, $id);
+				break;
 			default:
 				$herr->errorPutMessage($this->etype,
 					'Internal Error: Invalid datatype code.', $this->estate,
@@ -146,6 +155,7 @@ class verifyString implements verifyStringInterface
 	private function chklenmax($data, $field, $id, $len)
 	{
 		global $herr;
+
 		if ($len == 0) return;
 		if (strlen($data) > $len)
 		{
@@ -159,6 +169,7 @@ class verifyString implements verifyStringInterface
 	private function chklenmin($data, $field, $id, $len)
 	{
 		global $herr;
+
 		if ($len == 0) return;
 		if (strlen($data) < $len)
 		{
@@ -172,6 +183,7 @@ class verifyString implements verifyStringInterface
 	private function chkblank($data, $field, $id)
 	{
 		global $herr;
+
 		$result = true;
 		if ($data == "")
 		{
@@ -186,6 +198,7 @@ class verifyString implements verifyStringInterface
 	private function chkchrlogin($data, $field, $id)
 	{
 		global $herr;
+
 		$result = preg_match('/[^A-Za-z0-9_-]/', $data);
 		if ($result != 0)
 		{
@@ -199,6 +212,7 @@ class verifyString implements verifyStringInterface
 	private function chkchrcssa($data, $field, $id)
 	{
 		global $herr;
+
 		if (strpos($data, "%") !== false)
 		{
 			$herr->errorPutMessage($this->etype,
@@ -211,6 +225,7 @@ class verifyString implements verifyStringInterface
 	private function chkchrascii($data, $field, $id)
 	{
 		global $herr;
+
 		$len = strlen($data);
 		if ($len > 0)
 		{
@@ -231,6 +246,7 @@ class verifyString implements verifyStringInterface
 	private function chkchrasciiformat($data, $field, $id)
 	{
 		global $herr;
+
 		$len = strlen($data);
 		if ($len > 0)
 		{
@@ -254,6 +270,7 @@ class verifyString implements verifyStringInterface
 	private function chkchrphone($data, $field, $id)
 	{
 		global $herr;
+
 		$result = preg_match('/[^0-9\(\) -]/', $data);
 		if ($result != 0)
 		{
@@ -267,6 +284,7 @@ class verifyString implements verifyStringInterface
 	private function chkchralpha($data, $field, $id)
 	{
 		global $herr;
+
 		$result = preg_match('/[^A-Za-z\ ]/', $data);
 		if ($result != 0)
 		{
@@ -280,6 +298,7 @@ class verifyString implements verifyStringInterface
 	private function chkchrnumber($data, $field, $id)
 	{
 		global $herr;
+
 		$result = preg_match('/[^0-9-]/', $data);
 		if ($result != 0)
 		{
@@ -293,6 +312,7 @@ class verifyString implements verifyStringInterface
 	private function chkchralphanum($data, $field, $id)
 	{
 		global $herr;
+
 		$result = preg_match('/[^A-Za-z0-9\ -]/', $data);
 		if ($result != 0)
 		{
@@ -306,6 +326,7 @@ class verifyString implements verifyStringInterface
 	private function chkchrpint($data, $field, $id)
 	{
 		global $herr;
+
 		$result = preg_match('/[^0-9]/', $data);
 		if ($result != 0)
 		{
@@ -319,6 +340,7 @@ class verifyString implements verifyStringInterface
 	private function chkchrfloat($data, $field, $id)
 	{
 		global $herr;
+
 		$result = preg_match('/[^0-9\.\+[Ee]-]/', $data);
 		if ($result != 0)
 		{
@@ -394,6 +416,7 @@ class verifyString implements verifyStringInterface
 	private function helper_validate_date($data, $field, $id, $minyear, $maxyear)
 	{
 		global $herr;
+
 		// Number of days of each month.
 		$md = array(0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
 		// Separate data
@@ -450,6 +473,20 @@ class verifyString implements verifyStringInterface
 				'Invalid date format detected. Must be MM/DD/YYYY',
 				$this->estate, $field, $id);
 			return;
+		}
+	}
+
+	// Validates filenames
+	private function validate_filename($data, $field, $id)
+	{
+		global $herr;
+
+		$result = preg_match('/[^A-Za-z0-9\ \._-]/', $data);
+		if ($result != 0)
+		{
+			$herr->errorPutMessage($this->etype,
+				'Invalid characters detected.', $this->estate,
+				$field, $id);
 		}
 	}
 }
