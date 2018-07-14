@@ -519,6 +519,7 @@ function deleteRecordAction()
 function formPage($mode, $rxa)
 {
 	global $moduleDisplayUpper;
+	global $CONFIGVAR;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -605,7 +606,7 @@ function formPage($mode, $rxa)
 		);
 	}
 
-	// Scans the icon directory for file names and creates a
+	// Scans the icon directory for icon file names and creates a
 	// pulldown list of them on insert or update modes.  Otherwise
 	// the field is a text box.
 	if ($mode == MODE_INSERT || $mode == MODE_UPDATE)
@@ -618,13 +619,11 @@ function formPage($mode, $rxa)
 		if ($icon === false)
 			handleError('File System Error: Unable to get icon filenames.<br>Contact your administrator.');
 		
-		// We don't want . and .. directories.
-		if ($icon[1] == '..') unset($icon[1]);
-		if ($icon[0] == '.') unset($icon[0]);
-
 		// Remove the filename extension as they are all .png files.
 		foreach($icon as $kx => $vx)
 		{
+			if ($vx == '.') continue;
+			if ($vx == '..') continue;
 			$index = strrpos($vx, '.');
 			$temp = substr($vx, 0, $index);
 			$iconlist[$temp] = $temp;
@@ -649,6 +648,49 @@ function formPage($mode, $rxa)
 			'when displayed on the portal page.', $default, $disable);
 	}
 
+	// Scans the module directory for module file names and creates
+	// a pulldown list of them on insert or update modes.  Otherwise
+	// the field is a text box.
+	if ($mode == MODE_INSERT || $mode == MODE_UPDATE)
+	{
+		// Setup
+		$filelist = array();
+
+		// Get the directory listing.
+		$file = scandir('.');
+		if ($file === false)
+			handleError('File System Error: Unable to get module filenames.<br>Contact your administrator.');
+		
+		// Remove the filename extension as they are all .png files.
+		foreach($file as $kx => $vx)
+		{
+			// Exclue files/directories that we don't want.
+			if ($vx == '.') continue;
+			if ($vx == '..') continue;
+			if ($vx == 'template.php') continue;
+			if ($vx == $CONFIGVAR['html_gridportal_page']['value']) continue;
+			if ($vx == $CONFIGVAR['html_linkportal_page']['value']) continue;
+			$filelist[$vx] = $vx;
+		}
+		unset($file);
+		$modfile = array(
+			'type' => html::TYPE_PULLDN,
+			'label' => 'Filename',
+			'default' => $rxa['filename'],
+			'name' => 'modfile',
+			'fsize' => 4,
+			'optlist' => $filelist,
+			'tooltip' => 'The module\'s executable filename.',
+			'disable' => $disable,
+		);
+	}
+	else
+	{
+		$modfile = generateField(html::TYPE_TEXT, 'modfile', 'Filename', 4,
+			$rxa['filename'], 'The module\'s executable filename.', $default,
+			$disable);
+	}
+
 	// Custom field rendering code
 	$modid   = generateField(html::TYPE_TEXT, 'modid', 'Module ID', 3,
 		$rxa['moduleid'], 'The numeric ID of the module.', $default, $key);
@@ -657,9 +699,6 @@ function formPage($mode, $rxa)
 	$moddesc = generateField(html::TYPE_AREA, 'moddesc', 'Description', 6,
 		$rxa['description'], 'The module\'s description.', $default, $disable);
 	$moddesc['rows'] = 5;
-	$modfile = generateField(html::TYPE_TEXT, 'modfile', 'Filename', 6,
-		$rxa['filename'], 'The module\'s executable filename.', $default,
-		$disable);
 	$modact  = generateField(html::TYPE_CHECK, 'modact', 'Active', 1,
 		$rxa['active'], 'Indicates if the module is active or not.',
 		$default, $disable);

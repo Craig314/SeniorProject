@@ -1350,13 +1350,13 @@ class html implements html_interface
 		if (!empty($msg1) || !empty($msg2))
 		{
 ?>
-		<h1 class="center"><?php echo $msg1; ?><span class="color-blue"><?php echo $msg2; ?></span></h1>
+		<h1 class="text-center"><?php echo $msg1; ?><span class="color-blue"><?php echo $msg2; ?></span></h1>
 <?php
 		}
 		if (!empty($warn))
 		{
 ?>
-		<h4 class="center color-red">WARNING<br><?php echo $warn; ?></h4>
+		<h4 class="text-center color-red">WARNING<br><?php echo $warn; ?></h4>
 <?php
 		}
 	}
