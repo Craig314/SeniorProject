@@ -471,7 +471,7 @@ function insertRecordAction()
 		else
 			handleError('Database: Record insert failed.');
 	}
-	sendResponse('Module insert completed: key = ' . $modid);
+	sendResponse('Module insert completed: key = ' . $id);
 	exit(0);
 }
 
@@ -605,6 +605,50 @@ function formPage($mode, $rxa)
 		);
 	}
 
+	// Scans the icon directory for file names and creates a
+	// pulldown list of them on insert or update modes.  Otherwise
+	// the field is a text box.
+	if ($mode == MODE_INSERT || $mode == MODE_UPDATE)
+	{
+		// Setup
+		$iconlist = array();
+
+		// Get the directory listing.
+		$icon = scandir('../images/icon128');
+		if ($icon === false)
+			handleError('File System Error: Unable to get icon filenames.<br>Contact your administrator.');
+		
+		// We don't want . and .. directories.
+		if ($icon[1] == '..') unset($icon[1]);
+		if ($icon[0] == '.') unset($icon[0]);
+
+		// Remove the filename extension as they are all .png files.
+		foreach($icon as $kx => $vx)
+		{
+			$index = strrpos($vx, '.');
+			$temp = substr($vx, 0, $index);
+			$iconlist[$temp] = $temp;
+		}
+		unset($icon);
+		$modicon = array(
+			'type' => html::TYPE_PULLDN,
+			'label' => 'Icon',
+			'default' => $rxa['iconname'],
+			'name' => 'modicon',
+			'fsize' => 4,
+			'optlist' => $iconlist,
+			'tooltip' => 'The icon name that the module uses&#013' .
+				'when displayed on the portal page.',
+			'disable' => $disable,
+		);
+	}
+	else
+	{
+		$modicon = generateField(html::TYPE_TEXT, 'modicon', 'Icon', 4,
+			$rxa['iconname'], 'The icon name that the module uses&#013' .
+			'when displayed on the portal page.', $default, $disable);
+	}
+
 	// Custom field rendering code
 	$modid   = generateField(html::TYPE_TEXT, 'modid', 'Module ID', 3,
 		$rxa['moduleid'], 'The numeric ID of the module.', $default, $key);
@@ -616,9 +660,6 @@ function formPage($mode, $rxa)
 	$modfile = generateField(html::TYPE_TEXT, 'modfile', 'Filename', 6,
 		$rxa['filename'], 'The module\'s executable filename.', $default,
 		$disable);
-	$modicon = generateField(html::TYPE_TEXT, 'modicon', 'Icon', 4,
-		$rxa['iconname'], 'The icon name that the module uses&#013' .
-		'when displayed on the portal page.', $default, $disable);
 	$modact  = generateField(html::TYPE_CHECK, 'modact', 'Active', 1,
 		$rxa['active'], 'Indicates if the module is active or not.',
 		$default, $disable);

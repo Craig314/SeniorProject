@@ -18,77 +18,11 @@ button:focus {
 	height: 200px;
 }
 
-body {
+/* body {
 	margin: 0;
 	padding: 0;
 	overflow: hidden;
+	overflow-y: scroll;
 }
-
-.text-left {
-	text-align: left !important;
-}
-
-.text-right {
-	text-align: right !important;
-}
-
-.image-border-top {
-	width: 800px;
-	height: 60px;
-	margin: auto;
-}
-
-.image-border-bottom {
-	width: 800px;
-	margin: auto;
-}
-
-.width50 {
-	width: 50%;
-	max-width: 800px;
-	margin: auto;
-}
-
-.width75 {
-	width: 75%;
-	max-width: 800px;
-	margin: auto;
-}
-
-.padding5 {
-	padding-left: 5%;
-}
-
-.padding10 {
-	padding-left: 10%;
-}
-
-.color-red {
-	color: red;
-	text-decoration-color: red;
-}
-
-.color-blue {
-	color: blue;
-	text-decoration-color: blue;
-}
-
-.color-black {
-	color: black;
-	text-decoration-color: black;
-}
-
-.color-inherit {
-	color: inherit;
-	text-decoration-color: inherit;
-}
-
-.center {
-	text-align: center;
-}
-
-.border_center {
-	width: 800px;
-	margin: auto;
-}
+ */
 

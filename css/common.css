@@ -1,0 +1,101 @@
+/*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
+
+Cascading Style Sheet for Common Styles
+
+*/
+
+
+html, body {
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	overflow-y: scroll;
+}
+
+.color-red {
+	color: red;
+	text-decoration-color: red;
+}
+
+.color-blue {
+	color: blue;
+	text-decoration-color: blue;
+}
+
+.color-black {
+	color: black;
+	text-decoration-color: black;
+}
+
+.color-inherit {
+	color: inherit;
+	text-decoration-color: inherit;
+}
+
+.text-left {
+	text-align: left !important;
+}
+
+.text-right {
+	text-align: right !important;
+}
+
+.text-center {
+	text-align: center !important;
+}
+
+.image-border-top {
+	width: 800px;
+	height: 60px;
+	margin: auto;
+}
+
+.image-border-bottom {
+	width: 800px;
+	margin: auto;
+}
+
+.width50 {
+	width: 50%;
+	max-width: 800px;
+	margin: auto;
+}
+
+.width75 {
+	width: 75%;
+	max-width: 800px;
+	margin: auto;
+}
+
+.pad5left {
+	padding-left: 5%;
+}
+
+.pad10left {
+	padding-left: 10%;
+}
+
+.pad5right {
+	padding-right: 5%;
+}
+
+.pad10right {
+	padding-right: 10%;
+}
+
+.vspace5 {
+	height: 5%;
+	margin: auto;
+}
+
+.vspace10 {
+	height: 10%;
+	margin: auto;
+}
+
+

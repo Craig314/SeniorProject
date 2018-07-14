@@ -949,6 +949,12 @@ class html implements html_interface
 		self::helperFieldSizeText($data, $fclass);
 		self::helperTooltip($data, $tooltip);
 		self::helperIcon($data, $icons, $icond);
+		if (isset($data['blank']))
+		{
+			if ($data['blank'] == true) $blank = true;
+				else $blank = false;
+		}
+		else $blank = false;
 
 		// Combine
 		$printout = $name . $tooltip . $disabled;
@@ -962,8 +968,13 @@ class html implements html_interface
 				<div<?php echo $fclass; ?>>
 					<span<?php echo $icons; ?>><i<?php echo $icond; ?>></i></span>
 					<select class="form-control"<?php echo $printout; ?>>
+<?php
+		if ($blank == true)
+		{
+?>
 						<option value="----">----</option>
 <?php
+		}
 		if (!empty($data['optlist']))
 		{
 			foreach($data['optlist'] as $kx => $vx)
@@ -1618,6 +1629,8 @@ class html implements html_interface
 		<script type="text/javascript" src="<?php echo $url; ?>/js/treewalker.js"></script>
 		<!-- Install Bootstrap CSS -->
 		<link rel="stylesheet" type="text/css" href="<?php echo $url; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/css/bootstrap.css">
+		<!-- Install Custom Common CSS -->
+		<link rel="stylesheet" type="text/css" href="<?php echo $url; ?>/css/common.css">
 		<!-- Install Custom Header CSS -->
 		<link rel="stylesheet" type="text/css" href="<?php echo $url; ?>/css/header.css">
 		<!-- Install Slider CSS -->

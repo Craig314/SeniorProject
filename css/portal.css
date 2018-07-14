@@ -8,18 +8,18 @@ Cascading Style Sheet for Application Portal
 */
 
 
-div.iconimg {
+.iconimg {
     width: 128px;
     height: 128px;
   }
 
-div.icontxt {
+.icontxt {
     width: 128px;
     height: 24px;
     text-align: center;
   }
 
-div.icon {
+.icon {
     cursor: pointer;
     width: 128px;
     height: 165px;
@@ -30,7 +30,7 @@ div.icon {
     /* border: 1px solid lightgrey; */
   }
 
-div.iconfont {
+.iconfont {
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 12pt;
   }

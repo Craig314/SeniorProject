@@ -14,50 +14,13 @@ html, body {
 	margin: 0;
 }
 
-div.vspace10 {
-	width: 50%;
-	height: 10%;
-	margin: auto;
-}
-
-div.vspace5 {
-	width: 50%;
-	height: 5%;
-	margin: auto;
-}
-
-div.banner_center {
+.image-banner-center {
 	width: 527px;
-	margin: auto;
+	display: block;
+	margin: 0 auto;
 }
 
-div.border_center {
-	width: 800px;
-	margin: auto;
-}
-
-div.pg_center {
-	width: 75%;
-	margin: auto;
-}
-
-form.login {
+.login {
 	margin: auto;
 	width: 50%;
-}
-
-div.errormsg {
-	text-align: center;
-	font-weight: bold;
-	color: red;
-}
-
-div.normalmsg {
-	text-align: center;
-	color: blue;
-}
-
-div.chooser {
-	text-align: center;
-	color: black;
 }

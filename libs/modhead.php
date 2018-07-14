@@ -252,6 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
 	// If the method is GET, then we call the module specific
 	// initial content generator.
 	loadInitialContent();
+
 	exit(0);
 }
 
@@ -307,14 +308,14 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 	{
 		// Malformed request
 		$ajax->sendCode(ajaxClass::CODE_BADREQ);
-		exit;
+		exit(1);
 	}
 }
 else
 {
 	// Unknown request method
 	$ajax->sendCode(ajaxClass::CODE_NOMETH);
-	exit;
+	exit(1);
 }
 
 

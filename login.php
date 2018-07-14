@@ -360,21 +360,22 @@ function loginShowHeader()
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/ajax.js"></script>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/login.js"></script>
 		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/css/bootstrap.css">
+		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/css/common.css">
 		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/css/login.css">
 	</head>
 	<body>
 		<div class="vspace10"></div>
-		<div class="banner_center">
+		<div class="image-banner-center">
 			<img src="<?php echo $baseUrl; ?>/images/seacore_logo_trademark_large.png" />
 		</div>
 		<div class="vspace5"></div>
-		<div class="border_center">
+		<div class="image-border-top">
 			<img src="<?php echo $baseUrl; ?>/images/border2a.gif" />
 		</div>
 		<div class="vspace5"></div>
-		<div class="pg_center">
-			<div class="normalmsg" id="responseTarget"></div>
-			<div class="errormsg" id="errorTarget"></div>
+		<div class="width75">
+			<div class="color-blue" id="responseTarget"></div>
+			<div class="color-red" id="errorTarget"></div>
 			<div id="main"></div>
 		</div>
 <?php
@@ -389,8 +390,8 @@ function loginShowOption($hidden)
 		else $hide = '';
 ?>
 		<div id="method_chooser" <?php echo $hide; ?>>
-			<div class="pg_center">
-				<div class="chooser"><b>Select a login method.</b></div>
+			<div class="width75">
+				<div class="color-black"><b>Select a login method.</b></div>
 				<form class="login-choice" id="form_choice" method=post>
 					<div class="row">
 						<div class="button">
@@ -447,27 +448,35 @@ function loginShowNative($hidden, $mode)
 		else $hide = '';
 ?>
 		<div id="native_form" <?php echo $hide; ?>>
-			<div class="pg_center">
+			<div class="width75">
 				<form class="login form-horizontal" id="form_native" method=post>
-					<div class="form-group">
-						<label class="control-label col-xs-4" for="native_username">Username</label>
-						<div class="col-xs-8">
-							<input type="text" class="form-control" id="native_username" maxlength=<?php echo $userMax; ?> />
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="control-label col-xs-4" for="password">Password</label>
-						<div class="col-xs-8">
-							<input type="password" class="form-control" id="native_password" maxlength=<?php echo $passMax; ?>>
-						</div>
-					</div>
-					<div class="button">
+					<div class="row">
 						<div class="form-group">
-							<span class="col-xs-2"></span>
-							<input type="button" class="btn btn-default col-xs-3" value="Submit" onclick="submitFormNative()">
-							<span class="col-xs-2"></span>
-							<input type="button" class="btn btn-default col-xs-3" value="Reset" onclick="resetFormNative()">
-							<span class="col-xs-2"></span>
+							<label class="control-label col-xs-3 text-right" for="native_username">Username</label>
+							<div class="input-group col-xs-8">
+								<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+								<input type="text" class="form-control" id="native_username" maxlength=<?php echo $userMax; ?>>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="form-group">
+							<label class="control-label col-xs-3 text-right" for="password">Password</label>
+							<div class="input-group col-xs-8">
+								<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+								<input type="password" class="form-control" id="native_password" maxlength=<?php echo $passMax; ?>>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="button">
+							<div class="form-group">
+								<span class="col-xs-2"></span>
+								<input type="button" class="btn btn-default col-xs-3" value="Submit" onclick="submitFormNative()">
+								<span class="col-xs-2"></span>
+								<input type="button" class="btn btn-default col-xs-3" value="Reset" onclick="resetFormNative()">
+								<span class="col-xs-2"></span>
+							</div>
 						</div>
 					</div>
 <?php
@@ -499,7 +508,7 @@ function loginShowOAuth($hidden)
 		else $hide = '';
 ?>
 		<div id="oauth_form" <?php echo $hide; ?>>
-			<div class="pg_center">
+			<div class="width75">
 				<form class="login form-horizontal" id="form_oauth" method=post>
 					<div class="button">
 						<div class="form-group">
@@ -524,7 +533,7 @@ function loginShowOpenID($hidden)
 		else $hide = '';
 ?>
 		<div id="openid_form" <?php echo $hide; ?>>
-			<div class="pg_center">
+			<div class="width75">
 				<form class="login form-horizontal" id="openid_form" method=post>
 					<div class="form-group">
 						<label class="control-label col-xs-4" for="openid_url">OpenID URL</label>
@@ -561,7 +570,7 @@ function loginShowFooter()
 	global $baseUrl;
 ?>
 		<div class="vspace5"></div>
-		<div class="border_center">
+		<div class="image-border-bottom">
 			<img src="<?php echo $baseUrl; ?>/images/border2b.gif" />
 		</div>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/APIs/JQuery/BaseJQuery/jquery-3.1.0.min.js"></script>

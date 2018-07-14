@@ -218,7 +218,7 @@ function change_password()
 	// Load the user's login data.
 	$userid = $_SESSION['userId'];
 	$username = $_SESSION['nameUser'];
-	$rxa = $dbuser->queryLogin($userid);
+	$rxa_login = $dbuser->queryLogin($userid);
 	if ($rxa_login == false)
 		error_exit('Stored Data Conflict<br>Contact Your Administrator<br>XX32745');
 	$hexpass	= (string)$rxa_login['passwd'];
@@ -250,7 +250,7 @@ function change_password()
 
 	// Makes sure that the two new passwords match.
 	if (strcmp($newpass1, $newpass2) != 0)
-		error_exit('The two new passwords do not match.');
+		error_exit('The new passwords do not match.');
 	
 	// Make sure that the old and new passwords do not match.
 	if (strcmp($oldpass, $newpass1) == 0)
@@ -325,7 +325,7 @@ function bannerShowHeader($title, $subtitle, $message, $token)
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/ajax.js"></script>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/banner.js"></script>
 		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/css/bootstrap.css">
-		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/css/banner.css">
+		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/css/common.css">
 	</head>
 	<body href-link="banner.php" onload="initialRun()">
 <?php
@@ -335,12 +335,12 @@ function bannerShowHeader($title, $subtitle, $message, $token)
 	}
 ?>
 		<br><br>
-		<div class="center">
+		<div class="text-center">
 			<h1 class="color-red"><?php echo $title; ?></h1>
 			<h4 class="color-red"><?php echo $subtitle; ?></h4>
 			<h4 class="color-inherit"><?php echo $message; ?></h4>
 		</div>
-		<div class="border_center">
+		<div class="image-border-top">
 			<img src="<?php echo $baseUrl; ?>/images/border2a.gif" />
 		</div>
 		<br>
@@ -356,7 +356,7 @@ function bannerShowFooter()
 {
 	global $baseUrl;
 ?>
-		<div class="border_center">
+		<div class="image-border-bottom">
 			<img src="<?php echo $baseUrl; ?>/images/border2b.gif" />
 		</div>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/APIs/JQuery/BaseJQuery/jquery-3.1.0.min.js"></script>
@@ -375,7 +375,7 @@ function bannerShowPassword($hidden)
 		else $hide = '';
 ?>
 		<div id="block_password"<?php echo $hide; ?>>
-			<div class="pg_center">
+			<div class="width75">
 				<form class="passwd form-horizontal">
 					<div class="form-group">
 						<label class="control-label col-xs-4" for="oldpass">Old Password</label>
@@ -417,7 +417,7 @@ function bannerShowContinue($hidden)
 ?>
 		<div id="block_continue"<?php echo $hide; ?>>
 			<br>
-			<div class="pg_center">
+			<div class="width75">
 				<form class="form-horizontal">
 					<div class="button">
 						<div class="form-group">
