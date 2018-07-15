@@ -120,7 +120,8 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 			$jsFiles = array(
-			'/js/modedit.js',
+				'/js/common.js',
+				'/js/modedit.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -166,6 +167,7 @@ function loadAdditionalContent()
 	global $dbconf;
 	global $herr;
 	global $moduleTitle;
+	global $moduleDisplayLower;
 
 	// Dump the module database and process it.
 	$rxm = $dbconf->queryModuleAll();
@@ -329,12 +331,14 @@ function deleteRecordView()
 // XXX: Requires customization.
 function updateRecordAction()
 {
-	global $dbconf;
+	global $ajax;
 	global $herr;
 	global $vfystr;
-	global $ajax;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
+	global $dbconf;
 
-	// Set field list
+	// Set the field list
 	$fieldlist = array(
 		'modid',
 		'modname',
@@ -357,9 +361,9 @@ function updateRecordAction()
 
 	// Check key data.
 	if ($key == NULL)
-		handleError('Missing module selection data.');
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
 	if ($id == NULL)
-		handleError('Missing module selection data.');
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
 	if (!is_numeric($key))
 		handleError('Malformed key sequence.');
 	if (!is_numeric($id))
@@ -368,12 +372,13 @@ function updateRecordAction()
 		handleError('Database key mismatch.');
 
 	// Check mandatory fields.
-	$vfystr->strchk($name, 'Name', 'modname', verifyStringInterface::STR_ALPHA, true, 32, 3);
-	$vfystr->strchk($file, 'Filename', 'modfile', verifyStringInterface::STR_FILENAME, true, 50, 3);
-	$vfystr->strchk($icon, 'Icon', 'modicon', verifyStringInterface::STR_FILENAME, true, 50, 3);
+	$vfystr->strchk($id, 'Module ID', 'modid', verifyString::STR_PINTEGER, true, 2147483647, 1);
+	$vfystr->strchk($name, 'Name', 'modname', verifyString::STR_ALPHA, true, 32, 3);
+	$vfystr->strchk($file, 'Filename', 'modfile', verifyString::STR_FILENAME, true, 50, 3);
+	$vfystr->strchk($icon, 'Icon', 'modicon', verifyString::STR_FILENAME, true, 50, 3);
 	
 	// Check optional fields.
-	$vfystr->strchk($desc, 'Description', 'moddesc', verifyStringInterface::STR_ASCII, false, 256, 0);
+	$vfystr->strchk($desc, 'Description', 'moddesc', verifyString::STR_ASCII, false, 256, 0);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -393,16 +398,16 @@ function updateRecordAction()
 	if (!empty($sys)) $sys = 1; else $sys = 0;
 
 	// We are good, update the record.
-	$result = $dbconf->updateModule($id, $name, $desc, $file, $icon, (int)$act,
+	$result = $dbconf->updateModule($key, $name, $desc, $file, $icon, (int)$act,
 		(int)$all, (int)$sys, (int)$vend);
 	if ($result == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
 		else
-			handleError('Database: Record update failed.');
+			handleError('Database: Record update failed. Key = ' . $key);
 	}
-	sendResponse('Module update completed: key = ' . $key);
+	sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
 	exit(0);
 }
 
@@ -410,10 +415,12 @@ function updateRecordAction()
 // XXX: Requires customization.
 function insertRecordAction()
 {
-	global $dbconf;
+	global $ajax;
 	global $herr;
 	global $vfystr;
-	global $ajax;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
+	global $dbconf;
 
 	// Set field list
 	$fieldlist = array(
@@ -436,7 +443,7 @@ function insertRecordAction()
 	$sys = getPostValue('modsys');
 
 	// Check mandatory fields.
-	$vfystr->strchk($id, 'Module ID', 'modid', verifyString::STR_PINTEGER, true, 10, 1);
+	$vfystr->strchk($id, 'Module ID', 'modid', verifyString::STR_PINTEGER, true, 2147483647, 1);
 	$vfystr->strchk($name, 'Name', 'modname', verifyString::STR_ALPHA, true, 32, 3);
 	$vfystr->strchk($file, 'Filename', 'modfile', verifyString::STR_FILENAME, true, 50, 3);
 	$vfystr->strchk($icon, 'Icon', 'modicon', verifyString::STR_FILENAME, true, 50, 3);
@@ -469,9 +476,9 @@ function insertRecordAction()
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
 		else
-			handleError('Database: Record insert failed.');
+			handleError('Database: Record insert failed. Key = ' . $id);
 	}
-	sendResponse('Module insert completed: key = ' . $id);
+	sendResponse($moduleDisplayUpper . ' insert completed: key = ' . $id);
 	exit(0);
 }
 
@@ -479,26 +486,28 @@ function insertRecordAction()
 // XXX: Requires customization.
 function deleteRecordAction()
 {
-	global $dbconf;
 	global $herr;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
+	global $dbconf;
 
 	// Gather data...
 	$key = getPostValue('hidden');
-	$modid = getPostValue('modid');
+	$id = getPostValue('modid');
 	$modsys = getPostValue('modsys');
 
 	// ...and check it.
 	if ($key == NULL)
-		handleError('Missing module selection data.');
-	if ($modid == NULL)
-		handleError('Missing module selection data.');
+		handleError('Missing ' . $moduleDisplayLower . ' module selection data.');
+	if ($id == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
 	if ($modsys != NULL)
 		handleError('System modules cannot be deleted.');
 	if (!is_numeric($key))
 		handleError('Malformed key sequence.');
-	if (!is_numeric($modid))
+	if (!is_numeric($id))
 		handleError('Malformed key sequence.');
-	if ($key != $modid)
+	if ($key != $id)
 		handleError('Database key mismatch.');
 	
 	// Now remove the module from the database.
@@ -508,9 +517,10 @@ function deleteRecordAction()
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
 		else
-			handleError('Database Error: Unable to delete module data.');
+			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
+				' data. Key = ' . $key);
 	}
-	sendResponse('Module delete completed: key = ' . $key);
+	sendResponse($moduleDisplayUpper . ' delete completed: key = ' . $key);
 	exit(0);
 }
 
@@ -518,8 +528,9 @@ function deleteRecordAction()
 // XXX: Requires customization.
 function formPage($mode, $rxa)
 {
-	global $moduleDisplayUpper;
 	global $CONFIGVAR;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -790,7 +801,7 @@ function getPostValue(...$list)
 {
 	foreach($list as $param)
 	{
-		if (!empty($_POST[$param])) return $_POST[$param];
+		if (isset($_POST[$param])) return $_POST[$param];
 	}
 	return NULL;
 }

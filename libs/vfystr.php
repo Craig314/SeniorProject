@@ -78,21 +78,31 @@ class verifyString implements verifyStringInterface
 		{
 			if ($this->chkblank($data, $field, $id))
 			{
-				$this->chklenmin($data, $field, $id, $min);
-				$this->chklenmax($data, $field, $id, $max);
+				if ($type != self::STR_NUMERIC && $type != self::STR_PINTEGER
+					&& $type != self::STR_FLOAT)
+				{
+					if (!$this->chklenmin($data, $field, $id, $min)) return;
+					if (!$this->chklenmax($data, $field, $id, $max)) return;
+				}
 				if ($type != self::STR_PASSWD)
-					$this->chkchrcssa($data, $field, $id);
+					if (!$this->chkchrcssa($data, $field, $id)) return;
 			}
+			else return;
 		}
 		else
 		{
 			if ($data != "")
 			{
-				$this->chklenmin($data, $field, $id, $min);
-				$this->chklenmax($data, $field, $id, $max);
+				if ($type != self::STR_NUMERIC && $type != self::STR_PINTEGER
+					&& $type != self::STR_FLOAT)
+				{
+					if (!$this->chklenmin($data, $field, $id, $min)) return;
+					if (!$this->chklenmax($data, $field, $id, $max)) return;
+				}
 				if ($type != self::STR_PASSWD)
-					$this->chkchrcssa($data, $field, $id);
+					if (!$this->chkchrcssa($data, $field, $id)) return;
 			}
+			else return;
 		}
 
 		// Specific Checks
@@ -123,16 +133,16 @@ class verifyString implements verifyStringInterface
 				$this->chkchralpha($data, $field, $id);
 				break;
 			case self::STR_NUMERIC:
-				$this->chkchrnumber($data, $field, $id);
+				$this->chkchrnumber($data, $field, $id, $max, $min);
 				break;
 			case self::STR_ALPHANUM:
 				$this->chkchralphanum($data, $field, $id);
 				break;
 			case self::STR_PINTEGER:
-				$this->chkchrpint($data, $field, $id);
+				$this->chkchrpint($data, $field, $id, $max, $min);
 				break;
 			case self::STR_FLOAT:
-				$this->chkchrfloat($data, $field, $id);
+				$this->chkchrfloat($data, $field, $id, $max, $min);
 				break;
 			case self::STR_DATE:
 				$this->validate_date($data, $field, $id);
@@ -162,7 +172,9 @@ class verifyString implements verifyStringInterface
 			$herr->errorPutMessage($this->etype,
 				'Maximum length of ' . $len . ' exceeded.', $this->estate,
 				$field, $id);
+			return false;
 		}
+		return true;
 	}
 
 	// Checks string minimum length.
@@ -176,7 +188,9 @@ class verifyString implements verifyStringInterface
 			$herr->errorPutMessage($this->etype,
 				'Minimum length of ' . $len . ' not met.', $this->estate,
 				$field, $id);
+			return false;
 		}
+		return true;
 	}
 
 	// Checks for blank string.
@@ -184,14 +198,13 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$result = true;
-		if ($data == "")
+		if (strlen($data) == 0)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Blank field not allowed.', $this->estate, $field, $id);
-			$result = false;
+			return false;
 		}
-		return $result;
+		return true;
 	}
 
 	// Checks for invalid characters in user id string.
@@ -203,7 +216,8 @@ class verifyString implements verifyStringInterface
 		if ($result != 0)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected.', $this->estate,
+				'Invalid characters detected.<br>Only letters, numbers,' .
+				' -_ are allowed.', $this->estate,
 				$field, $id);
 		}
 	}
@@ -216,9 +230,11 @@ class verifyString implements verifyStringInterface
 		if (strpos($data, "%") !== false)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected.', $this->estate,
-				$field, $id);
+				'Invalid characters detected.<br>Percent sign not allowed.',
+				$this->estate, $field, $id);
+			return false;
 		}
+		return true;
 	}
 
 	// Checks to make sure string characters are in ASCII range.
@@ -234,8 +250,8 @@ class verifyString implements verifyStringInterface
 				if (ord($data[$i]) < 32 || ord($data[$i]) > 127)
 				{
 					$herr->errorPutMessage($this->etype,
-						'Invalid characters detected.', $this->estate,
-						$field, $id);
+						'Invalid characters detected.<br>Only ASCII characters allowed.',
+						$this->estate, $field, $id);
 				}
 			}
 		}
@@ -258,8 +274,8 @@ class verifyString implements verifyStringInterface
 					if (ord($data[$i]) == 10) continue;
 					if (ord($data[$i]) == 13) continue;
 					$herr->errorPutMessage($this->etype,
-						'Invalid characters detected.', $this->estate,
-						$field, $id);
+						'Invalid characters detected.<br>Only ASCII characters with' .
+						'<br>CR, LF, and TAB are allowed.', $this->estate, $field, $id);
 					return;
 				}
 			}
@@ -275,8 +291,8 @@ class verifyString implements verifyStringInterface
 		if ($result != 0)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected.', $this->estate,
-				$field, $id);
+				'Invalid characters detected.<br>Only numbers, ()-SP are allowed',
+				$this->estate, $field, $id);
 		}
 	}
 
@@ -289,13 +305,13 @@ class verifyString implements verifyStringInterface
 		if ($result != 0)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected.', $this->estate,
-				$field, $id);
+				'Invalid characters detected.<br>Only letters and space are' .
+				' allowed', $this->estate, $field, $id);
 		}
 	}
 
 	// Numbers only (+/-)
-	private function chkchrnumber($data, $field, $id)
+	private function chkchrnumber($data, $field, $id, $max, $min)
 	{
 		global $herr;
 
@@ -303,8 +319,27 @@ class verifyString implements verifyStringInterface
 		if ($result != 0)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected.', $this->estate,
+				'Invalid characters detected. Only numbers, - are allowed', $this->estate,
 				$field, $id);
+			return;
+		}
+		if (filter_var($data, FILTER_VALIDATE_INT) === false)
+		{
+			$herr->errorPutMessage($this->etype,
+				'Invalid floating point format detected.',
+				$this->estate, $field, $id);
+			return;
+		}
+		if ($max >= $min)
+		{
+			if ($data > $max || $data < $min)
+			{
+				$herr->errorPutMessage($this->etype,
+					'Numeric value out of range.<br>Must be between '
+					. $min . ' and ' . $max . ' inclusive.', $this->estate,
+					$field, $id);
+				return;
+			}
 		}
 	}
 
@@ -317,13 +352,13 @@ class verifyString implements verifyStringInterface
 		if ($result != 0)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected.', $this->estate,
-				$field, $id);
+				'Invalid characters detected.<br>Only letters, numbers,' .
+				' - SP are allowed.', $this->estate, $field, $id);
 		}
 	}
 
 	// Positive integers
-	private function chkchrpint($data, $field, $id)
+	private function chkchrpint($data, $field, $id, $max, $min)
 	{
 		global $herr;
 
@@ -331,13 +366,32 @@ class verifyString implements verifyStringInterface
 		if ($result != 0)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected.', $this->estate,
-				$field, $id);
+				'Invalid characters detected.<br>Only numbers are allowed.',
+				$this->estate, $field, $id);
+			return;
+		}
+		if (filter_var($data, FILTER_VALIDATE_INT) === false)
+		{
+			$herr->errorPutMessage($this->etype,
+				'Invalid integer format detected.',
+				$this->estate, $field, $id);
+			return;
+		}
+		if ($max >= $min)
+		{
+			if ($data > $max || $data < $min)
+			{
+				$herr->errorPutMessage($this->etype,
+					'Numeric value out of range.<br>Must be between '
+					. $min . ' and ' . $max . ' inclusive.', $this->estate,
+					$field, $id);
+				return;
+			}
 		}
 	}
 
 	// Floating point
-	private function chkchrfloat($data, $field, $id)
+	private function chkchrfloat($data, $field, $id, $max, $min)
 	{
 		global $herr;
 
@@ -345,8 +399,27 @@ class verifyString implements verifyStringInterface
 		if ($result != 0)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected.', $this->estate,
-				$field, $id);
+				'Invalid characters detected. Only numbers, .Ee+- are allowed.',
+				$this->estate, $field, $id);
+			return;
+		}
+		if (filter_var($data, FILTER_VALIDATE_FLOAT) === false)
+		{
+			$herr->errorPutMessage($this->etype,
+				'Invalid floating point format detected.',
+				$this->estate, $field, $id);
+			return;
+		}
+		if ($max >= $min)
+		{
+			if ($data > $max || $data < $min)
+			{
+				$herr->errorPutMessage($this->etype,
+					'Numeric value out of range.<br>Must be between '
+					. $min . ' and ' . $max . ' inclusive.', $this->estate,
+					$field, $id);
+				return;
+			}
 		}
 	}
 
@@ -485,8 +558,8 @@ class verifyString implements verifyStringInterface
 		if ($result != 0)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected.', $this->estate,
-				$field, $id);
+				'Invalid characters detected.<br>Only letters, numbers, ._-' .
+				' are allowed.', $this->estate, $field, $id);
 		}
 	}
 }

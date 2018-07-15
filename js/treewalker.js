@@ -70,25 +70,6 @@ function treeWalker(nodeArray) {
 						params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
 					}
 					break;
-				case "text":
-				case "password":
-				case "color":		// This and below: HTML 5
-				case "date":
-				case "datetime":
-				case "datetime-local":
-				case "email":
-				case "file":
-				case "image":
-				case "month":
-				case "number":
-				case "range":
-				case "search":
-				case "time":
-				case "url":
-				case "week":
-					if (params.length > 0) params += "&";
-					params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
-					break;
 
 				// Boolean input types
 				case "checkbox":
@@ -103,10 +84,12 @@ function treeWalker(nodeArray) {
 				case "button":
 					break;
 
-				// Unrecognized input type
+				// All other input types.
 				default:
-					console.log("Unsupported input type: " + nodeObject.type.toLowerCase());
-			}
+					if (params.length > 0) params += "&";
+					params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
+					break;
+		}
 		}
 
 		// Look for any objects in the DOM with a tag name of TEXTAREA.

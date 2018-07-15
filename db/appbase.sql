@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`setting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains configuration information about the application.\r\nThe following numerical ranges are defined:\r\n0-9  Server\r\n10-19 HTML\r\n20-29 SSL\r\n30-49 Security\r\n50-59 Session\r\n60-69 Time/Timezone\r\n70-79 Account/Profile\r\n1000+ Application Specific';
 
--- Dumping data for table configuration.config: ~40 rows (approximately)
+-- Dumping data for table configuration.config: ~43 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
 	(0, 0, 'server_document_root', 'Appliation Root Directory', '/Servers/webdocs', 'This sets the application root directory on the server.', 1),
@@ -63,7 +63,8 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(50, 1, 'session_regen_time', 'Session Regenerate Timeout', '30', 'The time interval between session ID regeneration. This helps to prevent session fixation and session hijacking.', 1),
 	(51, 1, 'session_expire_time', 'Session Expire Timeout', '60', 'The time in seconds that the old session before ID regeneration is still valid.', 1),
 	(52, 1, 'session_nonce_len', 'Session Nonce Length', '32', 'The length of the session nonce in bytes.', 0),
-	(53, 1, 'session_cookie_expire_time', 'Session Cookie Timeout', '600', 'The time in seconds before the client cookie expires on a per page basis.', 1),
+	(53, 1, 'session_cookie_expire_time', 'Session Cookie Timeout', '900', 'The time in seconds before the client cookie expires on a per page basis.', 1),
+	(54, 1, 'session_use_tokens', 'Use Session Tokens', '1', 'Tells the system to use session tokens in addition to session IDs.', 1),
 	(60, 10, 'timezone_default', 'Time Displacement From UTC', '-8:00', 'This sets the timezone displacement from UTC.', 1),
 	(70, 1, 'account_id_none', 'Null Account ID', '0', 'The account ID number for a NULL user which has not yet logged in.', 0),
 	(71, 1, 'account_id_vendor', 'Vendor Account ID', '1', 'The account ID number of the vendor account.', 0),
@@ -127,13 +128,13 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~4 rows (approximately)
+-- Dumping data for table configuration.module: ~3 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
-	(2147483600, 'Testing Module 1', 'This module is used for testing purposes.', 'testmod.php', 'icon_gears', 1, 1, 0, 0),
-	(2147483601, 'Testing Module 2', 'This module is used for testing purposes.', 'testmod.php', 'icon_gears', 1, 0, 0, 1),
-	(2147483602, 'Testing Module 3', 'This module is used for testing purposes.', 'testmod.php', 'icon_gears', 0, 0, 0, 0),
-	(2147483603, 'Testing Module 4', 'This module is used for testing purposes.', 'testmod.php', 'icon_gears', 1, 0, 0, 0);
+	(3, 'Module Data Editor', 'Edits module data in the database.', 'modedit.php', 'icon_gears', 1, 0, 1, 1),
+	(4, 'Change Password', 'Allows on to change their login password', 'passwd.php', 'icon_padlock', 1, 1, 1, 0),
+	(5, 'Profile Editor', 'Edits the available profiles that defines what access rights a user has.', 'profedit.php', 'icon_keys', 1, 0, 1, 0),
+	(3242, 'Test Module', 'This is for testing purposes only.', 'passwd.php', 'icon_computer', 1, 1, 1, 0);
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.oauth
@@ -231,8 +232,8 @@ CREATE TABLE IF NOT EXISTS `login` (
 -- Dumping data for table userdata.login: ~2 rows (approximately)
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `active`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
-	(1, 1, 0, 0, -1, 0, -1, 'SHA256', 100, '5166bc62b67e7012197588dc5cf2aeac919b5df0392648284998f8c07a3bb9a0', 'f9c4b6ac8d605c32b3843055da85622e662420978fb52d3d773fc15407f6be6c'),
-	(2, 1, 0, 0, -1, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73');
+	(1, 1, 0, 0, 1531643774, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(2, 1, 0, 0, 1531645842, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.oauth

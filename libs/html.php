@@ -139,7 +139,7 @@ class html implements html_interface
 	// Helper function for insertFieldSelect
 	static private function insertFieldSelectHelper($kx, $vx, $default)
 	{
-		if (!empty($default))
+		if (strlen($default) != 0)
 		{
 			if (strcasecmp($default, $vx) != 0 && strcasecmp($default, $kx) != 0)
 			{
@@ -258,7 +258,7 @@ class html implements html_interface
 	// Helper: Default Value
 	static private function helperDefault($data, $type, &$default)
 	{
-		if (!empty($data['default']))
+		if (isset($data['default']))
 		{
 			switch($type)
 			{
@@ -938,9 +938,13 @@ class html implements html_interface
 		$tooltip = NULL;
 		$icond = NULL;
 		$icons = NULL;
+		$dcmST = NULL;
+		$dcmGL = NULL;
+		$dcmMS = NULL;
 
 		// Parameters
 		self::helperNameId($data, $name, $forx);
+		self::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
 		self::helperDisabled($data, $disabled);
 		self::helperState($data, $stx, $gix);
 		self::helperDefault($data, self::DEFTYPE_PULLDOWN, $default);
@@ -963,7 +967,7 @@ class html implements html_interface
 
 ?>
 		<div class="row">
-			<div class="form-group<?php echo $stx; ?>">
+			<div <?php echo $dcmST; ?> class="form-group<?php echo $stx; ?>">
 				<label <?php echo $lclass . $forx ?>><?php echo $label; ?></label>
 				<div<?php echo $fclass; ?>>
 					<span<?php echo $icons; ?>><i<?php echo $icond; ?>></i></span>
@@ -1000,7 +1004,8 @@ class html implements html_interface
 		}
 ?>
 					</select>
-					<span class="glyphicon<?php echo $gix; ?> form-control-feedback"></span>
+					<span <?php echo $dcmGL; ?> class="glyphicon<?php echo $gix; ?> form-control-feedback"></span>
+					<span <?php echo $dcmMS; ?>></span>
 				</div>
 			</div>
 		</div>

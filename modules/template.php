@@ -117,6 +117,7 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
+			'/js/common.js',
 			'/js/.js',
 		);
 
@@ -236,7 +237,7 @@ function databaseLoad()
 	if ($key == NULL)
 		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
 	// The below line requires customization for database loading.	
-	$rxa = '';	// ******** CUSTOMIZE THIS ********
+	$rxa = $DATABASE_QUERY_OPERATION($key);	// XXX: Set This
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
@@ -278,10 +279,60 @@ function deleteRecordView()
 // XXX: Requires customization.
 function updateRecordAction()
 {
+	global $ajax;
 	global $herr;
 	global $vfystr;
-	global $ajax;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
 
+	// Set the field list.
+	$fieldlist = array(
+		'',
+	);
+	
+	// Get data
+	$key = getPostValue('hidden');
+	$id = getPostValue('');
+
+	// Check key data.
+	if ($key == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
+	if ($id == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
+	if (!is_numeric($key))
+		handleError('Malformed key sequence.');
+	if (!is_numeric($id))
+		handleError('Malformed key sequence.');
+	if ($key != $id)
+		handleError('Database key mismatch.');
+
+	// Check mandatory fields.
+	$vfystr->strchk();
+
+	// Check optional fields.
+	$vfystr->strchk();
+
+	// Handle any errors from above.
+	if ($vfystr->errstat() == true)
+	{
+		if ($herr->checkState() == true)
+		{
+			$rxe = $herr->errorGetData();
+			$ajax->sendStatus($rxe, $fieldlist);
+			exit(1);
+		}
+	}
+
+	// We are good, update the record
+	$result = $DATABASE_UPDATE_OPERATION($key);	// XXX: Set This
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database: Record update failed. Key = ' . $key);
+	}
+	sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
 	exit(0);
 }
 
@@ -289,10 +340,47 @@ function updateRecordAction()
 // XXX: Requires customization.
 function insertRecordAction()
 {
+	global $ajax;
 	global $herr;
 	global $vfystr;
-	global $ajax;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
 
+	// Set the field list.
+	$fieldlist = array(
+		'',
+	);
+	
+	// Get data
+	$id = getPostValue('');
+
+	// Check mandatory fields.
+	$vfystr->strchk();
+
+	// Check optional fields.
+	$vfystr->strchk();
+
+	// Handle any errors from above.
+	if ($vfystr->errstat() == true)
+	{
+		if ($herr->checkState() == true)
+		{
+			$rxe = $herr->errorGetData();
+			$ajax->sendStatus($rxe, $fieldlist);
+			exit(1);
+		}
+	}
+
+	// We are good, update the record
+	$result = $DATABASE_INSERT_OPERATION($id);	// XXX: Set This
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database: Record insert failed. Key = ' . $id);
+	}
+	sendResponse($moduleDisplayUpper . ' insert completed: key = ' . $id);
 	exit(0);
 }
 
@@ -301,13 +389,45 @@ function insertRecordAction()
 function deleteRecordAction()
 {
 	global $herr;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
 
+	// Gather data...
+	$key = getPostValue('hidden');
+	$id = getPostValue('');		// XXX: Set This
+
+	// ...and check it.
+	if ($key == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' module selection data.');
+	if ($id == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
+	if (!is_numeric($key))
+		handleError('Malformed key sequence.');
+	if (!is_numeric($id))
+		handleError('Malformed key sequence.');
+	if ($key != $id)
+		handleError('Database key mismatch.');
+	
+	// Now remove the module from the database.
+	$result = $DATABASE_DELETE_OPERATION($key);	// XXX: Set This
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
+				' data. Key = ' . $key);
+	}
+	sendResponse($moduleDisplayUpper . ' delete completed: key = ' . $key);
 	exit(0);
 }
+
 // Generate generic form page.
 function formPage($mode, $rxa)
 {
+	global $CONFIGVAR;
 	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -328,14 +448,14 @@ function formPage($mode, $rxa)
 			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_UPDATE;
-			$action = '';
-			$hideValue = 'submitUpdate()';
+			$action = 'submitUpdate()';
+			$hideValue = '';
 			$disable = false;
 			$default = true;
 			$key = true;
 			break;
 		case MODE_INSERT:		// Insert
-			$msg1 = 'Inserting ' . $moduleDisplayUpper . ' Data For';
+			$msg1 = 'Inserting ' . $moduleDisplayUpper . ' Data';
 			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_INSERT;
@@ -398,14 +518,17 @@ function formPage($mode, $rxa)
 		),
 		array('type' => html::TYPE_TOPB2),
 		array('type' => html::TYPE_WD75OPEN),
-		array('type' => html::TYPE_FORMOPEN),
+		array(
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'dataForm',
+		),
 
 		// Enter custom field data here.
 
 
 		array(
 			'type' => html::TYPE_ACTBTN,
-			'dispname' => $dispName,
+			'dispname' => $moduleDisplayUpper,
 			'btnset' => $btnset,
 			'action' => $action,
 		),
@@ -442,7 +565,7 @@ function getPostValue(...$list)
 {
 	foreach($list as $param)
 	{
-		if (!empty($_POST[$param])) return $_POST[$param];
+		if (isset($_POST[$param])) return $_POST[$param];
 	}
 	return NULL;
 }

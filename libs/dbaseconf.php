@@ -524,7 +524,7 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.profile';
-		$column = 'profileid, name, desc, portal';
+		$column = 'profileid, name, description, portal';
 		return($dbcore->launchQueryDumpTable($table, $column));
 	}
 

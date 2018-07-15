@@ -59,6 +59,10 @@ const MODE_UPDATE	= 1;
 const MODE_INSERT	= 2;
 const MODE_DELETE	= 3;
 
+// Additonal Constants
+const BMFS_COUNT	= 256;		// # of system bitmap flags
+const BMFA_COUNT	= 256;		// # of application bitmap flags
+
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
@@ -117,6 +121,7 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
+			'/js/common.js',
 			'/js/profedit.js',
 		);
 
@@ -159,20 +164,59 @@ function loadInitialContent()
 function loadAdditionalContent()
 {
 	global $baseUrl;
+	global $dbconf;
+	global $herr;
+	global $moduleTitle;
+
+	// Dump the profile database and process it.
+	$rxm = $dbconf->queryProfileAll();
+	if ($rxm == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('There are no ' . $moduleDisplayLower . 's in the database to edit.');
+	}
+
+	// Generate selection table.
+	$list = array(
+		'type' => html::TYPE_RADTABLE,
+		'name' => 'select_item',
+		'titles' => array(
+			'Name',
+			'ID',
+			'Portal',
+		),
+		'tdata' => array(),
+		'tooltip' => array(),
+	);
+	foreach($rxm as $kx => $vx)
+	{
+		$tdata = array(
+			$vx['profileid'],
+			$vx['name'],
+			$vx['profileid'],
+			$vx['portal'],
+		);
+		array_push($list['tdata'], $tdata);
+		array_push($list['tooltip'], $vx['description']);
+	}
 
 	// Generate rest of page.
 	$data = array(
 		array(
 			'type' => html::TYPE_HEADING,
-			'message1' => 'Profile Editor',
+			'message1' => $moduleTitle,
 			'warning' => '',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
-		array('type' => html::TYPE_FORMOPEN),
+		array('type' => html::TYPE_FORMOPEN,
+			'name' => 'select_table',
+		),
 
 		// Enter custom data here.
-
+		$list,
 
 		array('type' => html::TYPE_FORMCLOSE),
 		array('type' => html::TYPE_WDCLOSE),
@@ -235,7 +279,7 @@ function databaseLoad()
 	if ($key == NULL)
 		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
 	// The below line requires customization for database loading.	
-	$rxa = '';	// ******** CUSTOMIZE THIS ********
+	$rxa = $dbconf->queryProfile($key);
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
@@ -277,10 +321,97 @@ function deleteRecordView()
 // XXX: Requires customization.
 function updateRecordAction()
 {
+	global $ajax;
 	global $herr;
 	global $vfystr;
-	global $ajax;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
+	global $dbconf;
+	global $CONFIGVAR;
+	global $vendor;
 
+	// Set the field list.
+	$fieldlist = array(
+		'profid',
+		'profname',
+		'profdesc',
+		'profport',
+	);
+
+	// Get data
+	$key = getPostValue('hidden');
+	$id = getPostValue('profid');
+	$name = getPostValue('profname');
+	$desc = getPostValue('profdesc');
+	$port = getPostValue('profport');
+
+	// Check key data.
+	if ($key == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
+	if ($id == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
+	if (!is_numeric($key))
+		handleError('Malformed key sequence.');
+	if (!is_numeric($id))
+		handleError('Malformed key sequence.');
+	if ($key != $id)
+		handleError('Database key mismatch.');
+
+	// Check mandatory fields.
+	$vfystr->strchk($id, 'Profile ID', 'profid', verifyString::STR_PINTEGER, true, 2147483647, 0);
+	$vfystr->strchk($name, 'Name', 'profname', verifyString::STR_ALPHA, true, 32, 3);
+	$vfystr->strchk($port, 'Portal', 'profport', verifyString::STR_PINTEGER, true, 1, 0);
+
+	// Check optional fields.
+	$vfystr->strchk($desc, 'Description', 'profdesc', verifyString::STR_ASCII, false, 256, 0);
+
+	// Handle any errors from above.
+	if ($vfystr->errstat() == true)
+	{
+		if ($herr->checkState() == true)
+		{
+			$rxe = $herr->errorGetData();
+			$ajax->sendStatus($rxe, $fieldlist);
+			exit(1);
+		}
+	}
+
+	// Check if we have a system profile and the permissions for it.
+	if (!$vendor)
+	{
+		if ($key == $CONFIGVAR['profile_id_none']['value'] ||
+		$key == $CONFIGVAR['profile_id_vendor']['value'] ||
+		$key == $CONFIGVAR['profile_id_admin']['value'])
+		{
+			handleError('You do not have permission to update a system profile.');
+		}
+	}
+	
+	// This is to be removed when the flags systems is implemented.
+	if ($key == $CONFIGVAR['profile_id_vendor']['value'] ||
+		$key == $CONFIGVAR['profile_id_admin']['value'])
+	{
+		// System profiles have all 1's set.
+		$bmfs = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
+		$bmfa = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
+	}
+	else
+	{
+		// Non-system profiles have all 0's set.
+		$bmfs = hex2bin('00000000000000000000000000000000');
+		$bmfa = hex2bin('00000000000000000000000000000000');
+	}
+
+	// We are good, update the record
+	$result = $dbconf->updateProfile($key, $name, $desc, $port, $bmfs, $bmfa);
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database: Record update failed. Key = ' . $key);
+	}
+	sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
 	exit(0);
 }
 
@@ -288,10 +419,72 @@ function updateRecordAction()
 // XXX: Requires customization.
 function insertRecordAction()
 {
+	global $ajax;
 	global $herr;
 	global $vfystr;
-	global $ajax;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
+	global $dbconf;
+	global $CONFIGVAR;
 
+	// Set the field list.
+	$fieldlist = array(
+		'profid',
+		'profname',
+		'profdesc',
+		'profport',
+	);
+	
+	// Get data
+	$id = getPostValue('profid');
+	$name = getPostValue('profname');
+	$desc = getPostValue('profdesc');
+	$port = getPostValue('profport');
+
+	// Check mandatory fields.
+	$vfystr->strchk($id, 'Profile ID', 'profid', verifyString::STR_PINTEGER, true, 2147483647, 0);
+	$vfystr->strchk($name, 'Name', 'profname', verifyString::STR_ALPHA, true, 32, 3);
+	$vfystr->strchk($port, 'Portal', 'profport', verifyString::STR_PINTEGER, true, 1, 0);
+
+	// Check optional fields.
+	$vfystr->strchk($desc, 'Description', 'profdesc', verifyString::STR_ASCII, false, 256, 0);
+
+	// Handle any errors from above.
+	if ($vfystr->errstat() == true)
+	{
+		if ($herr->checkState() == true)
+		{
+			$rxe = $herr->errorGetData();
+			$ajax->sendStatus($rxe, $fieldlist);
+			exit(1);
+		}
+	}
+
+	// This is to be removed when the flags systems is implemented.
+	if ($id == $CONFIGVAR['profile_id_vendor']['value'] ||
+		$id == $CONFIGVAR['profile_id_admin']['value'])
+	{
+		// System profiles have all 1's set.
+		$bmfs = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
+		$bmfa = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
+	}
+	else
+	{
+		// Non-system profiles have all 0's set.
+		$bmfs = hex2bin('00000000000000000000000000000000');
+		$bmfa = hex2bin('00000000000000000000000000000000');
+	}
+
+	// We are good, update the record
+	$result = $dbconf->insertProfile($id, $name, $desc, $port, $bmfs, $bmfa);
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database: Record insert failed. Key = ' . $id);
+	}
+	sendResponse($moduleDisplayUpper . ' insert completed: key = ' . $id);
 	exit(0);
 }
 
@@ -300,41 +493,87 @@ function insertRecordAction()
 function deleteRecordAction()
 {
 	global $herr;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
+	global $dbconf;
+	global $CONFIGVAR;
+	global $vendor;
 
+	// Gather data...
+	$key = getPostValue('hidden');
+	$id = getPostValue('profid');
+
+	// ...and check it.
+	if ($key == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' module selection data.');
+	if ($id == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
+	if (!is_numeric($key))
+		handleError('Malformed key sequence.');
+	if (!is_numeric($id))
+		handleError('Malformed key sequence.');
+	if ($key != $id)
+		handleError('Database key mismatch.');
+	
+	// Check if we have a system profile and the permissions for it.
+	if (!$vendor)
+	{
+		if ($key == $CONFIGVAR['profile_id_none']['value'] ||
+		$key == $CONFIGVAR['profile_id_vendor']['value'] ||
+		$key == $CONFIGVAR['profile_id_admin']['value'])
+		{
+			handleError('You do not have permission to delete a system profile.');
+		}
+	}
+	
+	// Now remove the module from the database.
+	$result = $dbconf->deleteProfile($key);
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
+				' data. Key = ' . $key);
+	}
+	sendResponse($moduleDisplayUpper . ' delete completed: key = ' . $key);
 	exit(0);
 }
+
 // Generate generic form page.
 function formPage($mode, $rxa)
 {
 	global $moduleDisplayUpper;
+	global $CONFIGVAR;
+	global $vendor;
 
 	// Determine the editing mode.
 	switch($mode)
 	{
 		case MODE_VIEW:			// View
 			$msg1 = 'Viewing ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = '';
+			$msg2 = $rxa['name'];
 			$warn = '';
 			$btnset = html::BTNTYP_VIEW;
 			$action = '';
-			$hideValue = '';
+			$hideValue = $rxa['profileid'];
 			$disable = true;
 			$default = true;
 			$key = true;
 			break;
 		case MODE_UPDATE:		// Update
 			$msg1 = 'Updating ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = '';
+			$msg2 = $rxa['name'];
 			$warn = '';
 			$btnset = html::BTNTYP_UPDATE;
-			$action = '';
-			$hideValue = 'submitUpdate()';
+			$action = 'submitUpdate()';
+			$hideValue = $rxa['profileid'];
 			$disable = false;
 			$default = true;
 			$key = true;
 			break;
 		case MODE_INSERT:		// Insert
-			$msg1 = 'Inserting ' . $moduleDisplayUpper . ' Data For';
+			$msg1 = 'Inserting ' . $moduleDisplayUpper . ' Data';
 			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_INSERT;
@@ -346,11 +585,11 @@ function formPage($mode, $rxa)
 			break;
 		case MODE_DELETE:		// Delete
 			$msg1 = 'Deleting ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = '';
+			$msg2 = $rxa['name'];
 			$warn = '';
 			$btnset = html::BTNTYP_DELETE;
 			$action = 'submitDelete()';
-			$hideValue = '';
+			$hideValue = $rxa['profileid'];
 			$disable = true;
 			$default = true;
 			$key = true;
@@ -379,12 +618,54 @@ function formPage($mode, $rxa)
 		// Datafill this array with dummy values to prevent PHP
 		// from issuing errors.
 		$rxa = array(
-			'' => '',
+			'profileid' => '',
+			'name' => '',
+			'description' => '',
+			'portal' => 1,
 		);
 	}
 
 	// Custom field rendering code
-
+	$profid = generateField(html::TYPE_TEXT, 'profid', 'Profile ID', 3,
+		$rxa['profileid'], 'The numeric ID of the profile.', $default, $key);
+	$profname = generateField(html::TYPE_TEXT, 'profname', 'Name', 6, $rxa['name'],
+		'Display name of the profile.', $default, $disable);
+	$profdesc = generateField(html::TYPE_AREA, 'profdesc', 'Description', 6,
+		$rxa['description'], 'The description of the profile.', $default, $disable);
+	$profdesc['rows'] = 5;
+	$profport = array(
+		'type' => html::TYPE_PULLDN,
+		'label' => 'Portal Type',
+		'default' => $rxa['portal'],
+		'name' => 'profport',
+		'fsize' => 4,
+		'tooltip' => 'Type of portal that the user sees.',
+		'optlist' => array(
+			'Grid Portal' => 0,
+			'Link Portal' => 1,
+		),
+	);
+	
+	// System profile warnings.
+	if (!$vendor)
+	{
+		if ($rxa['profileid'] == $CONFIGVAR['profile_id_none']['value'] ||
+			$rxa['profileid'] == $CONFIGVAR['profile_id_vendor']['value'] ||
+			$rxa['profileid'] == $CONFIGVAR['profile_id_admin']['value'])
+		{
+			switch($mode)
+			{
+				case MODE_UPDATE:
+					$warn = 'You cannot update a system profile.';
+					break;
+				case MODE_DELETE:
+					$warn = 'You cannot delete a system profile.';
+					break;
+				default:
+					break;
+			}
+		}
+	}
 
 	// Build out the form array.
 	$data = array(
@@ -397,14 +678,20 @@ function formPage($mode, $rxa)
 		),
 		array('type' => html::TYPE_TOPB2),
 		array('type' => html::TYPE_WD75OPEN),
-		array('type' => html::TYPE_FORMOPEN),
+		array(
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'dataForm',
+		),
 
 		// Enter custom field data here.
-
+		$profid,
+		$profname,
+		$profdesc,
+		$profport,
 
 		array(
 			'type' => html::TYPE_ACTBTN,
-			'dispname' => $dispName,
+			'dispname' => $moduleDisplayUpper,
 			'btnset' => $btnset,
 			'action' => $action,
 		),
@@ -441,7 +728,7 @@ function getPostValue(...$list)
 {
 	foreach($list as $param)
 	{
-		if (!empty($_POST[$param])) return $_POST[$param];
+		if (isset($_POST[$param])) return $_POST[$param];
 	}
 	return NULL;
 }
