@@ -17,7 +17,13 @@ session.php		Session handling/checking
 
 */
 
-
+// Encodes HTML entities for save storage in the database which
+// prevents persistant cross-site scripting (XSS) attacks.
+function safeEncodeString($str)
+{
+	$result = htmlentities($str, ENT_QUOTES | ENT_HTML5);
+	return $result;
+}
 
 
 

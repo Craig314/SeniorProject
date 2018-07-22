@@ -15,13 +15,13 @@ require_once 'database.php';
 interface database_userdata_interface
 {
 	// Table: contact
-	public function queryContact($userid, $method);
-	public function updateContact($userid, $method, $name, $address, $email,
+	public function queryContact($userid);
+	public function queryContactAll();
+	public function updateContact($userid, $name, $address, $email,
 		$hphone, $wphone, $cphone);
-	public function insertContact($userid, $method, $name, $address, $email,
+	public function insertContact($userid, $name, $address, $email,
 		$hphone, $wphone, $cphone);
-	public function deleteContact($userid, $method);
-
+	public function deleteContact($userid);
 	// Table: login
 	public function queryLogin($userid);
 	public function updateLoginPassword($userid, $change, $digest, $count, $salt, $passwd);
@@ -58,7 +58,7 @@ class database_user implements database_userdata_interface
 	   name, last name, etc... */
 
 	// Returns the contact information for the specified user ID.
-	public function queryContact($userid, $method)
+	public function queryContact($userid)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
@@ -67,14 +67,22 @@ class database_user implements database_userdata_interface
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
+	// Returns all data in the contact table.
+	public function queryContactAll()
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.contact';
+		$column = '*';
+		return($dbcore->launchQueryDumpTable($table, $column));
+	}
+	
 	// Updates the contact information for the specified user ID.
-	public function updateContact($userid, $method, $name, $address, $email,
+	public function updateContact($userid, $name, $address, $email,
 		$hphone, $wphone, $cphone)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
 		$qxk = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
-		$qxk = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxk);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('address', $address, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('email', $email, databaseCore::PTSTR, $qxa);
@@ -85,13 +93,12 @@ class database_user implements database_userdata_interface
 	}
 
 	// Inserts new contact information.
-	public function insertContact($userid, $method, $name, $address, $email,
+	public function insertContact($userid, $name, $address, $email,
 		$hphone, $wphone, $cphone)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
 		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
-		$qxa = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('address', $address, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('email', $email, databaseCore::PTSTR, $qxa);
@@ -102,12 +109,11 @@ class database_user implements database_userdata_interface
 	}
 
 	// Deletes the contact information for the specified user ID.
-	public function deleteContact($userid, $method)
+	public function deleteContact($userid)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
 		$qxk = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
-		$qxk = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxk);
 		return($dbcore->launchDeleteSingle($table, $qxk));
 	}
 

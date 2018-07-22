@@ -54,7 +54,7 @@ interface database_config_interface
 
 	// Table: oauth
 	public function queryOAuth($provider);
-	public function queryOAuthAll($provider);
+	public function queryOAuthAll();
 	public function updateOAuth($provider, $module, $expire, $clid,
 		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
 		$resurl2, $resurl3, $resurl4);
@@ -440,7 +440,7 @@ class database_config implements database_config_interface
 	}
 
 	// Queries all providers.
-	public function queryOAuthAll($provider)
+	public function queryOAuthAll()
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.oauth';

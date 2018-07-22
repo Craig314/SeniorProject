@@ -64,8 +64,8 @@ const MODE_DELETE	= 3;
 //$inject_html_file = '../dat/somefile.html';
 $htmlInjectFile = false;
 
-// Order matter here.  The modhead library needs to be loaded first.
-// If additional libraries are needed, then load them afterwards.
+// Order matters here.  The modhead library needs to be loaded last.
+// If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
 require_once BASEDIR . 'modhead.php';
 
@@ -171,7 +171,10 @@ function loadAdditionalContent()
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
-		array('type' => html::TYPE_FORMOPEN),
+		array(
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'select_table',
+		),
 
 		// Enter custom data here.
 
@@ -229,7 +232,6 @@ function commandProcessor($commandId)
 // XXX: Requires customization.
 function databaseLoad()
 {
-	global $dbconf;
 	global $herr;
 	global $moduleDisplayLower;
 
@@ -323,6 +325,12 @@ function updateRecordAction()
 		}
 	}
 
+	// Safely encode all strings to prevent XSS attacks.
+	$ = safeEncodeString($);
+	$ = safeEncodeString($);
+	$ = safeEncodeString($);
+	$ = safeEncodeString($);
+	
 	// We are good, update the record
 	$result = $DATABASE_UPDATE_OPERATION($key);	// XXX: Set This
 	if ($result == false)
@@ -371,6 +379,12 @@ function insertRecordAction()
 		}
 	}
 
+	// Safely encode all strings to prevent XSS attacks.
+	$ = safeEncodeString($);
+	$ = safeEncodeString($);
+	$ = safeEncodeString($);
+	$ = safeEncodeString($);
+	
 	// We are good, update the record
 	$result = $DATABASE_INSERT_OPERATION($id);	// XXX: Set This
 	if ($result == false)
@@ -380,7 +394,8 @@ function insertRecordAction()
 		else
 			handleError('Database: Record insert failed. Key = ' . $id);
 	}
-	sendResponse($moduleDisplayUpper . ' insert completed: key = ' . $id);
+	sendResponseClear($moduleDisplayUpper . ' insert completed: key = '
+		. $id);
 	exit(0);
 }
 

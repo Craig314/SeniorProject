@@ -291,7 +291,7 @@ function native_login()
 	}
 
 	// The user has successfully logged in. Now we load in their contact info.
-	$rxa_contact = $dbuser->queryContact($userid, 0);
+	$rxa_contact = $dbuser->queryContact($userid);
 	if ($rxa_contact == false)
 		error_exit('Stored Data Conflict<br>Contact Your Administrator<br>XX29174');
 

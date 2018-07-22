@@ -37,29 +37,31 @@ interface html_interface
 	const BTNTYP_DELETE		= 3;
 
 	// Field type definitions used by pageAutoGenerate.
-	const TYPE_HIDE			= 0;
-	const TYPE_TEXT			= 1;
-	const TYPE_PASS			= 2;
-	const TYPE_AREA			= 3;
-	const TYPE_CHECK		= 4;
-	const TYPE_RADIO		= 5;
-	const TYPE_PULLDN		= 6;
-	const TYPE_BLIST		= 7;
-	const TYPE_BUTTON		= 8;
-	const TYPE_ACTBTN		= 9;
-	const TYPE_RADTABLE		= 10;
-	const TYPE_HEADING		= 11;
-	const TYPE_FORMOPEN		= 20;
-	const TYPE_FORMCLOSE	= 21;
-	const TYPE_FSETOPEN		= 22;
-	const TYPE_FSETCLOSE	= 23;
-	const TYPE_TOPB1		= 30;
-	const TYPE_TOPB2		= 31;
-	const TYPE_BOTB1		= 32;
-	const TYPE_BOTB2		= 33;
-	const TYPE_WD50OPEN		= 40;
-	const TYPE_WD75OPEN		= 41;
-	const TYPE_WDCLOSE		= 49;
+	const TYPE_HIDE			= 0;	// Hidden input field
+	const TYPE_TEXT			= 1;	// Text input field
+	const TYPE_PASS			= 2;	// Password input field
+	const TYPE_AREA			= 3;	// Textarea tag input field
+	const TYPE_CHECK		= 4;	// Checkbox
+	const TYPE_RADIO		= 5;	// Radio button group
+	const TYPE_PULLDN		= 6;	// Pulldown selection menu/list
+	const TYPE_BLIST		= 7;	// Standard nested list
+	const TYPE_BUTTON		= 8;	// Button group
+	const TYPE_ACTBTN		= 9;	// Action button set
+	const TYPE_RADTABLE		= 10;	// Radio button item selection table
+	const TYPE_HEADING		= 11;	// Banner headings
+	const TYPE_FORMOPEN		= 20;	// Open form with name
+	const TYPE_FORMCLOSE	= 21;	// Close form
+	const TYPE_FSETOPEN		= 22;	// Open field set with title
+	const TYPE_FSETCLOSE	= 23;	// Close field set
+	const TYPE_HIDEOPEN		= 24;	// Opens a named hidden block
+	const TYPE_HIDECLOSE	= 25;	// Close named hidden block
+	const TYPE_TOPB1		= 30;	// Top border type 1
+	const TYPE_TOPB2		= 31;	// Top border type 2
+	const TYPE_BOTB1		= 32;	// Bottom border type 1
+	const TYPE_BOTB2		= 33;	// Bottom border type 2
+	const TYPE_WD50OPEN		= 40;	// Open a area of 50% width
+	const TYPE_WD75OPEN		= 41;	// Open a area of 75% width
+	const TYPE_WDCLOSE		= 49;	// Close width area
 
 	// Utility
 	static public function initialize();
@@ -204,10 +206,16 @@ class html implements html_interface
 	}
 
 	// Helper: On-Click Event Action
-	static private function helperOnClick($data, &$onclick)
+	static private function helperOnEvent($data, &$event)
 	{
-		if (!empty($data['event_onclick'])) $onclick = ' onclick="' . $data['event_onclick'] . '"';
-			else $onclick = '';
+		if (!empty($data['event']) && !empty($data['action']))
+		{
+			$event = ' ' . $data['event'] .  '="' . $data['action'] . '"';
+		}
+		else
+		{
+			$event = '';
+		}
 	}
 
 	// Helper: Disabled
@@ -269,8 +277,8 @@ class html implements html_interface
 					$default = $data['default'];
 					break;
 				case self::DEFTYPE_CHECKBOX:
-					if ($data['default'] == true) $default = ' checked';
-					else $default = '';
+					if ($data['default']) $default = ' checked';
+						else $default = '';
 					break;
 				default:
 					$default = '';
@@ -419,7 +427,8 @@ class html implements html_interface
 	// lsize - Size of the label (Bootstrap)
 	// fsize - Size of the field (Bootstrap)
 	// default - Default field value
-	// onclick - On-Click event action
+	// event - Event to watch for
+	// action - Function to call when event happens
 	// tooltip - Popup tool tip text
 	static private function insertFieldTextCommon($type, $data)
 	{
@@ -429,7 +438,7 @@ class html implements html_interface
 		// Setup
 		$name = NULL;
 		$forx = NULL;
-		$onclick = NULL;
+		$event = NULL;
 		$disabled = NULL;
 		$value = NULL;
 		$stx = NULL;
@@ -448,7 +457,7 @@ class html implements html_interface
 		// Parameters
 		self::helperNameId($data, $name, $forx);
 		self::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
-		self::helperOnClick($data, $onclick);
+		self::helperOnEvent($data, $event);
 		self::helperDisabled($data, $disabled);
 		self::helperValue($data, $value);
 		self::helperState($data, $stx, $gix);
@@ -460,7 +469,7 @@ class html implements html_interface
 		self::helperIcon($data, $icons, $icond);
 
 		// Combine
-		$printout = $name . $value . $default . $onclick . $tooltip . $disabled;
+		$printout = $name . $value . $default . $event . $tooltip . $disabled;
 
 		// Render
 ?>
@@ -639,7 +648,7 @@ class html implements html_interface
 		// Setup
 		$name = NULL;
 		$forx = NULL;
-		$onclick = NULL;
+		$event = NULL;
 		$disabled = NULL;
 		$stx = NULL;
 		$gix = NULL;
@@ -658,7 +667,7 @@ class html implements html_interface
 		// Parameters
 		self::helperNameId($data, $name, $forx);
 		self::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
-		self::helperOnClick($data, $onclick);
+		self::helperOnEvent($data, $event);
 		self::helperDisabled($data, $disabled);
 		self::helperState($data, $stx, $gix);
 		self::helperDefault($data, self::DEFTYPE_TEXTBOX, $default);
@@ -674,7 +683,7 @@ class html implements html_interface
 			else $value = '';
 
 		// Combine
-		$printout = $name . $default . $onclick . $tooltip . $disabled;
+		$printout = $name . $default . $event . $tooltip . $disabled;
 
 		// Render
 ?>
@@ -928,6 +937,7 @@ class html implements html_interface
 		// Setup
 		$name = NULL;
 		$forx = NULL;
+		$event = NULL;
 		$disabled = NULL;
 		$stx = NULL;
 		$gix = NULL;
@@ -944,6 +954,7 @@ class html implements html_interface
 
 		// Parameters
 		self::helperNameId($data, $name, $forx);
+		self::helperOnEvent($data, $event);
 		self::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
 		self::helperDisabled($data, $disabled);
 		self::helperState($data, $stx, $gix);
@@ -961,7 +972,7 @@ class html implements html_interface
 		else $blank = false;
 
 		// Combine
-		$printout = $name . $tooltip . $disabled;
+		$printout = $name . $tooltip . $event . $disabled;
 
 		// Render
 
@@ -1431,6 +1442,38 @@ class html implements html_interface
 <?php
 	}
 
+	// Generates a hidden block
+	static public function openHiddenBlock($data)
+	{
+		$name = NULL;
+		$forx = NULL;
+		$disable = NULL;
+
+		self::helperNameId($data, $name, $forx);
+		self::helperDisabled($data, $disable);
+		if (isset($data['hidden']))
+		{
+			if ($data['hidden'] == true)
+				$hidden = ' hidden';
+			else
+				$hidden = '';
+		}
+		else $hidden = '';
+
+		$printout = $name . $disable . $hidden;
+?>
+	<div <?php echo $printout; ?>>
+<?php
+	}
+
+	// Closes a hidden block
+	static public function closeHiddenBlock()
+	{
+?>
+	</div>
+<?php
+	}
+
 	// Renders a top border type 1
 	static public function border1top()
 	{
@@ -1559,6 +1602,12 @@ class html implements html_interface
 						break;
 					case self::TYPE_FSETCLOSE:
 						self::closeFieldset();
+						break;
+					case self::TYPE_HIDEOPEN:
+						self::openHiddenBlock($vx);
+						break;
+					case self::TYPE_HIDECLOSE:
+						self::closeHiddenBlock();
 						break;
 					case self::TYPE_TOPB1:
 						self::border1top();

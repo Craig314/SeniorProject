@@ -13,6 +13,10 @@ allows for a module to configure settings.
 
 */
 
+// User login methods
+const LOGIN_METHOD_NATIVE = 0;
+const LOGIN_METHOD_OAUTH = 1;
+const LOGIN_METHOD_OPENID = 2;
 
 // Debugging
 const APP_DEBUG_STATUS = true;

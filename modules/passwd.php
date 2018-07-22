@@ -45,7 +45,8 @@ $moduleSystem = true;
 $modulePermissions = array();
 
 
-
+// Order matters here.  The modhead library needs to be loaded last.
+// If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
 require_once BASEDIR . 'dbaseuser.php';
 require_once BASEDIR . 'password.php';

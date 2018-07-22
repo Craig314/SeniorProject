@@ -68,7 +68,7 @@ const BMFA_COUNT	= 256;		// # of application bitmap flags
 //$inject_html_file = '../dat/somefile.html';
 $htmlInjectFile = false;
 
-// Order matter here.  The modhead library needs to be loaded last.
+// Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
 require_once BASEDIR . 'modhead.php';
@@ -211,7 +211,8 @@ function loadAdditionalContent()
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
-		array('type' => html::TYPE_FORMOPEN,
+		array(
+			'type' => html::TYPE_FORMOPEN,
 			'name' => 'select_table',
 		),
 
@@ -376,6 +377,10 @@ function updateRecordAction()
 		}
 	}
 
+	// Safely encode all strings to prevent XSS attacks.
+	$name = safeEncodeString($name);
+	$desc = safeEncodeString($desc);
+	
 	// Check if we have a system profile and the permissions for it.
 	if (!$vendor)
 	{
@@ -460,6 +465,10 @@ function insertRecordAction()
 		}
 	}
 
+	// Safely encode all strings to prevent XSS attacks.
+	$name = safeEncodeString($name);
+	$desc = safeEncodeString($desc);
+	
 	// This is to be removed when the flags systems is implemented.
 	if ($id == $CONFIGVAR['profile_id_vendor']['value'] ||
 		$id == $CONFIGVAR['profile_id_admin']['value'])
@@ -484,7 +493,8 @@ function insertRecordAction()
 		else
 			handleError('Database: Record insert failed. Key = ' . $id);
 	}
-	sendResponse($moduleDisplayUpper . ' insert completed: key = ' . $id);
+	sendResponseClear($moduleDisplayUpper . ' insert completed: key = '
+		. $id);
 	exit(0);
 }
 

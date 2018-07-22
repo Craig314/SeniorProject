@@ -11,7 +11,6 @@ Banner Page JavaScript File
 // This is called when the page first loads.
 function initialRun() {
 	url = $(document.body).attr('href-link');
-	console.log('url: ' + url);
 	serverLinkObject.setUrlPath(url);
 }
 
