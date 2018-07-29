@@ -88,13 +88,13 @@ function dbaseTableUsers($userid, $profid, $username)
 	$result = $dbuser->queryUsers($username);
 	if ($result != false && is_array($result))
 	{
-		$result = $dbuser->updateUsers($username, $userid, $profid, 0);
-		if ($result == false) printErrorImmediate('');
+		$result = $dbuser->updateUsers($username, $userid, $profid, LOGIN_METHOD_NATIVE);
+		if ($result == false) printErrorImmediate('Users table update record failed.');
 	}
 	else
 	{
-		$result = $dbuser->insertUsers($username, $userid, $profid, 0);
-		if ($result == false) printErrorImmediate('');
+		$result = $dbuser->insertUsers($username, $userid, $profid, LOGIN_METHOD_NATIVE);
+		if ($result == false) printErrorImmediate('Users table insert record failed.');
 	}
 }
 
@@ -102,19 +102,26 @@ function dbaseTableUsers($userid, $profid, $username)
 function dbaseTableContact($userid)
 {
 	global $dbuser;
+
 	$name = 'Application ' . PROFILE_NAME;
-	$address = 'SEA-CORE International LTD.';
+	$addr = 'SEA-CORE International LTD.';
 	$email = 'seacoregroup@gmail.com';
+
+	$name = safeEncodeString($name);
+	$addr = safeEncodeString($addr);
+	$email = safeEncodeString($email);
 
 	$result = $dbuser->queryContact($userid, 0);
 	if ($result != false && is_array($result))
 	{
-		$result = $dbuser->updateContact($userid, 0, $name, $address, $email, '', '', '');
+		$result = $dbuser->updateContact($userid, 0, $name, $addr, $addr,
+			$email, '', '', '');
 		if ($result == false) printErrorImmediate('Contact table update record failed.');
 	}
 	else
 	{
-		$result = $dbuser->insertContact($userid, 0, $name, $address, $email, '', '', '');
+		$result = $dbuser->insertContact($userid, 0, $name, $addr, $addr,
+			$email, '', '', '');
 		if ($result == false) printErrorImmediate('Contact table insert record failed.');
 	}
 }
@@ -124,7 +131,7 @@ function dbaseTableProfile($profid)
 {
 	global $dbconf;
 	$name = PROFILE_NAME;
-	$desc = 'Profile for use only by the application ' . ACCOUNT_NAME . '.';
+	$desc = safeEncodeString('Profile for use only by the application ' . ACCOUNT_NAME . '.');
 	$portal = 0;
 	$bmc = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
 	$bma = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');

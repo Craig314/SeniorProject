@@ -17,9 +17,9 @@ interface database_userdata_interface
 	// Table: contact
 	public function queryContact($userid);
 	public function queryContactAll();
-	public function updateContact($userid, $name, $address, $email,
+	public function updateContact($userid, $name, $haddr, $maddr, $email,
 		$hphone, $wphone, $cphone);
-	public function insertContact($userid, $name, $address, $email,
+	public function insertContact($userid, $name, $haddr, $maddr, $email,
 		$hphone, $wphone, $cphone);
 	public function deleteContact($userid);
 	// Table: login
@@ -35,8 +35,28 @@ interface database_userdata_interface
 		$lastlog, $timeout, $digest, $count, $salt, $passwd);
 	public function deleteLogin($userid);
 
+	// Table: oath
+	public function queryOAuth($userid);
+	public function updateOAuth($userid, $state, $provider, $token, $tokentype,
+		$issue, $expire, $refresh, $scope);
+	public function updateOAuthLogin($userid, $state, $token, $tokentype,
+		$issue, $expire, $refresh, $scope);
+	public function updateOAuthProvider($userid, $provider);
+	public function insertOAuth($userid, $state, $provider, $token, $tokentype,
+		$issue, $expire, $refresh, $scope);
+	public function deleteOAuth($userid);
+
+	// Table: openid
+	public function queryOpenId($userid);
+	public function updateOpenId($userid, $provider, $ident, $issue, $expire);
+	public function updateOpenIdLogin($userid, $issue, $expire);
+	public function insertOpenId($userid, $provider, $ident, $issue, $expire);
+	public function deleteOpenId($userid);
+
 	// Table: users
 	public function queryUsers($username);
+	public function queryUsersUserId($userid);
+	public function queryUsersProfId($profid);
 	public function queryUsersAll();
 	public function updateUsers($username, $userid, $profid, $method);
 	public function insertUsers($username, $userid, $profid, $method);
@@ -77,14 +97,15 @@ class database_user implements database_userdata_interface
 	}
 	
 	// Updates the contact information for the specified user ID.
-	public function updateContact($userid, $name, $address, $email,
+	public function updateContact($userid, $name, $haddr, $maddr, $email,
 		$hphone, $wphone, $cphone)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
 		$qxk = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
-		$qxa = $dbcore->buildArray('address', $address, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('haddr', $haddr, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('maddr', $maddr, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('email', $email, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('hphone', $hphone, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('cphone', $cphone, databaseCore::PTSTR, $qxa);
@@ -93,14 +114,15 @@ class database_user implements database_userdata_interface
 	}
 
 	// Inserts new contact information.
-	public function insertContact($userid, $name, $address, $email,
+	public function insertContact($userid, $name, $haddr, $maddr, $email,
 		$hphone, $wphone, $cphone)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
 		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('address', $address, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('haddr', $haddr, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('maddr', $maddr, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('email', $email, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('hphone', $hphone, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('cphone', $cphone, databaseCore::PTSTR, $qxa);
@@ -235,6 +257,143 @@ class database_user implements database_userdata_interface
 	}
 
 
+	/* ******** OAUTH TABLE ******** */
+
+	/* The OAuth table contains the user's login informatioin given
+	   by the OAuth provider. */
+	
+	// Queries the OAuth information about a specific user.
+	public function queryOAuth($userid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$column = '*';
+		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
+		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	public function updateOAuth($userid, $state, $provider, $token, $tokentype,
+		$issue, $expire, $refresh, $scope)
+	{		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('state', $state, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('token', $token, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('tokentype', $tokentype, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('refresh', $refresh, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTINT, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+	}
+
+	public function updateOAuthLogin($userid, $state, $token, $tokentype,
+		$issue, $expire, $refresh, $scope)
+	{
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('state', $state, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('token', $token, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('tokentype', $tokentype, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('refresh', $refresh, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTINT, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+	}
+
+	public function updateOAuthProvider($userid, $provider)
+	{
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+	}
+
+	public function insertOAuth($userid, $state, $provider, $token, $tokentype,
+		$issue, $expire, $refresh, $scope)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('state', $state, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('token', $token, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('tokentype', $tokentype, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('refresh', $refresh, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTINT, $qxa);
+		return($dbcore->launchInsert($table, $qxa));
+	}
+
+	public function deleteOAuth($userid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		return($dbcore->launchDeleteSingle($table, 'userid', $userid, databaseCore::PTINT));
+	}
+
+
+
+	/* ******** OPENID TABLE ******** */
+
+	/* The OpenID table provides information about the user's OpenID
+	   login stauts. */
+	
+	// Queries a user's OpenID data.
+	public function queryOpenId($userid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.openid';
+		$column = '*';
+		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
+		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	// Updates a user's OpenID data.
+	public function updateOpenId($userid, $provider, $ident, $issue, $expire)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.openid';
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('ident', $ident, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+	}
+
+	// Updates just the user's OpenID login status.
+	public function updateOpenIdLogin($userid, $issue, $expire)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.openid';
+		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+	}
+
+	// Inserts the OpenID data for a user.
+	public function insertOpenId($userid, $provider, $ident, $issue, $expire)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.openid';
+		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('ident', $ident, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		return($dbcore->launchInsert($table, $qxa));
+	}
+
+	// Delete's the OpenID data for a user.
+	public function deleteOpenId($userid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.openid';
+		return($dbcore->launchDeleteSingle($table, 'userid', $userid, databaseCore::PTINT));
+	}
+
+
+
 
 	/* ******** USERS TABLE ******** */
 
@@ -250,6 +409,26 @@ class database_user implements database_userdata_interface
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
+	// Queries a user by their user ident number
+	public function queryUsersUserId($userid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.users';
+		$column = '*';
+		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
+		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	// Queries none, one, or more users by the profile ident number.
+	public function queryUsersProfId($profid)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.users';
+		$column = '*';
+		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT);
+		return($dbcore->launchQueryMultiple($table, $column, $qxa));
+	}
+	
 	// Queries all users existing in the table.
 	public function queryUsersAll()
 	{
@@ -264,10 +443,10 @@ class database_user implements database_userdata_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.users';
-		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('username', $username, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'username', $username, databaseCore::PTSTR, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
 	}	
 
 	// Inserts a user.
@@ -275,8 +454,8 @@ class database_user implements database_userdata_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.users';
-		$qxa = $dbcore->buildArray('username', $username, databaseCore::PTSTR);
-		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('username', $username, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
@@ -287,7 +466,7 @@ class database_user implements database_userdata_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.users';
-		return($dbcore->launchUpdateSingle($table, 'username', $username, databaseCore::PTSTR));
+		return($dbcore->launchDeleteSingle($table, 'userid', $userid, databaseCore::PTINT));
 	}
 }
 

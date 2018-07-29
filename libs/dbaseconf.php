@@ -55,13 +55,20 @@ interface database_config_interface
 	// Table: oauth
 	public function queryOAuth($provider);
 	public function queryOAuthAll();
-	public function updateOAuth($provider, $module, $expire, $clid,
+	public function updateOAuth($provider, $name, $module, $expire, $clid,
 		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
 		$resurl2, $resurl3, $resurl4);
-	public function insertOAuth($provider, $module, $expire, $clid,
+	public function insertOAuth($provider, $name, $module, $expire, $clid,
 		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
 		$resurl2, $resurl3, $resurl4);
 	public function deleteOAuth($provider);
+
+	// Table: openid
+	public function queryOpenId($provider);
+	public function queryOpenIdAll();
+	public function updateOpenId($provider, $name, $module, $serverurl, $redirecturl);
+	public function insertOpenId($provider, $name, $module, $serverurl, $redirecturl);
+	public function deleteOpenId($provider);
 
 	// Table: profile
 	public function queryProfile($profid);
@@ -435,7 +442,7 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.oauth';
 		$column = '*';
-		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
@@ -444,18 +451,19 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.oauth';
-		$column = 'provider,module,expire,clientid,authtype';
+		$column = 'provider,name,module,expire,clientid,authtype';
 		return($dbcore->launchQueryDumpTable($table, $column));
 	}
 
 	// Updates the data associated with the specified OAuth provider.
-	public function updateOAuth($provider, $module, $expire, $clid,
+	public function updateOAuth($provider, $name, $module, $expire, $clid,
 		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
 		$resurl2, $resurl3, $resurl4)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.oauth';
 		$qxa = $dbcore->buildArray('module', $module, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('clientid', $clid, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('clientsecret', $clsecret, databaseCore::PTSTR, $qxa);
@@ -467,17 +475,18 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('resourceurl2', $resurl2, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl3', $resurl3, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl4', $resurl4, databaseCore::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'provider', $provier, databaseCore::PTSTR, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'provider', $provier, databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a new OAuth provider in the database.
-	public function insertOAuth($provider, $module, $expire, $clid,
+	public function insertOAuth($provider, $name, $module, $expire, $clid,
 		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
 		$resurl2, $resurl3, $resurl4)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.oauth';
-		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('module', $module, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('clientid', $clid, databaseCore::PTSTR, $qxa);
@@ -498,8 +507,66 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.oauth';
-		return($dbcore->lauchDeleteSingle($table, 'provider', $provider, databaseCore::PTSTR));
+		return($dbcore->lauchDeleteSingle($table, 'provider', $provider, databaseCore::PTINT));
 	}
+
+
+
+	/* ******** OPENID TABLE ******** */
+
+	/* The OpenID table provides information about OpenID providers and
+	   how to communicate with them. */
+	
+	public function queryOpenId($provider)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.openid';
+		$column = '*';
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
+		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	public function queryOpenIdAll()
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.openid';
+		$column = 'provider,name,module,expire';
+		return($dbcore->launchQueryDumpTable($table, $column));
+	}
+
+	   public function updateOpenId($provider, $name, $module, $serverurl, $redirecturl)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('module', $module, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('serverurl', $serverurl, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('redirecturl', $redirecturl, databaseCore::PTSTR, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'provider', $provier, databaseCore::PTINT, $qxa));
+	}
+
+	public function insertOpenId($provider, $name, $module, $serverurl, $redirecturl)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('module', $module, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('serverurl', $serverurl, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('redirecturl', $redirecturl, databaseCore::PTSTR, $qxa);
+		return($dbcore->launchInsert($table, $rxa));
+	}
+
+	public function deleteOpenId($provider)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.openid';
+		return($dbcore->lauchDeleteSingle($table, 'provider', $provider, databaseCore::PTINT));
+	}
+
+   
 
 
 

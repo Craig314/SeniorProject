@@ -59,6 +59,18 @@ const MODE_UPDATE	= 1;
 const MODE_INSERT	= 2;
 const MODE_DELETE	= 3;
 
+// These are flags to indicate what is in the database and what tables
+// are being changed for an update operation.  The following values
+// have the given meanings.
+// 0 - no change
+// 1 - insert
+// 2 - delete
+// 3 - update
+const DBCHG_NONE = 0;
+const DBCHG_INS = 1;
+const DBCHG_DEL = 2;
+const DBCHG_UPD = 3;
+
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
@@ -69,6 +81,7 @@ $htmlInjectFile = false;
 const BASEDIR = '../libs/';
 require_once BASEDIR . 'dbaseuser.php';
 require_once BASEDIR . 'timedate.php';
+require_once BASEDIR . 'password.php';
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -164,13 +177,15 @@ function loadAdditionalContent()
 	global $baseUrl;
 	global $dbcore;
 	global $dbuser;
+	global $dbconf;
 	global $vendor;
 	global $admin;
 	global $CONFIGVAR;
+	global $herr;
 
 	// Query the database for user information.
 	$rxu = $dbuser->queryUsersAll();
-	if ($rxu == false)
+	if ($rxu === false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
@@ -178,12 +193,28 @@ function loadAdditionalContent()
 			handleError('Database Error: Unable to read users table.');
 	}
 	$rxc = $dbuser->queryContactAll();
-	if ($rxc == false)
+	if ($rxc === false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
 		else
 			handleError('Database Error: Unable to read contact table.');
+	}
+	$rxpa = $dbconf->queryOAuthAll();
+	if ($rxpa === false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to read OAuth providers table.');
+	}
+	$rxpo = $dbconf->queryOpenIdAll();
+	if ($rxpo === false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to read OpenID providers table.');
 	}
 
 	// Rearrange the result arrays so they can be processed.
@@ -197,7 +228,17 @@ function loadAdditionalContent()
 	{
 		$contacts[$vx['userid']] = $vx;
 	}
-	unset($rxu, $rxc);
+	$provOAuth = array();
+	foreach ($rxpa as $kx => $vx)
+	{
+		$provOAuth[$vx['provider']] = $vx;
+	}
+	$provOpenId = array();
+	foreach ($rxpo as $kx => $vx)
+	{
+		$provOpenId[$vx['provider']] = $vx;
+	}
+	unset($rxu, $rxc, $rxpa, $rxpo);
 
 	// Generate selection table.
 	$list = array(
@@ -209,11 +250,12 @@ function loadAdditionalContent()
 			'Profile ID',
 			'Name',
 			'Login Method',
+			'Provider',
 		),
 		'tdata' => array(),
 		'tooltip' => '',
 	);
-	$users = array_reverse($users);
+	//$users = array_reverse($users);
 	foreach ($users as $kx => $vx)
 	{
 		if (!$vendor && !$admin)
@@ -225,13 +267,36 @@ function loadAdditionalContent()
 		{
 			if ($vx['userid'] == $CONFIGVAR['account_id_vendor']['value']) continue;
 		}
+		switch ($vx['method'])
+		{
+			case LOGIN_METHOD_NATIVE:
+				$method = 'Native';
+				$provname = 'Native';
+				break;
+			case LOGIN_METHOD_OAUTH:
+				$method = 'OAuth';
+				$rxa = $dbuser->queryOAuth($vx['userid']);
+				if ($rxa == false) $provname = '**ERROR**';
+					else $provname = $rxa['name'];
+				break;
+			case LOGIN_METHOD_OPENID:
+				$method = 'OpenID';
+				$rxa = $dbuser->queryOpenId($vx['userid']);
+				if ($rxa == false) $provname = '**ERROR**';
+					else $provname = $rxa['name'];
+				break;
+			default:
+				$method = '**ERROR**';
+				break;
+		}
 		$tdata = array(
-			$vx['username'],
+			$vx['userid'],
 			$vx['username'],
 			$vx['userid'],
 			$vx['profileid'],
 			$contacts[$vx['userid']]['name'],
-			$vx['method'],
+			$method,
+			$provname,
 		);
 		array_push($list['tdata'], $tdata);
 	}
@@ -315,7 +380,7 @@ function databaseLoad()
 		handleError('You must select a ' . $moduleDisplayLower .
 			' from the list view.');
 
-	$rxa = $dbuser->queryUsers($key);
+	$rxa = $dbuser->queryUsersUserId($key);
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
@@ -361,8 +426,16 @@ function updateRecordAction()
 	global $ajax;
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $dbcore;
+	global $dbuser;
+	global $dbconf;
+
+	$dbChangeNative = DBCHG_NONE;
+	$dbChangeOAuth = DBCHG_NONE;
+	$dbChangeOpenId = DBCHG_NONE;
 
 	// Set the field list.
 	$fieldlist = array(
@@ -372,10 +445,13 @@ function updateRecordAction()
 		'method',
 		'newpass1',
 		'newpass2',
-		'provider',
+		'oaprovider',
+		'opprovider',
+		'opident',
 		'name',
 		'haddr',
 		'maddr',
+		'email',
 		'hphone',
 		'cphone',
 		'wphone',
@@ -383,7 +459,7 @@ function updateRecordAction()
 	
 	// Get identity data
 	$key = getPostValue('hidden');
-	$id = getPostValue('username');
+	$username = getPostValue('username');
 	$userid = getPostValue('userid');
 	$profid = getPostValue('profid');
 	$method = getPostValue('method');
@@ -391,49 +467,83 @@ function updateRecordAction()
 	// Check key data.
 	if ($key == NULL)
 		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
-	if ($id == NULL)
+	if ($userid == NULL)
 		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
-	if (is_numeric($key))
-		handleError('Malformed key sequence.');
-	if (is_numeric($id))
-		handleError('Malformed key sequence.');
-	if ($key != $id)
-		handleError('Database key mismatch.');
-
-	// Get login data.  Some of these fields are dependent on the
-	// login method.
-	if (!is_numeric($method))
+	$vfystr->strchk($key, 'Selection Data', '', verifyString::STR_PINTEGER,
+		true, 2147483647, 1);
+	if ($vfystr->errstat())
+		handleError($herr->errorGetMessage());
+	$vfystr->strchk($userid, 'User ID', 'userid', verifyString::STR_PINTEGER,
+		true, 2147483647, 1);
+	if ($vfystr->errstat())
 	{
-		$herr->errorPutMessage(handleErrors::ETFORM, 'Malformed login method.', handleErrors::ESFAIL, 'Method', 'method', $method);
+		$rxe = $herr->errorGetData();
+		$ajax->sendStatus($rxe, $fieldlist);
+		exit(1);
 	}
-	else
+	if ($key != $userid)
+		handleError('Database key mismatch.');
+	
+	// Check the rest of the data.
+	$vfystr->strchk($username, 'Username', 'username', verifyString::STR_USERID,
+		true, $CONFIGVAR['security_username_maxlen']['value'],
+		$CONFIGVAR['security_username_minlen']['value']);
+	$vfystr->strchk($profid, 'Profile ID', 'profid', verifyString::STR_PINTEGER,
+		true, 2147483647, 1);
+	$vfystr->strchk($method, 'Login Method', 'method', verifyString::STR_PINTEGER,
+		true, 2, 0);
+	if ($vfystr->errstat())
 	{
-		switch ($method)
-		{
-			case LOGIN_METHOD_NATIVE:
-				$newpass1 = getPostValue('newpass1');
-				$newpass2 = getPostValue('newpass2');
-				$active = getPostValue('active');
-				if (!empty($newpass1) || !empty($newpass2))
+		$rxe = $herr->errorGetData();
+		$ajax->sendStatus($rxe, $fieldlist);
+		exit(1);
+	}
+	
+	// We need to make sure that the given profile ID exists.
+	checkProfileId($profid);
+
+	switch ($method)
+	{
+		case LOGIN_METHOD_NATIVE:
+			$newpass1 = getPostValue('newpass1');
+			$newpass2 = getPostValue('newpass2');
+			$active = getPostValue('active');
+			$pwdflag = 0;
+			if (!empty($newpass1) || !empty($newpass2))
+			{
+				// This does some basic checking of passwords if either
+				// password field is filled in.
+				$pwdflag = 1;
+				if (empty($newpass1))
 				{
-					// This does some basic checking of passwords if either
-					// password field is filled in.
-					$flag = false;
-					if (empty($newpass1))
-					{
-						$herr->errorPutMessage(handleErrors::ETFORM,
-							'Password field cannot be blank.',
-							handleErrors::ESFAIL, '', 'newpass1');
-						$flag = true;
-					}
-					if (empty($newpass2))
-					{
-						$herr->errorPutMessage(handleErrors::ETFORM,
-							'Password field cannot be blank.',
-							handleErrors::ESFAIL, '', 'newpass2');
-						$flag = true;
-					}
-					if ($flag == false && strcmp($newpass1, $newpass2) != 0)
+					$herr->errorPutMessage(handleErrors::ETFORM,
+						'Password field cannot be blank.',
+						handleErrors::ESFAIL, '', 'newpass1');
+					$pwdflag = 2;
+				}
+				if (empty($newpass2))
+				{
+					$herr->errorPutMessage(handleErrors::ETFORM,
+						'Password field cannot be blank.',
+						handleErrors::ESFAIL, '', 'newpass2');
+					$pwdflag = 2;
+				}
+				if ($pwdflag != 2)
+				{
+					$res1 = $vfystr->strchk($newpass1, 'New Password', 'newpass1',
+						verifyString::STR_PASSWD, true,
+						$CONFIGVAR['security_passwd_maxlen']['value'],
+						$CONFIGVAR['security_passwd_minlen']['value']);
+					$res2 = $vfystr->strchk($newpass2, 'New Password Again', 'newpass2',
+						verifyString::STR_PASSWD, true,
+						$CONFIGVAR['security_passwd_maxlen']['value'],
+						$CONFIGVAR['security_passwd_minlen']['value']);
+					if ($res1 == false || $res2 == false) $pwdflag = 2;
+					unset($res1, $res2);
+				}
+				if ($pwdflag != 2)
+				{
+					if (strcmp($newpass1, $newpass2) != 0)
 					{
 						$herr->errorPutMessage(handleErrors::ETFORM,
 							'Passwords do not match.',
@@ -441,53 +551,64 @@ function updateRecordAction()
 						$herr->errorPutMessage(handleErrors::ETFORM,
 							'Passwords do not match.',
 							handleErrors::ESFAIL, '', 'newpass2');
-						$flag = true;
-					}
-					if ($flag == false)
-					{
-						$vfystr->strchk($newpass1, 'New Password', 'newpass1',
-							verifyString::STR_PASSWD, true,
-							$CONFIGVAR['security_passwd_maxlen']['value'],
-							$CONFIGVAR['security_passwd_minlen']['value']);
-						$vfystr->strchk($newpass2, 'New Password Again', 'newpass2',
-							verifyString::STR_PASSWD, true,
-							$CONFIGVAR['security_passwd_maxlen']['value'],
-							$CONFIGVAR['security_passwd_minlen']['value']);
+						$pwdflag = 2;
 					}
 				}
-				if ($active != NULL) $active = true; else $active = false;
-				break;
-			case LOGIN_METHOD_OAUTH:
-				$provider = getPostValue('provider');
-				if ($provider == NULL)
-				{
-					$herr->errorPutMessage(handleErrors::ETFORM, 'Blank provider specified.', handleErrors::ESFAIL, 'Provider', 'provider');
-				}
-				else
-				{
-				}
-				break;
-			case LOGIN_METHOD_OPENID:
-				break;
-			default:
-				$herr->errorPutMessage(handleErrors::ETFORM, 'Invalid login method.', handleErrors::ESFAIL, 'Method', 'method', $method);
-				break;
-		}
+			}
+			if ($active != NULL) $active = true; else $active = false;
+			$dbChangeNative = DBCHG_UPD;
+			break;
+		case LOGIN_METHOD_OAUTH:
+			$provider = getPostValue('oaprovider');
+			$result = $vfystr->strchk($provider, 'Provider', 'oaprovider',
+				verifyString::STR_PINTEGER, true, 2147483647, 1);
+			if ($result)
+			{
+				// We have to do a database read to make sure the provider
+				// is actually in the database.
+				checkOAuthProvider($provider);
+			}
+			$dbChangeOAuth = DBCHG_UPD;
+			break;
+		case LOGIN_METHOD_OPENID:
+			$provider = getPostValue('opprovider');
+			$result = $vfystr->strchk($provider, 'Provider', 'opprovider',
+				verifyString::STR_PINTEGER, true, 2147483647, 1);
+			if ($result)
+			{
+				// We have to do a database read to make sure the provider
+				// is actually in the database.
+				checkOpenIdProvider($provider);
+			}
+			$opident = getPostValue('opident');
+			$vfystr->strchk($opident, 'OpenID Identifier', 'opident',
+				verifyString::STR_URI, true, 512, 1);
+			$dbChangeOpenId = DBCHG_UPD;
+			break;
+		default:
+			$herr->errorPutMessage(handleErrors::ETFORM,
+				'Invalid login method.', handleErrors::ESFAIL,
+				'Method', 'method', $method);
+			break;
 	}
 
 	// Get contact data.
 	$name = getPostValue('name');
 	$haddr = getPostValue('haddr');
 	$maddr = getPostValue('maddr');
+	$email = getPostValue('email');
 	$hphone = getPostValue('hphone');
 	$cphone = getPostValue('cphone');
 	$wphone = getPostValue('wphone');
 
-	// Check mandatory fields.
-	$vfystr->strchk();
-
-	// Check optional fields.
-	$vfystr->strchk();
+	// Check contact data fields.
+	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, false, 50, 0);
+	$vfystr->strchk($haddr, 'Home Address', 'haddr', verifyString::STR_ADDR, false, 100, 0);
+	$vfystr->strchk($maddr, 'Mailing Address', 'maddr', verifyString::STR_ADDR, false, 100, 0);
+	$vfystr->strchk($email, 'EMail Address', 'email', verifyString::STR_EMAIL, false, 50, 0);
+	$vfystr->strchk($hphone, 'Home Phone', 'hphone', verifyString::STR_PHONE, false, 30, 0);
+	$vfystr->strchk($cphone, 'Cell Phone', 'cphone', verifyString::STR_PHONE, false, 30, 0);
+	$vfystr->strchk($wphone, 'Work Phone', 'wphone', verifyString::STR_PHONE, false, 30, 0);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -500,22 +621,270 @@ function updateRecordAction()
 		}
 	}
 
+	// If we get to this point, then all field checks have passed.  We now
+	// perform safe encoding of the strings and then submit them to the
+	// database.  Because of the multiple tables involved in the database
+	// update, this code will be somewhat complicated.
+
 	// Safely encode all strings to prevent XSS attacks.
-	// $a = safeEncodeString($a);
-	// $a = safeEncodeString($a);
-	// $a = safeEncodeString($a);
-	// $a = safeEncodeString($a);
+	switch ($method)
+	{
+		case LOGIN_METHOD_NATIVE:
+			break;
+		case LOGIN_METHOD_OAUTH:
+			break;
+		case LOGIN_METHOD_OPENID:
+			break;
+		default;
+			break;
+	}
+	$name = safeEncodeString($name);
+	$haddr = safeEncodeString($haddr);
+	$maddr = safeEncodeString($maddr);
+	$email = safeEncodeString($email);
+	$hphone = safeEncodeString($hphone);
+	$cphone = safeEncodeString($cphone);
+	$wphone = safeEncodeString($wphone);
+
+	// Now we need to check what is present in the database and
+	// update the internal variables.
+	$rxLogin = $dbuser->queryLogin($userid);
+	$rxOAuth = $dbuser->queryOAuth($userid);
+	$rxOpenId = $dbuser->queryOpenId($userid);
+	$rxContact = $dbuser->queryContact($userid);
+	$rxUsers = $dbuser->queryUsersUserId($userid);
+	if ($rxLogin !== false) $dbPresentNative = true; else $dbPresentNative = false;
+	if ($rxOAuth !== false) $dbPresentOAuth = true; else $dbPresentOAuth = false;
+	if ($rxOpenId !== false) $dbPresentOpenId = true; else $dbPresentOpenId = false;
+
+	// Now comes the logic of what to update, insert, and delete.
+	if ($dbChangeNative == DBCHG_UPD)
+	{
+		if ($dbPresentOAuth)
+		{
+			$dbChangeNative = DBCHG_INS;
+			$dbChangeOAuth = DBCHG_DEL;
+		}
+		if ($dbPresentOpenId)
+		{
+			$dbChangeNative = DBCHG_INS;
+			$dbChangeOpenId = DBCHG_DEL;
+		}
+	}
+	if ($dbChangeOAuth == DBCHG_UPD)
+	{
+		if ($dbPresentLogin)
+		{
+			$dbChangeOAuth = DBCHG_INS;
+			$dbChangeNative = DBCHG_DEL;
+		}
+		if ($dbPresentOpenId)
+		{
+			$dbChangeOAuth = DBCHG_INS;
+			$dbChangeOpenId = DBCHG_DEL;
+		}
+	}
+	if ($dbChangeOpenId == DBCHG_UPD)
+	{
+		if ($dbPresentNative)
+		{
+			$dbChangeOpenId = DBCHG_INS;
+			$dbChangeNative = DBCHG_DEL;
+		}
+		if ($dbPresentOAuth)
+		{
+			$dbChangeOpenId = DBCHG_INS;
+			$dbChangeOAuth = DBCHG_DEL;
+		}
+	}
 
 	// We are good, update the record
-	$result = $DATABASE_UPDATE_OPERATION($key);	// XXX: Set This
+
+	// Open the database transaction.
+	$result = $dbcore->transOpen();
 	if ($result == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
 		else
+			handleError('Unable to open database transaction.');
+	}
+	$result = true;
+
+	// Native Login Table Transactions
+	switch ($dbChangeNative)
+	{
+		case DBCHG_UPD:
+			if ($pwdflag == 1)
+			{
+				$pwdcount = $CONFIGVAR['security_hash_rounds']['value'];
+				$pwddigest = NULL;
+				$pwdsalt = NULL;
+				$pwdpasswd = NULL;
+				password::encryptNew($newpass1, $pwdsalt, $pwdpasswd, $pwddigest, $pwdcount);
+				if ($CONFIGVAR['security_passchg_new']['value'] == 1)
+					$timeout = 0;
+				else
+					$timeout = time() + $CONFIGVAR['security_passexp_timeout']['value'];
+			}
+			else
+			{
+				$pwdcount = $rxLogin['count'];
+				$pwddigest = $rxLogin['digest'];
+				$pwdsalt = $rxLogin['salt'];
+				$pwdpasswd = $rxLogin['passwd'];
+				$timeout = $rxLogin['timeout'];
+			}
+			$lock = $rxLogin['locked'];
+			$locktime = $rxLogin['locktime'];
+			$failcount = $rxLogin['failcount'];
+			$lastlog = $rxLogin['lastlog'];
+			$res = $dbuser->updateLogin($userid, $active, $lock, $locktime,
+				$failcount, $lastlog, $timeout, $pwddigest, $pwdcount, $pwdsalt,
+				$pwdpasswd);
+			break;
+		case DBCHG_INS:
+			if ($pwdflag != 1)
+			{
+				// Password is required when inserting into the login table.
+				$dbcore->transRollback();
+				$herr->errorPutMessage(handleErrors::ETFORM,
+					'Password required when changing login method to native.',
+					handleErrors::ESFAIL, '', 'newpass1');
+				$herr->errorPutMessage(handleErrors::ETFORM,
+					'Password required when changing login method to native.',
+					handleErrors::ESFAIL, '', 'newpass2');
+				$rxe = $herr->errorGetData();
+				$ajax->sendStatus($rxe, $fieldlist);
+				exit(1);
+			}
+			$pwdcount = $CONFIGVAR['security_hash_rounds']['value'];
+			$pwddigest = NULL;
+			$pwdsalt = NULL;
+			$pwdpasswd = NULL;
+			password::encryptNew($newpass1, $pwdsalt, $pwdpasswd, $pwddigest, $pwdcount);
+			$timeout = time() + $CONFIGVAR['security_passexp_timeout']['value'];
+			$lock = $rxLogin[''];
+			$locktime = $rxLogin[''];
+			$failcount = $rxLogin[''];
+			$lastlog = $rxLogin[''];
+			$res = $dbuser->updateLogin($userid, $active, $lock, $locktime,
+				$failcount, $lastlog, $timeout, $pwddigest, $pwdcount, $pwdsalt,
+				$pwdpasswd);
+			break;
+		case DBCHG_DEL:
+			$res = $dbuser->deleteLogin($userid);
+			break;
+		default:
+			break;
+	}
+	$result = ($res) ? $result : false;
+
+	// OAuth Table Transactions
+	switch ($dbChangeOAuth)
+	{
+		case DBCHG_UPD:
+			if ($provider != $rxOAuth['provider'])
+			{
+				$state = '';
+				$oatok = '';
+				$oatoktype = '';
+				$oaissue = 0;
+				$oaexpire = 0;
+				$refresh = '';
+				$scope = '';
+			}
+			else
+			{
+				$state = $rxOAuth['state'];
+				$oatok = $rxOAuth['token'];
+				$oatoktype = $rxOAuth['tokentype'];
+				$oaissue = $rxOAuth['issue'];
+				$oaexpire = $rxOAuth['expire'];
+				$refresh = $rxOAuth['refresh'];
+				$scope = $rxOAuth['scope'];
+			}
+			$res = $dbuser->updateOAuth($userid, $state, $provider, $oatok,
+				$oatoktype, $oaissue, $oaexpire, $refresh, $scope);
+			break;
+		case DBCHG_INS:
+			$state = '';
+			$oatok = '';
+			$oatoktype = '';
+			$oaissue = 0;
+			$oaexpire = 0;
+			$refresh = '';
+			$scope = '';
+			$res = $dbuser->insertOAuth($userid, $state, $provider, $oatok,
+				$oatoktype, $oaissue, $oaexpire, $refresh, $scope);
+		break;
+		case DBCHG_DEL:
+			$res = $dbuser->deleteOAuth($userid);
+			break;
+		default:
+			break;
+	}
+	$result = ($res) ? $result : false;
+
+	// OpenID Table Transactions
+	switch ($dbChangeOpenId)
+	{
+		case DBCHG_UPD:
+			if ($provider != rxOpenId['provider'])
+			{
+				$opissue = 0;
+				$opexpire = 0;
+			}
+			else
+			{
+				$opissue = $rxOpenId['issue'];
+				$opexipre = $rxOpenId['expire'];
+			}
+			$res = $dbuser->updateOpenId($userid, $provider, $opident, $opissue, $opexpire);
+			break;
+		case DBCHG_INS:
+			$opissue = 0;
+			$opexpire = 0;
+			$res = $dbuser->insertOpenId($userid, $provider, $opident, $opissue, $opexpire);
+			break;
+		case DBCHG_DEL:
+			$res = $dbuser->deleteOpenId($userid);
+			break;
+		default:
+			break;
+	}
+	$result = ($res) ? $result : false;
+
+	// Users Table Transaction
+	$res = $dbuser->updateUsers($username, $userid, $profid, $method);
+	$result = ($res) ? $result : false;
+
+	// Contact Table Transaction
+	$res = $dbuser->updateContact($userid, $name, $haddr, $maddr, $email,
+		$hphone, $wphone, $cphone);
+	$result = ($res) ? $result : false;
+
+	// Commit or rollback database changes.
+	if ($result)
+	{
+		$res = $dbcore->transCommit();
+		if ($result == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('Database: Record update failed. Key = ' . $key);
+		}
+		sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
+	}
+	else
+	{
+		$dbcore->transRollback();
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
 			handleError('Database: Record update failed. Key = ' . $key);
 	}
-	sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
 	exit(0);
 }
 
@@ -526,22 +895,188 @@ function insertRecordAction()
 	global $ajax;
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $dbuser;
+	global $dbcore;
 
 	// Set the field list.
 	$fieldlist = array(
-		'',
+		'username',
+		'userid',
+		'profid',
+		'method',
+		'newpass1',
+		'newpass2',
+		'oaprovider',
+		'opprovider',
+		'opident',
+		'name',
+		'haddr',
+		'maddr',
+		'email',
+		'hphone',
+		'cphone',
+		'wphone',
 	);
 	
-	// Get data
-	$id = getPostValue('');
+	// Get identiy data...
+	$userid = getPostValue('userid');
+	$username = getPostValue('username');
+	$profid = getPostValue('profid');
+	$method = getPostValue('method');
 
-	// Check mandatory fields.
-	$vfystr->strchk();
+	// ...and check it.
+	$vfystr->strchk($userid, 'User ID', 'userid', verifyString::STR_PINTEGER,
+		true, 2147483647, 1);
+	$vfystr->strchk($username, 'Username', 'username', verifyString::STR_USERID,
+		true, $CONFIGVAR['security_username_maxlen']['value'],
+		$CONFIGVAR['security_username_minlen']['value']);
+	$vfystr->strchk($profid, 'Profile ID', 'profid', verifyString::STR_PINTEGER,
+		true, 2147483647, 1);
+	$vfystr->strchk($method, 'Login Method', 'method', verifyString::STR_PINTEGER,
+		true, 2, 0);
+	
+	// We need to make sure that we have a valid profile Id.
+	checkProfileId($profid);
 
-	// Check optional fields.
-	$vfystr->strchk();
+	// Get login method specific data and check it at the same time.
+	switch ($method)
+	{
+		case LOGIN_METHOD_NATIVE:
+			// Password
+			$newpass1 = getPostValue('newpass1');
+			$newpass2 = getPostValue('newpass2');
+			$pwdflag = 1;
+			if (empty($newpass1))
+			{
+				$herr->errorPutMessage(handleErrors::ETFORM,
+					'Password field cannot be blank.',
+					handleErrors::ESFAIL, '', 'newpass1');
+				$pwdflag = 2;
+			}
+			if (empty($newpass2))
+			{
+				$herr->errorPutMessage(handleErrors::ETFORM,
+					'Password field cannot be blank.',
+					handleErrors::ESFAIL, '', 'newpass2');
+				$pwdflag = 2;
+			}
+			if ($pwdflag != 2)
+			{
+				$res1 = $vfystr->strchk($newpass1, 'New Password', 'newpass1',
+					verifyString::STR_PASSWD, true,
+					$CONFIGVAR['security_passwd_maxlen']['value'],
+					$CONFIGVAR['security_passwd_minlen']['value']);
+				$res2 = $vfystr->strchk($newpass2, 'New Password Again', 'newpass2',
+					verifyString::STR_PASSWD, true,
+					$CONFIGVAR['security_passwd_maxlen']['value'],
+					$CONFIGVAR['security_passwd_minlen']['value']);
+				if ($res1 == false || $res2 == false) $pwdflag = 2;
+				unset($res1, $res2);
+			}
+			if ($pwdflag != 2)
+			{
+				if (strcmp($newpass1, $newpass2) != 0)
+				{
+					$herr->errorPutMessage(handleErrors::ETFORM,
+						'Passwords do not match.',
+						handleErrors::ESFAIL, '', 'newpass1');
+					$herr->errorPutMessage(handleErrors::ETFORM,
+						'Passwords do not match.',
+						handleErrors::ESFAIL, '', 'newpass2');
+					$pwdflag = 2;
+				}
+			}
+
+			// Account Active
+			$active = getPostValue('active');
+			if (!empty($active)) $active = true; else $active = false;
+
+			// Default Values
+			$lock = 0;
+			$locktime = 0;
+			$lastlog = 0;
+			$failcount = 0;
+			if ($CONFIGVAR['security_passchg_new']['value'] == 1)
+				$timeout = 0;
+			else
+				$timeout = time() + $CONFIGVAR['security_passexp_timeout']['value'];
+
+			// Encrypt the password
+			$pwdhash = '';
+			$pwdsalt = '';
+			$pwdpasswd = '';
+			$pwdcount = $CONFIGVAR['security_hash_rounds']['value'];
+			password::encryptNew($newpass1, $pwdsalt, $pwdpasswd, $pwdhash, $pwdcount);
+			break;
+		case LOGIN_METHOD_OAUTH:
+			// OAuth Provider
+			$provider = getPostValue('oaprovider');
+			$result = $vfystr->strchk($provider, 'Provider', 'oaprovider',
+				verifyString::STR_PINTEGER, true, 2147483647, 1);
+			if ($result)
+			{
+				// We have to do a database read to make sure the provider
+				// is actually in the database.
+				checkOAuthProvider($provider);
+			}
+
+			// Default Values
+			$state = '';
+			$oatok = '';
+			$oatoktype = '';
+			$oaissue = 0;
+			$oaexpire = 0;
+			$refresh = '';
+			$scope = '';
+			break;
+		case LOGIN_METHOD_OPENID:
+			// OpenID Provider
+			$provider = getPostValue('opprovider');
+			$result = $vfystr->strchk($provider, 'Provider', 'opprovider',
+				verifyString::STR_PINTEGER, true, 2147483647, 1);
+			if ($result)
+			{
+				// We have to do a database read to make sure the provider
+				// is actually in the database.
+				checkOpenIdProvider($provider);
+			}
+
+			// OpenID Identity
+			$opident = getPostValue('opident');
+			$vfystr->strchk($opident, 'OpenID Identifier', 'opident',
+				verifyString::STR_URI, true, 512, 1);
+
+			// Default Values
+			$opissue = 0;
+			$opexpire = 0;
+			break;
+		default:
+			$herr->errorPutMessage(handleErrors::ETFORM,
+			'Invalid login method.', handleErrors::ESFAIL,
+			'Method', 'method', $method);
+			break;
+	}
+
+	// Get contact data.
+	$name = getPostValue('name');
+	$haddr = getPostValue('haddr');
+	$maddr = getPostValue('maddr');
+	$email = getPostValue('email');
+	$hphone = getPostValue('hphone');
+	$cphone = getPostValue('cphone');
+	$wphone = getPostValue('wphone');
+
+	// Check contact data fields.
+	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, false, 50, 0);
+	$vfystr->strchk($haddr, 'Home Address', 'haddr', verifyString::STR_ADDR, false, 100, 0);
+	$vfystr->strchk($maddr, 'Mailing Address', 'maddr', verifyString::STR_ADDR, false, 100, 0);
+	$vfystr->strchk($email, 'EMail Address', 'email', verifyString::STR_EMAIL, false, 50, 0);
+	$vfystr->strchk($hphone, 'Home Phone', 'hphone', verifyString::STR_PHONE, false, 30, 0);
+	$vfystr->strchk($cphone, 'Cell Phone', 'cphone', verifyString::STR_PHONE, false, 30, 0);
+	$vfystr->strchk($wphone, 'Work Phone', 'wphone', verifyString::STR_PHONE, false, 30, 0);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -554,23 +1089,94 @@ function insertRecordAction()
 		}
 	}
 
+	// If we get to this point, then all the data has been evaluated as being
+	// good.  Now we can proceed to insert the user into the database.
+
 	// Safely encode all strings to prevent XSS attacks.
-	$a = safeEncodeString($a);
-	$a = safeEncodeString($a);
-	$a = safeEncodeString($a);
-	$a = safeEncodeString($a);
-	
-	// We are good, update the record
-	$result = $DATABASE_INSERT_OPERATION($id);	// XXX: Set This
+	switch ($method)
+	{
+		case LOGIN_METHOD_NATIVE:
+			break;
+		case LOGIN_METHOD_OAUTH:
+			break;
+		case LOGIN_METHOD_OPENID:
+			break;
+		default;
+			break;
+	}
+	$name = safeEncodeString($name);
+	$haddr = safeEncodeString($haddr);
+	$maddr = safeEncodeString($maddr);
+	$email = safeEncodeString($email);
+	$hphone = safeEncodeString($hphone);
+	$cphone = safeEncodeString($cphone);
+	$wphone = safeEncodeString($wphone);
+
+	// Open the transaction.
+	$result = $dbcore->transOpen();
 	if ($result == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
 		else
-			handleError('Database: Record insert failed. Key = ' . $id);
+			handleError('Unable to open database transaction.');
 	}
-	sendResponseClear($moduleDisplayUpper . ' insert completed: key = '
-		. $id);
+	$result = true;
+
+	// ** ORDER MATTERS HERE **
+	// First we put the user in the users table.
+	$res = $dbuser->insertUsers($username, $userid, $profid, $method);
+	$result = ($res) ? $result : false;
+
+	// Then contacts
+	$res = $dbuser->insertContact($userid, $name, $haddr, $maddr, $email,
+		$hphone, $wphone, $cphone);
+	$result = ($res) ? $result : false;	
+
+	// Finally, the login specific data.
+	switch ($method)
+	{
+		case LOGIN_METHOD_NATIVE:
+			$res = $dbuser->insertLogin($userid, $active, $lock, $locktime,
+				$failcount, $lastlog, $timeout, $pwdhash, $pwdcount, $pwdsalt,
+				$pwdpasswd);
+			break;
+		case LOGIN_METHOD_OAUTH:
+			$res = $dbuser->inserOAuth($userid, $state, $provider, $oatok,
+				$oatoktype, $oaissue, $oaexpire, $refresh, $scope);
+			break;
+		case LOGIN_METHOD_OPENID:
+			$res = $dbuser->insertOpenId($userid, $provider, $opident,
+				$opissue, $opexpire);
+			break;
+	}
+	$result = ($res) ? $result : false;
+
+	// Now we either commit the transaction to make all the updates
+	// to the database happen at the same time, or we roll back the
+	// changes if one of the actions failed.
+	if ($result)
+	{
+		$res = $dbcore->transCommit();
+		if ($res == false)
+		{
+			if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to insert ' . $moduleDisplayLower .
+				' data. Key = ' . $key);
+		}
+		sendResponse($moduleDisplayUpper . ' insert completed: key = ' . $userid);
+	}
+	else
+	{
+		$dbcore->transRollback();
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to insert ' . $moduleDisplayLower .
+				' data. Key = ' . $userid);
+	}
 	exit(0);
 }
 
@@ -578,46 +1184,113 @@ function insertRecordAction()
 // XXX: Requires customization.
 function deleteRecordAction()
 {
+	global $ajax;
 	global $herr;
+	global $vfystr;
+	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 	global $database;
 	global $dbuser;
-	global $CONFIGVAR;
 
 	// Gather data...
 	$key = getPostValue('hidden');
-	$id = getPostValue('');		// XXX: Set This
+	$userid = getPostValue('userid');
 
 	// ...and check it.
 	if ($key == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' module selection data.');
-	if ($id == NULL)
 		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
-	if (!is_numeric($key))
-		handleError('Malformed key sequence.');
-	if (!is_numeric($id))
-		handleError('Malformed key sequence.');
-	if ($key != $id)
+	if ($userid == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
+	$vfystr->strchk($key, 'Selection Data', '', verifyString::STR_PINTEGER,
+		true, 2147483647, 1);
+	if ($vfystr->errstat())
+		handleError($herr->errorGetMessage());
+	$vfystr->strchk($userid, 'User ID', 'userid', verifyString::STR_PINTEGER,
+		true, 2147483647, 1);
+	if ($vfystr->errstat())
+	{
+		$rxe = $herr->errorGetData();
+		$ajax->sendStatus($rxe, $fieldlist);
+		exit(1);
+	}
+	if ($key != $userid)
 		handleError('Database key mismatch.');
 	
 	// Cannot delete vendor or admin user.
 	if ($key == $CONFIGVAR['account_id_none']['value'] ||
 		$key == $CONFIGVAR['account_id_vendor']['value'] ||
 		$key == $CONFIGVAR['account_id_admin']['value'])
-		handleError('You are not allowed to delete systems accounts.');
+		handleError('You are not allowed to delete system accounts.');
 
-	// Now remove the module from the database.
-	$result = $DATABASE_DELETE_OPERATION($key);	// XXX: Set This
+	// Now remove the user from the database.
+
+	// We need to check what is present in the database and
+	// update the internal variables.
+	$rxLogin = $dbuser->queryLogin($userid);
+	$rxOAuth = $dbuser->queryOAuth($userid);
+	$rxOpenId = $dbuser->queryOpenId($userid);
+	$rxContact = $dbuser->queryContact($userid);
+	$rxUsers = $dbuser->queryUsersUserId($userid);
+	if ($rxLogin !== false) $dbPresentNative = true; else $dbPresentNative = false;
+	if ($rxOAuth !== false) $dbPresentOAuth = true; else $dbPresentOAuth = false;
+	if ($rxOpenId !== false) $dbPresentOpenId = true; else $dbPresentOpenId = false;
+
+	// This must be done as a transaction because we are updating
+	// multiple tables
+	$result = $dbcore->transOpen();
 	if ($result == false)
 	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Unable to open database transaction.');
+	}
+	$result = true;
+
+	if ($dbPresentNative)
+	{
+		$res = $dbuser->deleteLogin($userid);
+		$result = ($res) ? $result : false;
+	}
+
+	if ($dbPresentOAuth)
+	{
+		$res = $dbuser->deleteOAuth($userid);
+		$result = ($res) ? $result : false;
+	}
+
+	if ($dbPresentOpenId)
+	{
+		$res = $dbuser->deleteOpenId($userid);
+		$result = ($res) ? $result : false;
+	}
+
+	// Now we either commit the transaction to make all the updates
+	// to the database happen at the same time, or we roll back the
+	// changes if one of the actions failed.
+	if ($result)
+	{
+		$res = $dbcore->transCommit();
+		if ($res == false)
+		{
+			if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
+				' data. Key = ' . $key);
+		}
+		sendResponse($moduleDisplayUpper . ' delete completed: key = ' . $key);
+	}
+	else
+	{
+		$dbcore->transRollback();
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
 		else
 			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
 				' data. Key = ' . $key);
 	}
-	sendResponse($moduleDisplayUpper . ' delete completed: key = ' . $key);
 	exit(0);
 }
 
@@ -647,7 +1320,7 @@ function formPage($mode, $rxa)
 			$warn = '';
 			$btnset = html::BTNTYP_VIEW;
 			$action = '';
-			$hideValue = $rxa['username'];
+			$hideValue = $rxa['userid'];
 			$disable = true;
 			$default = true;
 			$key = true;
@@ -658,7 +1331,7 @@ function formPage($mode, $rxa)
 			$warn = '';
 			$btnset = html::BTNTYP_UPDATE;
 			$action = 'submitUpdate()';
-			$hideValue = $rxa['username'];
+			$hideValue = $rxa['userid'];
 			$disable = false;
 			$default = true;
 			$key = true;
@@ -680,7 +1353,7 @@ function formPage($mode, $rxa)
 			$warn = '';
 			$btnset = html::BTNTYP_DELETE;
 			$action = 'submitDelete()';
-			$hideValue = $rxa['user'];
+			$hideValue = $rxa['userid'];
 			$disable = true;
 			$default = true;
 			$key = true;
@@ -690,69 +1363,104 @@ function formPage($mode, $rxa)
 			break;
 	}
 
-	// This generate the provider list for OAuth.  We may need this if
-	// the edit mode is insert or update because the user's login method
-	// can change during those operations.
+	// This generate the provider list for OAuth and OpenID.  We may need
+	// this if the edit mode is insert or update because the user's login
+	// method can change during those operations.
 	if ($mode == MODE_INSERT || $mode == MODE_UPDATE)
 	{
-		$optlist = array();
+		// OAuth
+		$oaOptlist = array();
 		$rxpa = $dbconf->queryOAuthAll();
 		if ($rxpa == false)
 		{
 			if ($herr->checkState())
 				handleError($herr->errorGetMessages());
-			$optlist = array(
-				'None Available' => 'XXX-NONE-XXX',
-			);
 		}
 		else
 		{
 			foreach($rxpa as $kx => $vx)
 			{
-				$temp = array(
-					$vx['provider'] => $vx['provider'],
-				);
-				array_push($optlist, $temp);
+				$oaOptlist[$vx['name']] = $vx['provider'];
 			}
 		}
-		$providerList = array(
+		$oaProviderList = array(
 			'type' => html::TYPE_PULLDN,
 			'label' => 'Provider',
-			'name' => 'provider',
+			'name' => 'oaprovider',
 			'fsize' => 4,
 			'lsize' => 4,
-			'optlist' => $optlist,
+			'optlist' => $oaOptlist,
 			'tooltip' => 'The OAuth provider name.',
 			'disable' => $disable,
 		);
+
+		// OpenID
+		$opOptlist = array();
+		$rxpo = $dbconf->queryOpenIdAll();
+		if ($rxpo == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessages());
+		}
+		else
+		{
+			foreach($rxpo as $kx => $vx)
+			{
+				$opPotlist[$vx['name']] = $vx['provider'];
+			}
+		}
+		$opProviderList = array(
+			'type' => html::TYPE_PULLDN,
+			'label' => 'Provider',
+			'name' => 'opprovider',
+			'fsize' => 4,
+			'lsize' => 4,
+			'optlist' => $opOptlist,
+			'tooltip' => 'The OAuth provider name.',
+			'disable' => $disable,
+		);
+
 	}
 	else
 	{
-		$providerList = '';
+		$oaProviderList = '';
+		$opProviderList = '';
 	}
 
 	// Load and outfit the form based on login method.
 	switch ($rxa['method'])
 	{
 		case LOGIN_METHOD_NATIVE:
-			// Native login method with user name and password.
-			$rxl = $dbuser->queryLogin($rxa['userid']);
-			if ($rxl == false)
+			if ($mode == MODE_INSERT)
 			{
-				if ($herr->checkState())
-					handleError($herr->errorGetMessages());
-				else
-					handleError('Database Error: Unable to retrieve required '
-						. $moduleDisplayLower . ' login data.');
+				$db_active = '';
+				$db_locked = '';
+				$db_locktime = '';
+				$db_lastlog = '';
+				$db_timeout = '';
+				$db_failcount = '';
 			}
+			else
+			{
+				// Native login method with user name and password.
+				$rxl = $dbuser->queryLogin($rxa['userid']);
+				if ($rxl == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessages());
+					else
+						handleError('Database Error: Unable to retrieve required '
+							. $moduleDisplayLower . ' login data.');
+				}
 
-			// Datafill the native login information.
-			$db_active = $rxl['active'];
-			$db_locked = $rxl['locked'];
-			$db_locktime = timedate::unix2canonical($rxl['locktime']);
-			$db_lastlog = timedate::unix2canonical($rxl['lastlog']);
-			$db_timeout = timedate::unix2canonical($rxl['timeout']);
-			$db_failcount = $rxl['failcount'];
+				// Datafill the native login information.
+				$db_active = $rxl['active'];
+				$db_locked = $rxl['locked'];
+				$db_locktime = timedate::unix2canonical($rxl['locktime']);
+				$db_lastlog = timedate::unix2canonical($rxl['lastlog']);
+				$db_timeout = timedate::unix2canonical($rxl['timeout']);
+				$db_failcount = $rxl['failcount'];
+			}
 
 			// Datafill the other login types so we don't get errors.
 			// OAuth
@@ -763,9 +1471,13 @@ function formPage($mode, $rxa)
 			$db_tokexpire = '';
 			$db_refresh = '';
 			$db_scope = '';
-			$db_provider = '';
+			$db_oaprovider = '';
 
-			// OpenID (None)
+			// OpenID
+			$db_opident = '';
+			$db_opissue = '';
+			$db_opexire = '';
+			$db_opprovider = '';
 
 			// Mark the visibility of the login types appropriately.
 			$hideNative = false;
@@ -777,25 +1489,39 @@ function formPage($mode, $rxa)
 			// signin (Kerberos from Unix, LDAP from Microsoft), method which
 			// uses an authentication provider other than ourselves to
 			// authenticate the user.
-			$rxl = $dbuser->queryOAuth($rxa['userid']);
-			if ($rxl == false)
+			if ($mode == MODE_INSERT)
 			{
-				if ($herr->checkState())
-					handleError($herr->errorGetMessages());
-				else
-					handleError('Database Error: Unable to retrieve required OAuth '
-						. ' user data.');
+				$db_state = '';
+				$db_oatok = '';
+				$db_oatoktype = '';
+				$db_tokissue = '';
+				$db_tokexpire = '';
+				$db_refresh = '';
+				$db_scope = '';
+				$db_oaprovider = '';
 			}
+			else
+			{
+				$rxl = $dbuser->queryOAuth($rxa['userid']);
+				if ($rxl == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessages());
+					else
+						handleError('Database Error: Unable to retrieve required OAuth '
+							. ' user data.');
+				}
 
-			// Datafill the OAuth information.
-			$db_state = $rxl['state'];
-			$db_oatok = $rxl['token'];
-			$db_oatoktype = $rxl['tokentype'];
-			$db_tokissue = timedate::unix2canonical($rxl['issue']);
-			$db_tokexpire = timedate::unix2canonical($rxl['expire']);
-			$db_refresh = $rxl['refresh'];
-			$db_scope = $rxl['scope'];
-			$db_provider = $rxl['provider'];
+				// Datafill the OAuth information.
+				$db_state = $rxl['state'];
+				$db_oatok = $rxl['token'];
+				$db_oatoktype = $rxl['tokentype'];
+				$db_tokissue = timedate::unix2canonical($rxl['issue']);
+				$db_tokexpire = timedate::unix2canonical($rxl['expire']);
+				$db_refresh = $rxl['refresh'];
+				$db_scope = $rxl['scope'];
+				$db_oaprovider = $rxl['provider'];
+			}
 
 			// Now datafill the other login types so we don't get errors.
 			// Native
@@ -806,7 +1532,11 @@ function formPage($mode, $rxa)
 			$db_timeout = '';
 			$db_failcount = '';
 
-			// OpenID (None)
+			// OpenID
+			$db_opident = '';
+			$db_opissue = '';
+			$db_opexire = '';
+			$db_opprovider = '';
 
 			// Mark the login types appropriately.
 			$hideNative = true;
@@ -814,7 +1544,35 @@ function formPage($mode, $rxa)
 			$hideOpenid = true;
 			break;
 		case LOGIN_METHOD_OPENID:
-			// Currently none.
+			// Login method using OAuth which is basically one type of single
+			// signin (Kerberos from Unix, LDAP from Microsoft), method which
+			// uses an authentication provider other than ourselves to
+			// authenticate the user.
+			if ($mode == MODE_INSERT)
+			{
+				$db_opident = '';
+				$db_opissue = '';
+				$db_opexire = '';
+				$db_opprovider = '';
+			}
+			else
+			{
+				$rxl = $dbuser->queryOpenId($rxa['userid']);
+				if ($rxl == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessages());
+					else
+						handleError('Database Error: Unable to retrieve required OpenID '
+							. ' user data.');
+				}
+
+				// Datafill the OpenID information.
+				$db_opident = $rxl['ident'];
+				$db_opissue = timedate::unix2canonical($rxl['issue']);
+				$db_opexire = timedate::unix2canonical($rxl['expire']);
+				$db_opprovider = $rxl['provider'];
+			}
 
 			// Now datafill the other login types so we don't get errors.
 			// Native
@@ -833,7 +1591,7 @@ function formPage($mode, $rxa)
 			$tokexpire = '';
 			$refresh = '';
 			$scope = '';
-			$db_provider = '';
+			$db_oaprovider = '';
 
 			// Mark the login types appropriately.
 			$hideNative = true;
@@ -841,19 +1599,34 @@ function formPage($mode, $rxa)
 			$hideOpenid = false;
 			break;
 		default:
-			handleError('Invalid Login Method.');
+			handleError('Database Error: Invalid Login Method.');
 			break;
 	}
 
 	// Load contact information from the database.
-	$rxc = $dbuser->queryContact($rxa['userid']);
-	if ($rxc == false)
+	if ($mode == MODE_INSERT)
 	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
-		else
-			handleError('Database Error: Unable to retrieve required '
-				. $moduleDisplayLower . ' contact data.');
+		$rxc = array(
+			'name' => '',
+			'haddr' => '',
+			'maddr' => '',
+			'email' => '',
+			'hphone' => '',
+			'cphone' => '',
+			'wphone' => '',
+		);
+	}
+	else
+	{
+		$rxc = $dbuser->queryContact($rxa['userid']);
+		if ($rxc == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessages());
+			else
+				handleError('Database Error: Unable to retrieve required '
+					. $moduleDisplayLower . ' contact data.');
+		}
 	}
 
 	// Load profiles from database.
@@ -893,7 +1666,10 @@ function formPage($mode, $rxa)
 		// Datafill this array with dummy values to prevent PHP
 		// from issuing errors.
 		$rxa = array(
-			'' => '',
+			'userid' => '',
+			'username' => '',
+			'profileid' => '',
+			'method' => '',
 		);
 	}
 
@@ -932,71 +1708,28 @@ function formPage($mode, $rxa)
 		'action' => 'setHidden()',
 		);
 	
+	
 	// Native login method fields.
-	$newpass1 = generateField(html::TYPE_PASS, 'newpass1', 'New Password', 6,
-		'', 'Enter new password for user.', $default, $disable);
-	$newpass2 = generateField(html::TYPE_PASS, 'newpass2', 'New Password Again',
-		6, '', 'Repeat new password entry for user.', $default, $disable);
 	$active = generateField(html::TYPE_CHECK, 'active', 'Account Active', 1,
 		$db_active, 'Indicates if the account is active or not.',
 		$default, $disable);
-	$active['sidemode'] = true;
-	$active['side'] = 0;
-	$locked = generateField(html::TYPE_CHECK, 'locked', 'Account Locked', 1,
-		$db_locked, 'Indicates if the account has been locked out.',
-		$default, true);
-	$locked['sidemode'] = true;
-	$locked['side'] = 1;
-	$locktime = generateField(html::TYPE_TEXT, 'locktime', 'Lockout Time',
-		4, $db_locktime, 'View the time that the user\'s locked out ' .
-		'account is reenabled.', true, true);
-	$lastlog = generateField(html::TYPE_TEXT, 'lastlog', 'Last Login Time',
-		4, $db_lastlog, 'View the user\'s last successful login attempt.',
-		true, true);
-	$timeout = generateField(html::TYPE_TEXT, 'timeout', 'Password Timeout',
-		4, $db_timeout, 'View when the user\'s current password will ' .
-		'time out.', true, true);
-	$failcount = generateField(html::TYPE_TEXT, 'failcount',
-		'Failed Login Attempts', 4, $db_failcount, 'View the time ' .
-		'that the user\'s locked out account is reenabled.', true, true);
 
 	// OAuth login method fields.
-	$state = generateField(html::TYPE_TEXT, 'state', 'OAuth State',
-		4, $db_state, 'View the user\'s state string which helps' .
-		' enable user authentication.', true, true);
-	$oatok = generateField(html::TYPE_TEXT, 'oatok', 'OAuth Token', 4,
-		$db_oatok, 'The OAuth token that the provider responded with.',
-		true, true);
-	$oatoktype = generateField(html::TYPE_TEXT, 'oatoktype',
-		'OAuth Token Type', 4, $db_oatoktype, 'The OAuth token that ' .
-		'the provider responded with.', true, true);
-	$tokissue = generateField(html::TYPE_TEXT, 'tokissue', 'Token ' .
-		'Issue Time', 4, $db_tokissue, 'View the time the authentication ' .
-		'token was issued by the provider.', true, true);
-	$tokexpire = generateField(html::TYPE_TEXT, 'tokexpire', 'Token ' .
-		'Expire Time', 4, $db_tokexpire,
-		'View  the time the authentication token was issued by the ' .
-		'provider.', true, true);
-	$refresh = generateField(html::TYPE_TEXT, 'refresh', 'OAuth Refresh',
-		4, $db_refresh, 'View the OAuth refresh data.', true, true);
-	$scope = generateField(html::TYPE_TEXT, 'scope', 'Access Scope',
-		4, $db_scope, 'View the granted access scope that the ' .
-		'user has granted to their profile.', true, true);
 	switch ($mode)
 	{
 		case MODE_VIEW:
 		case MODE_DELETE:
-			$provider = generateField(html::TYPE_TEXT, 'provider',
-				'OAuth Provider', 3, $db_provider, 'The OAuth ' .
+			$oaProvider = generateField(html::TYPE_TEXT, 'provider',
+				'OAuth Provider', 3, $db_oaprovider, 'The OAuth ' .
 				'provider which authenticates the user to the application',
 				true, true);
 			break;
 		case MODE_INSERT:
-			$provider = $providerList;
+			$oaProvider = $oaProviderList;
 			break;
 		case MODE_UPDATE:
-			$provider = $providerList;
-			$provider['default'] = $db_provider;
+			$oaProvider = $oaProviderList;
+			$oaProvider['default'] = $db_oaprovider;
 			break;
 		default:
 			handleError('Invalid Mode Specified');
@@ -1004,7 +1737,113 @@ function formPage($mode, $rxa)
 	}
 
 	// OpenID login method fields.
+	switch ($mode)
+	{
+		case MODE_VIEW:
+		case MODE_DELETE:
+			$opProvider = generateField(html::TYPE_TEXT, 'provider',
+				'OpenID Provider', 3, $db_opprovider, 'The OpenID ' .
+				'provider which authenticates the user to the application',
+				true, true);
+			break;
+		case MODE_INSERT:
+			$opProvider = $opProviderList;
+			break;
+		case MODE_UPDATE:
+			$opProvider = $opProviderList;
+			$opProvider['default'] = $db_opprovider;
+			break;
+		default:
+			handleError('Invalid Mode Specified');
+			break;
+	}
+	$opident = generateField(html::TYPE_TEXT, 'opident', 'OpenID Identity',
+	4, $db_opident, 'The user\'s OpenID identity.', $default, $disable);
 
+	// Different fields are displayed in different editing modes.
+	if ($mode == MODE_VIEW || $mode == MODE_DELETE)
+	{
+		// Native
+		$newpass1 = NULL;
+		$newpass2 = NULL;
+		$active['sidemode'] = true;
+		$active['side'] = 0;
+		$locked = generateField(html::TYPE_CHECK, 'locked', 'Account Locked', 1,
+			$db_locked, 'Indicates if the account has been locked out.',
+			$default, true);
+		$locked['sidemode'] = true;
+		$locked['side'] = 1;
+		$locktime = generateField(html::TYPE_TEXT, 'locktime', 'Lockout Time',
+			4, $db_locktime, 'View the time that the user\'s locked out ' .
+			'account is reenabled.', true, true);
+		$lastlog = generateField(html::TYPE_TEXT, 'lastlog', 'Last Login Time',
+			4, $db_lastlog, 'View the user\'s last successful login attempt.',
+			true, true);
+		$timeout = generateField(html::TYPE_TEXT, 'timeout', 'Password Timeout',
+			4, $db_timeout, 'View when the user\'s current password will ' .
+			'time out.', true, true);
+		$failcount = generateField(html::TYPE_TEXT, 'failcount',
+			'Failed Login Attempts', 4, $db_failcount, 'View the time ' .
+			'that the user\'s locked out account is reenabled.', true, true);
+
+		// OAuth
+		$state = generateField(html::TYPE_TEXT, 'state', 'OAuth State',
+			4, $db_state, 'View the user\'s state string which helps' .
+			' enable user authentication.', true, true);
+		$oatok = generateField(html::TYPE_TEXT, 'oatok', 'OAuth Token', 4,
+			$db_oatok, 'The OAuth token that the provider responded with.',
+			true, true);
+		$oatoktype = generateField(html::TYPE_TEXT, 'oatoktype',
+			'OAuth Token Type', 4, $db_oatoktype, 'The OAuth token that ' .
+			'the provider responded with.', true, true);
+		$tokissue = generateField(html::TYPE_TEXT, 'tokissue', 'Token ' .
+			'Issue Time', 4, $db_tokissue, 'View the time the authentication ' .
+			'token was issued by the provider.', true, true);
+		$tokexpire = generateField(html::TYPE_TEXT, 'tokexpire', 'Token ' .
+			'Expire Time', 4, $db_tokexpire,
+			'View the time the authentication will expire.', 'provider.',
+			true, true);
+		$refresh = generateField(html::TYPE_TEXT, 'refresh', 'OAuth Refresh',
+			4, $db_refresh, 'View the OAuth refresh data.', true, true);
+		$scope = generateField(html::TYPE_TEXT, 'scope', 'Access Scope',
+			4, $db_scope, 'View the granted access scope that the ' .
+			'user has granted to their profile.', true, true);
+		
+		// OpenID
+		$opissue = generateField(html::TYPE_TEXT, 'opissue', 'OpenID ' .
+			'Issue Time', 4, $db_tokissue, 'View the time the authentication ' .
+			'was issued by the provider.', true, true);
+		$opexpire = generateField(html::TYPE_TEXT, 'opexpire', 'OpenID ' .
+			'Expire Time', 4, $db_tokissue, 'View the time the authentication ' .
+			'will expire.', true, true);
+	}
+	else
+	{
+		// Native
+		$newpass1 = generateField(html::TYPE_PASS, 'newpass1', 'New Password', 6,
+			'', 'Enter new password for user.', $default, $disable);
+		$newpass2 = generateField(html::TYPE_PASS, 'newpass2', 'New Password Again',
+			6, '', 'Repeat new password entry for user.', $default, $disable);
+		$locked = NULL;
+		$locktime = NULL;
+		$lastlog = NULL;
+		$timeout = NULL;
+		$failcount = NULL;
+
+		// OAuth
+		$state = NULL;
+		$oatok = NULL;
+		$oatoktype = NULL;
+		$tokissue = NULL;
+		$tokexpire = NULL;
+		$refresh = NULL;
+		$scope = NULL;
+
+		// OpenID
+		$opissue = NULL;
+		$opexpire = NULL;
+	}
+	
 	// Contact Information
 	$name = generateField(html::TYPE_TEXT, 'name', 'Name', 6, $rxc['name'],
 		'The user\'s real name.', $default, $disable);
@@ -1014,7 +1853,7 @@ function formPage($mode, $rxa)
 	$maddr = generateField(html::TYPE_AREA, 'maddr', 'Mailing Address', 6,
 		$rxc['maddr'], 'The user\'s mailing address.', $default, $disable);
 	$maddr['rows'] = 5;
-		$email = generateField(html::TYPE_TEXT, 'email', 'E-Mail Address', 6,
+	$email = generateField(html::TYPE_TEXT, 'email', 'E-Mail Address', 6,
 		$rxc['email'], 'The user\'s e-mail address.', $default, $disable);
 	$hphone = generateField(html::TYPE_TEXT, 'hphone', 'Home Phone Number', 4,
 		$rxc['hphone'], 'The user\'s home phone number', $default, $disable);
@@ -1022,7 +1861,6 @@ function formPage($mode, $rxa)
 		$rxc['cphone'], 'The user\'s mobile phone number', $default, $disable);
 	$wphone = generateField(html::TYPE_TEXT, 'wphone', 'Work Phone Number', 4,
 		$rxc['wphone'], 'The user\'s work phone number', $default, $disable);
-
 
 	// Build out the form array.
 	$data = array(
@@ -1045,8 +1883,8 @@ function formPage($mode, $rxa)
 			'type' => html::TYPE_FSETOPEN,
 			'name' => 'Identity',
 		),
-		$uname,
 		$userid,
+		$uname,
 		$profid,
 		$method,
 		array(
@@ -1078,7 +1916,7 @@ function formPage($mode, $rxa)
 			'name' => 'oauthLogin',
 			'hidden' => $hideOauth,
 		),
-		$provider,
+		$oaProvider,
 		$state,
 		$oatok,
 		$oatoktype,
@@ -1094,6 +1932,10 @@ function formPage($mode, $rxa)
 			'name' => 'openidLogin',
 			'hidden' => $hideOpenid,
 		),
+		$opProvider,
+		$opident,
+		$opissue,
+		$opexpire,
 		array(
 			'type' => html::TYPE_HIDECLOSE,
 		),
@@ -1144,7 +1986,11 @@ function generateField($type, $name, $label, $size = 0, $value = '',
 	);
 	if ($size != 0) $data['fsize'] = $size;
 	if ($disabled == true) $data['disable'] = true;
-	if ($default != false) $data['value'] = $value;
+	if ($default != false)
+	{
+		$data['value'] = $value;
+		$data['default'] = $value;
+	}
 	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
 	$data['lsize'] = 4;
 	return $data;
@@ -1161,5 +2007,46 @@ function getPostValue(...$list)
 	return NULL;
 }
 
+// Checks to make sure that the given OAuth provider is valid.
+function checkOAuthProvider($provider)
+{
+	global $dbconf;
+
+	$rxa = $dbconf->queryOAuth($provider);
+	if ($rxa == false)
+	{
+		$herr->errorPutMessage(handleErrors::ETFORM,
+			'Specified provider is not valid.',
+			handleErrors::ESFAIL, '', 'provider');
+	}
+}
+
+// Checks to make sure that the given OpenID provider is valid.
+function checkOpenIdProvider($provider)
+{
+	global $dbconf;
+
+	$rxa = $dbconf->queryOpenId($provider);
+	if ($rxa == false)
+	{
+		$herr->errorPutMessage(handleErrors::ETFORM,
+			'Specified provider is not valid.',
+			handleErrors::ESFAIL, '', 'provider');
+	}
+}
+
+// Checks to make sure that the given Profile ID is valid.
+function checkProfileId($profid)
+{
+	global $dbconf;
+
+	$rxa = $dbconf->queryProfile($profid);
+	if ($rxa == false)
+	{
+		$herr->errorPutMessage(handleErrors::ETFORM,
+			'Specified profile does not exist.',
+			handleErrors::ESFAIL, '', 'profid');
+	}
+}
 
 ?>

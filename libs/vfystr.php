@@ -30,10 +30,13 @@ interface verifyStringInterface
 	const STR_NUMERIC		= 8;	// Numeric Only
 	const STR_ALPHANUM		= 9;	// Alphanumeric
 	const STR_PINTEGER		= 10;	// Positive Integer
-	const STR_FLOAT			= 11;	// Floating Point
-	const STR_DATE			= 12;	// Date
-	const STR_DATEUNIX		= 13;	// Unix Date Timestamp
-	const STR_FILENAME		= 14;	// Filename
+	const STR_INTEGER		= 11;	// Integer (decimal or 0x hex format)
+	const STR_FLOAT			= 12;	// Floating Point
+	const STR_DATE			= 13;	// Date
+	const STR_DATEUNIX		= 14;	// Unix Date Timestamp
+	const STR_FILENAME		= 15;	// Filename
+	const STR_URI			= 16;	// Uniform Resource Identifier
+	const STR_URL			= 17;	// Uniform Resource Location
 
 	// Start custom checks at 100
 
@@ -81,13 +84,13 @@ class verifyString implements verifyStringInterface
 				if ($type != self::STR_NUMERIC && $type != self::STR_PINTEGER
 					&& $type != self::STR_FLOAT)
 				{
-					if (!$this->chklenmin($data, $field, $id, $min)) return;
-					if (!$this->chklenmax($data, $field, $id, $max)) return;
+					if (!$this->chklenmin($data, $field, $id, $min)) return false;
+					if (!$this->chklenmax($data, $field, $id, $max)) return false;
 				}
 				if ($type != self::STR_PASSWD)
-					if (!$this->chkchrcssa($data, $field, $id)) return;
+					if (!$this->chkchrcssa($data, $field, $id)) return false;
 			}
-			else return;
+			else return false;
 		}
 		else
 		{
@@ -96,69 +99,80 @@ class verifyString implements verifyStringInterface
 				if ($type != self::STR_NUMERIC && $type != self::STR_PINTEGER
 					&& $type != self::STR_FLOAT)
 				{
-					if (!$this->chklenmin($data, $field, $id, $min)) return;
-					if (!$this->chklenmax($data, $field, $id, $max)) return;
+					if (!$this->chklenmin($data, $field, $id, $min)) return false;
+					if (!$this->chklenmax($data, $field, $id, $max)) return false;
 				}
 				if ($type != self::STR_PASSWD)
-					if (!$this->chkchrcssa($data, $field, $id)) return;
+					if (!$this->chkchrcssa($data, $field, $id)) return false;
 			}
-			else return;
+			else return true;
 		}
 
 		// Specific Checks
 		switch ($type)
 		{
 			case self::STR_USERID:
-				$this->chkchrlogin($data, $field, $id);
+				$result = $this->chkchrlogin($data, $field, $id);
 				break;
 			case self::STR_PASSWD:
-				$this->chkchrascii($data, $field, $id);
+				$result = $this->chkchrascii($data, $field, $id);
 				break;
 			case self::STR_NAME:
-				$this->chkchrascii($data, $field, $id);
+				$result = $this->chkchrascii($data, $field, $id);
 				break;
 			case self::STR_ADDR:
-				$this->chkchrasciiformat($data, $field, $id);
+				$result = $this->chkchrasciiformat($data, $field, $id);
 				break;
 			case self::STR_PHONE:
-				$this->chkchrphone($data, $field, $id);
+				$result = $this->chkchrphone($data, $field, $id);
 				break;
 			case self::STR_EMAIL:
-				$this->validate_email($data, $field, $id);
+				$result = $this->validate_email($data, $field, $id);
 				break;
 			case self::STR_ASCII:
-				$this->chkchrascii($data, $field, $id);
+				$result = $this->chkchrascii($data, $field, $id);
 				break;
 			case self::STR_ALPHA:
-				$this->chkchralpha($data, $field, $id);
+				$result = $this->chkchralpha($data, $field, $id);
 				break;
 			case self::STR_NUMERIC:
-				$this->chkchrnumber($data, $field, $id, $max, $min);
+				$result = $this->chkchrnumber($data, $field, $id, $max, $min);
 				break;
 			case self::STR_ALPHANUM:
-				$this->chkchralphanum($data, $field, $id);
+				$result = $this->chkchralphanum($data, $field, $id);
 				break;
 			case self::STR_PINTEGER:
-				$this->chkchrpint($data, $field, $id, $max, $min);
+				$result = $this->chkchrpint($data, $field, $id, $max, $min);
+				break;
+			case self::STR_INTEGER:
+				$result = $this->checkchrint($data, $field, $id, $max, $min);
 				break;
 			case self::STR_FLOAT:
-				$this->chkchrfloat($data, $field, $id, $max, $min);
+				$result = $this->chkchrfloat($data, $field, $id, $max, $min);
 				break;
 			case self::STR_DATE:
-				$this->validate_date($data, $field, $id);
+				$result = $this->validate_date($data, $field, $id);
 				break;
 			case self::STR_DATEUNIX:
-				$this->validate_date_unix($data, $field, $id);
+				$result = $this->validate_date_unix($data, $field, $id);
 				break;
 			case self::STR_FILENAME:
-				$this->validate_filename($data, $field, $id);
+				$result = $this->validate_filename($data, $field, $id);
+				break;
+			case self::STR_URI:
+				$result = $this->validate_uri($data, $field, $id);
+				break;
+			case self::STR_URL:
+				$result = $this->validate_url($data, $field, $id);
 				break;
 			default:
 				$herr->errorPutMessage($this->etype,
 					'Internal Error: Invalid datatype code.', $this->estate,
 					$field, $id);
+				$result = false;
 				break;
 		}
+		return $result;
 	}
 
 	// Checks string maximum length.
@@ -212,14 +226,17 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$result = preg_match('/[^A-Za-z0-9_-]/', $data);
-		if ($result != 0)
+		$regex = '/^[A-Za-z0-9\_\-]+$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid characters detected.<br>Only letters, numbers,' .
 				' -_ are allowed.', $this->estate,
 				$field, $id);
+			return false;
 		}
+		return true;
 	}
 
 	// Checks for % for cross site scripting attacks.
@@ -242,19 +259,16 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$len = strlen($data);
-		if ($len > 0)
+		$regex = '/^[\x20-\x7E]*$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
 		{
-			for ($i = 0; $i < $len; $i++)
-			{
-				if (ord($data[$i]) < 32 || ord($data[$i]) > 127)
-				{
-					$herr->errorPutMessage($this->etype,
-						'Invalid characters detected.<br>Only ASCII characters allowed.',
-						$this->estate, $field, $id);
-				}
-			}
+			$herr->errorPutMessage($this->etype,
+				'Invalid characters detected.<br>Only ASCII characters allowed.',
+				$this->estate, $field, $id);
+			return false;
 		}
+		return true;
 	}
 
 	// Checks to make sure string characters are in ASCII range,
@@ -263,23 +277,17 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$len = strlen($data);
-		if ($len > 0)
+		$regex = '/^[\t\n\r\x20-\x7E]*$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
 		{
-			for ($i = 0; $i < $len; $i++)
-			{
-				if (ord($data[$i]) < 32 || ord($data[$i]) > 127)
-				{
-					if (ord($data[$i]) == 9) continue;
-					if (ord($data[$i]) == 10) continue;
-					if (ord($data[$i]) == 13) continue;
-					$herr->errorPutMessage($this->etype,
-						'Invalid characters detected.<br>Only ASCII characters with' .
-						'<br>CR, LF, and TAB are allowed.', $this->estate, $field, $id);
-					return;
-				}
-			}
+			$herr->errorPutMessage($this->etype,
+				'Invalid characters detected.<br>Only ASCII characters with' .
+				'<br>SPACE, CR, LF, and TAB are allowed.',
+				$this->estate, $field, $id);
+			return false;
 		}
+		return true;
 	}
 
 	// Check phone numbers for invalid characters.
@@ -287,13 +295,16 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$result = preg_match('/[^0-9\(\) -]/', $data);
-		if ($result != 0)
+		$regex = '/^[0-9\(\)\-\ ]+$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected.<br>Only numbers, ()-SP are allowed',
-				$this->estate, $field, $id);
+				'Invalid characters detected.<br>Only numbers, ()- ' .
+				'and SPACE are allowed', $this->estate, $field, $id);
+			return false;
 		}
+		return true;
 	}
 
 	// Letters only
@@ -301,13 +312,16 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$result = preg_match('/[^A-Za-z\ ]/', $data);
-		if ($result != 0)
+		$regex = '/^[A-Za-z\ ]+$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid characters detected.<br>Only letters and space are' .
 				' allowed', $this->estate, $field, $id);
+			return false;
 		}
+		return true;
 	}
 
 	// Numbers only (+/-)
@@ -315,20 +329,21 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$result = preg_match('/[^0-9-]/', $data);
-		if ($result != 0)
+		$regex = '/^[+|-]?[0-9]+$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid characters detected. Only numbers, - are allowed', $this->estate,
 				$field, $id);
-			return;
+			return false;
 		}
 		if (filter_var($data, FILTER_VALIDATE_INT) === false)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid floating point format detected.',
 				$this->estate, $field, $id);
-			return;
+			return false;
 		}
 		if ($max >= $min)
 		{
@@ -338,9 +353,10 @@ class verifyString implements verifyStringInterface
 					'Numeric value out of range.<br>Must be between '
 					. $min . ' and ' . $max . ' inclusive.', $this->estate,
 					$field, $id);
-				return;
+				return false;
 			}
 		}
+		return true;
 	}
 
 	// Letters and numbers (+/-)
@@ -348,13 +364,16 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$result = preg_match('/[^A-Za-z0-9\ -]/', $data);
-		if ($result != 0)
+		$regex = '/^[A-Za-z0-9\ _-]+$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid characters detected.<br>Only letters, numbers,' .
-				' - SP are allowed.', $this->estate, $field, $id);
+				' _- SP are allowed.', $this->estate, $field, $id);
+			return false;
 		}
+		return true;
 	}
 
 	// Positive integers
@@ -362,20 +381,21 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$result = preg_match('/[^0-9]/', $data);
-		if ($result != 0)
+		$regex = '/^([1-9][0-9]*)|([0-9])$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid characters detected.<br>Only numbers are allowed.',
 				$this->estate, $field, $id);
-			return;
+			return false;
 		}
 		if (filter_var($data, FILTER_VALIDATE_INT) === false)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid integer format detected.',
 				$this->estate, $field, $id);
-			return;
+			return false;
 		}
 		if ($max >= $min)
 		{
@@ -385,9 +405,38 @@ class verifyString implements verifyStringInterface
 					'Numeric value out of range.<br>Must be between '
 					. $min . ' and ' . $max . ' inclusive.', $this->estate,
 					$field, $id);
-				return;
+				return false;
 			}
 		}
+		return true;
+	}
+
+	// Integer
+	private function chkchrint($data, $field, $id, $max, $min)
+	{
+		global $herr;
+
+		$regex = '/^((0x[0-9A-Fa-f]+)|([+|-]?(([1-9][0-9]+)|([0-9]))))$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
+		{
+			$herr->errorPutMessage($this->etype,
+				'Invalid characters or format detected.<br>Only numbers are allowed.',
+				$this->estate, $field, $id);
+			return false;
+		}
+		if ($max >= $min)
+		{
+			if ($data > $max || $data < $min)
+			{
+				$herr->errorPutMessage($this->etype,
+					'Numeric value out of range.<br>Must be between '
+					. $min . ' and ' . $max . ' inclusive.', $this->estate,
+					$field, $id);
+				return false;
+			}
+		}
+		return true;
 	}
 
 	// Floating point
@@ -395,20 +444,24 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$result = preg_match('/[^0-9\.\+[Ee]-]/', $data);
-		if ($result != 0)
+		$regex = '/^[+|-]?';
+		$regex .= '(([1-9][0-9]*(\.[0-9]+)?)|';
+		$regex .= '(0(\.[0-9]+)?))';
+		$regex .= '([E|e][+|-][0-9]+)?$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
 		{
 			$herr->errorPutMessage($this->etype,
-				'Invalid characters detected. Only numbers, .Ee+- are allowed.',
+				'Invalid characters or format detected. Only numbers, ., [Ee], +, - are allowed.',
 				$this->estate, $field, $id);
-			return;
+			return false;
 		}
 		if (filter_var($data, FILTER_VALIDATE_FLOAT) === false)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid floating point format detected.',
 				$this->estate, $field, $id);
-			return;
+			return false;
 		}
 		if ($max >= $min)
 		{
@@ -418,9 +471,10 @@ class verifyString implements verifyStringInterface
 					'Numeric value out of range.<br>Must be between '
 					. $min . ' and ' . $max . ' inclusive.', $this->estate,
 					$field, $id);
-				return;
+				return false;
 			}
 		}
+		return true;
 	}
 
 	// Validates an email address.
@@ -434,7 +488,7 @@ class verifyString implements verifyStringInterface
 			$herr->errorPutMessage($this->etype,
 				'EMail address contains invalid characters.', $this->estate,
 				$field, $id);
-			return;
+			return false;
 		}
 		$result = filter_var($data, FILTER_VALIDATE_EMAIL);
 		if (!$result)
@@ -442,7 +496,9 @@ class verifyString implements verifyStringInterface
 			$herr->errorPutMessage($this->etype,
 				'EMail address not formatted correctly.', $this->estate,
 				$field, $id);
+			return false;
 		}
+		return true;
 	}
 
 	// Validates the correct date was entered.
@@ -471,15 +527,18 @@ class verifyString implements verifyStringInterface
 		switch(PHP_INT_SIZE)
 		{
 			case 4:
-				helper_validate_date($data, $field, $id, 1970, 2037);
+				$result = helper_validate_date($data, $field, $id, 1970, 2037);
 				break;
 			case 8:
-				helper_validate_date($data, $field, $id, 1970, 9999);
+				$result = helper_validate_date($data, $field, $id, 1970, 9999);
 				break;
 			default:
 				printErrorImmediate('Critical System Error: Platform not supported.'
 					. ' Only platform which have 32/64 bit word sizes are supported.');
+				return false;
+				break;
 		}
+		return $result;
 	}
 
 	// Date validation helper function.  This is where the actual
@@ -506,7 +565,7 @@ class verifyString implements verifyStringInterface
 				$herr->errorPutMessage($this->etype,
 					'Invalid date format detected. Must be MM/DD/YYYY',
 					$this->estate, $field, $id);
-				return;
+				return false;
 			}
 		}
 		else
@@ -514,15 +573,16 @@ class verifyString implements verifyStringInterface
 			$herr->errorPutMessage($this->etype,
 				'Invalid date format detected. Must be MM/DD/YYYY',
 				$this->estate, $field, $id);
-			return;
+			return false;
 		}
+
 		// Check to make sure that the year makes sense.
 		if ($date[2] < $minyear || $date[2] > $maxyear)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid date format detected. Must be MM/DD/YYYY',
 				$this->estate, $field, $id);
-			return;
+			return false;
 		}
 		// Figure out if we are on a leap year or not.
 		// Note, if the year ends in 00, then it is *NOT* a
@@ -531,22 +591,25 @@ class verifyString implements verifyStringInterface
 		{
 			if (($date[2] % 4) == 0) $md[2]++;
 		}
+
 		// Check if the month is in the proper range.
 		if ($date[0] < 1 || $date[0] > 12)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid date format detected. Must be MM/DD/YYYY',
 				$this->estate, $field, $id);
-			return;
+			return false;
 		}
+
 		// Check if the day is in the proper range.
 		if ($date[1] < 1 || $date[1] > $md[$date[0]])
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid date format detected. Must be MM/DD/YYYY',
 				$this->estate, $field, $id);
-			return;
+			return false;
 		}
+		return true;
 	}
 
 	// Validates filenames
@@ -554,13 +617,66 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		$result = preg_match('/[^A-Za-z0-9\ \._-]/', $data);
-		if ($result != 0)
+		$regex = '/^[A-Za-z0-9\.\_\-]+$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
 		{
 			$herr->errorPutMessage($this->etype,
 				'Invalid characters detected.<br>Only letters, numbers, ._-' .
 				' are allowed.', $this->estate, $field, $id);
+			return false;
 		}
+		return true;
+	}
+
+	// Validates URIs
+	private function validate_uri($data, $field, $id)
+	{
+		global $herr;
+
+		$regex = '/^';
+		$regex .= '(http|https)\:\/\/'; // SCHEME 
+		$regex .= '([a-z0-9+!*(),;?&=\$_.-]+(\:[a-z0-9+!*(),;?&=\$_.-]+)?@)?'; // User and Pass 
+		$regex .= '([a-z0-9-.]*)\.([a-z]{2,3})'; // Host or IP 
+		$regex .= '(\:[0-9]{2,5})?'; // Port 
+		$regex .= '(\/([a-z0-9+\$_-]\.?)+)*\/?'; // Path 
+		$regex .= '(\?[a-z+&\$_.-][a-z0-9;:@&%=+\/\$_.-]*)?'; // GET Query 
+		$regex .= '(#[a-z_.-][a-z0-9+\$_.-]*)?'; // Anchor 
+		$regex .= '$/';
+
+		$result = preg_match($regex, $data);
+		if ($result != 1)
+		{
+			$herr->errorPutMessage($this->etype,
+			'An invalid URI has been detected.',
+			$this->estate, $field, $id);
+			return false;
+		}
+		return true;
+	}
+
+	// Validates URIs
+	private function validate_url($data, $field, $id)
+	{
+		global $herr;
+
+		$regex = '/^';
+		$regex = '(http|https)\:\/\/'; // SCHEME 
+		$regex .= '([a-z0-9+!*(),;?&=\$_.-]+(\:[a-z0-9+!*(),;?&=\$_.-]+)?@)?'; // User and Pass 
+		$regex .= '([a-z0-9-.]*)\.([a-z]{2,3})'; // Host or IP 
+		$regex .= '(\:[0-9]{2,5})?'; // Port 
+		$regex .= '(\/([a-z0-9+\$_-]\.?)+)*\/?'; // Path 
+		$regex .= '$/';
+
+		$result = preg_match($regex, $data);
+		if ($result != 1)
+		{
+			$herr->errorPutMessage($this->etype,
+			'An invalid URL has been detected.',
+			$this->estate, $field, $id);
+			return false;
+		}
+		return true;
 	}
 }
 

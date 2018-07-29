@@ -92,7 +92,7 @@ $digest = NULL;
 echo "\nPassword Hashing Utility\n\n";
 $passwd = getPassword();
 $count = $CONFIGVAR['security_hash_rounds']['value'];
-$password->encryptNew($passwd, $hexsalt, $hexpass, $digest, $count);
+password::encryptNew($passwd, $hexsalt, $hexpass, $digest, $count);
 
 echo "\n";
 echo "Password: " . $passwd . "\n";

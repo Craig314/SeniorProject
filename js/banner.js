@@ -18,8 +18,8 @@ function initialRun() {
 function customCmdProc(command, data) {
 	switch(command) {
 		case 1:
-			document.getElementById('block_password').hidden = false;
-			document.getElementById('block_continue').hidden = true;
+			document.getElementById('block_password').hidden = true;
+			document.getElementById('block_continue').hidden = false;
 			break;
 		default:
 			return(false);

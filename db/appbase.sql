@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`setting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains configuration information about the application.\r\nThe following numerical ranges are defined:\r\n0-9  Server\r\n10-19 HTML\r\n20-29 SSL\r\n30-49 Security\r\n50-59 Session\r\n60-69 Time/Timezone\r\n70-79 Account/Profile\r\n1000+ Application Specific';
 
--- Dumping data for table configuration.config: ~43 rows (approximately)
+-- Dumping data for table configuration.config: ~44 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
 	(0, 0, 'server_document_root', 'Appliation Root Directory', '/Servers/webdocs', 'This sets the application root directory on the server.', 1),
@@ -54,12 +54,13 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(33, 1, 'security_passwd_maxlen', 'Password Maximum Length', '128', 'Maximum acceptable length of passwords.', 1),
 	(34, 1, 'security_passexp_timeout', 'Password Expire Timeout', '7776000', 'Maximum allowed time between password changes. When this is exceeded, the user will be forced to change their password.', 1),
 	(35, 1, 'security_passwd_complex_level', 'Password Complexity Level', '0', 'The complexity of the user password. 0: None, 1: Letters and numbers, 2: Upper and lower case letter and numbers, 3: Same as 2 plus symbols.', 1),
-	(36, 1, 'security_salt_len', 'Password Salt Length', '32', 'The length of the password salt in bytes.', 1),
-	(37, 1, 'security_hash_rounds', 'Password Hash Rounds', '100', 'Number of times to hash password + salt for password encryption.', 1),
-	(38, 1, 'security_hashtime_min', 'Password Hashtime Minimum', '10', 'Minimum jitter time for password hashing.', 0),
-	(39, 1, 'security_hashtime_max', 'Password Hashtime Maximum', '500', 'Maximum jitter time for password hashing.', 0),
-	(40, 1, 'security_login_failure_lockout', 'Allowed Login Failure Attempts', '5', 'The maximum number of login failure attempts before the account is locked out.', 1),
-	(41, 1, 'security_lockout_time', 'Account Lockout Time', '900', 'The amount of time the account is locked out after the number of login failure attempts have been exceeded.', 1),
+	(36, 2, 'security_passchg_new', 'Force Password Change on Reset', '1', 'Forces the user to change their password if their account is newly created or if the password has been reset by an administrator.', 1),
+	(37, 1, 'security_salt_len', 'Password Salt Length', '32', 'The length of the password salt in bytes.', 1),
+	(38, 1, 'security_hash_rounds', 'Password Hash Rounds', '100', 'Number of times to hash password + salt for password encryption.', 1),
+	(39, 1, 'security_hashtime_min', 'Password Hashtime Minimum', '10', 'Minimum jitter time for password hashing.', 0),
+	(40, 1, 'security_hashtime_max', 'Password Hashtime Maximum', '500', 'Maximum jitter time for password hashing.', 0),
+	(41, 1, 'security_login_failure_lockout', 'Allowed Login Failure Attempts', '5', 'The maximum number of login failure attempts before the account is locked out.', 1),
+	(42, 1, 'security_lockout_time', 'Account Lockout Time', '900', 'The amount of time the account is locked out after the number of login failure attempts have been exceeded.', 1),
 	(50, 1, 'session_regen_time', 'Session Regenerate Timeout', '30', 'The time interval between session ID regeneration. This helps to prevent session fixation and session hijacking.', 1),
 	(51, 1, 'session_expire_time', 'Session Expire Timeout', '60', 'The time in seconds that the old session before ID regeneration is still valid.', 1),
 	(52, 1, 'session_nonce_len', 'Session Nonce Length', '32', 'The length of the session nonce in bytes.', 0),
@@ -128,18 +129,19 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~3 rows (approximately)
+-- Dumping data for table configuration.module: ~4 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
 	(3, 'Module Data Editor', 'Edits module data in the database.', 'modedit.php', 'icon_gears', 1, 0, 1, 1),
 	(4, 'Change Password', 'Allows on to change their login password', 'passwd.php', 'icon_padlock', 1, 1, 1, 0),
 	(5, 'Profile Editor', 'Edits the available profiles that defines what access rights a user has.', 'profedit.php', 'icon_keys', 1, 0, 1, 0),
-	(3242, 'Test Module', 'This is for testing purposes only.', 'passwd.php', 'icon_computer', 1, 1, 1, 0);
+	(10, 'User Editor', 'Edits the user database', 'useredit.php', 'icon_users2', 1, 0, 1, 0);
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.oauth
 CREATE TABLE IF NOT EXISTS `oauth` (
-  `provider` varchar(32) NOT NULL COMMENT 'Key Field: The OAuth provider',
+  `provider` int(11) NOT NULL COMMENT 'Key Field: The OAuth provider',
+  `name` varchar(50) NOT NULL COMMENT 'The name of the OAuth provider.',
   `module` varchar(32) NOT NULL COMMENT 'The OAuth API module in the OAuth directory to use.',
   `expire` bigint(20) unsigned NOT NULL COMMENT 'The default expire time if it is not given in the token.',
   `clientid` varchar(32) NOT NULL COMMENT 'The Client ID of this application that is given by the provider.',
@@ -155,18 +157,27 @@ CREATE TABLE IF NOT EXISTS `oauth` (
   PRIMARY KEY (`provider`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains OAuth information about this client';
 
--- Dumping data for table configuration.oauth: ~0 rows (approximately)
+-- Dumping data for table configuration.oauth: ~1 rows (approximately)
 /*!40000 ALTER TABLE `oauth` DISABLE KEYS */;
+INSERT INTO `oauth` (`provider`, `name`, `module`, `expire`, `clientid`, `clientsecret`, `scope`, `authtype`, `authurl`, `redirecturl`, `resourceurl1`, `resourceurl2`, `resourceurl3`, `resourceurl4`) VALUES
+	(0, 'No Provider', 'XXXX', 0, 'NONE', NULL, 'NONE', 'NONE', 'NONE', 'NONE', 'NONE', NULL, NULL, NULL);
 /*!40000 ALTER TABLE `oauth` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.openid
 CREATE TABLE IF NOT EXISTS `openid` (
-  `provider` varchar(32) NOT NULL COMMENT 'Key Field: The OpenID provider.',
+  `provider` int(11) NOT NULL COMMENT 'Key Field: The OpenID provider.',
+  `name` varchar(50) NOT NULL COMMENT 'The name of the OpenID Provider.',
+  `module` varchar(32) NOT NULL COMMENT 'The OpenID module ID that this provider uses.',
+  `expire` bigint(20) NOT NULL COMMENT 'The default expire time of this provider.',
+  `serverurl` varchar(512) NOT NULL COMMENT 'The OpenID provider''s server URL to redirect the user to.',
+  `redirecturl` varchar(512) NOT NULL COMMENT 'The URL that the provider redirects to when the user logs in and authorizes this application to access their data.',
   PRIMARY KEY (`provider`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This hold information on each provider for the OpenID login protocol.';
 
--- Dumping data for table configuration.openid: ~0 rows (approximately)
+-- Dumping data for table configuration.openid: ~1 rows (approximately)
 /*!40000 ALTER TABLE `openid` DISABLE KEYS */;
+INSERT INTO `openid` (`provider`, `name`, `module`, `expire`, `serverurl`, `redirecturl`) VALUES
+	(0, 'No Provider', 'XXXX', 0, 'NONE', 'NONE');
 /*!40000 ALTER TABLE `openid` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.profile
@@ -180,12 +191,13 @@ CREATE TABLE IF NOT EXISTS `profile` (
   PRIMARY KEY (`profileid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='All user accounts must be assigned one of the profiles which are defined in this table.';
 
--- Dumping data for table configuration.profile: ~3 rows (approximately)
+-- Dumping data for table configuration.profile: ~4 rows (approximately)
 /*!40000 ALTER TABLE `profile` DISABLE KEYS */;
 INSERT INTO `profile` (`profileid`, `name`, `description`, `portal`, `bitmap_core`, `bitmap_app`) VALUES
 	(0, 'NONE', NULL, 1, NULL, NULL),
 	(1, 'Vendor', 'Profile for use only by the application vendor.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
-	(2, 'Admin', 'Profile for use only by the application admin.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+	(2, 'Admin', 'Profile for use only by the application admin.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
+	(435, 'Test Profile', 'This profile is for development testing purposes&period;', 0, _binary 0x00000000000000000000000000000000, _binary 0x00000000000000000000000000000000);
 /*!40000 ALTER TABLE `profile` ENABLE KEYS */;
 
 
@@ -196,21 +208,23 @@ USE `userdata`;
 -- Dumping structure for table userdata.contact
 CREATE TABLE IF NOT EXISTS `contact` (
   `userid` int(11) NOT NULL COMMENT 'The numeric user ID from the users table.',
-  `method` int(11) NOT NULL COMMENT 'The type of user ID (0: native, 1: OAuth, 2: OpenID)',
   `name` varchar(50) DEFAULT NULL COMMENT 'The name of the user.',
-  `address` varchar(100) DEFAULT NULL COMMENT 'The user''s home address.',
+  `haddr` varchar(100) DEFAULT NULL COMMENT 'The user''s home address.',
+  `maddr` varchar(100) DEFAULT NULL COMMENT 'The user''s mailing address.',
   `email` varchar(50) DEFAULT NULL COMMENT 'The user''s email address.',
   `hphone` varchar(30) DEFAULT NULL COMMENT 'Home phone number',
   `cphone` varchar(30) DEFAULT NULL COMMENT 'Mobile phone number',
   `wphone` varchar(30) DEFAULT NULL COMMENT 'Work phone number',
-  PRIMARY KEY (`userid`,`method`)
+  PRIMARY KEY (`userid`),
+  CONSTRAINT `FK_contact_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the user contact information.';
 
--- Dumping data for table userdata.contact: ~2 rows (approximately)
+-- Dumping data for table userdata.contact: ~3 rows (approximately)
 /*!40000 ALTER TABLE `contact` DISABLE KEYS */;
-INSERT INTO `contact` (`userid`, `method`, `name`, `address`, `email`, `hphone`, `cphone`, `wphone`) VALUES
-	(1, 0, 'Application Vendor', 'SEA-CORE International LTD.', 'seacoregroup@gmail.com', '', '', ''),
-	(2, 0, 'Application Admin', 'SEA-CORE International LTD.', 'seacoregroup@gmail.com', '', '', '');
+INSERT INTO `contact` (`userid`, `name`, `haddr`, `maddr`, `email`, `hphone`, `cphone`, `wphone`) VALUES
+	(1, 'Application Vendor', 'SEA-CORE International LTD.', NULL, 'seacoregroup@gmail.com', '', '', ''),
+	(2, 'Application Admin', 'SEA-CORE International LTD&period;', 'SEA-CORE International LTD&period;', 'seacoregroup&commat;gmail&period;com', '', '', ''),
+	(34, 'Test User', 'Test user for developmental purposes only&period;', 'Test user for developmental purposes only&period;', 'testuser&commat;localhost', '707-555-3343', '916-555-1212', '916-278-6000');
 /*!40000 ALTER TABLE `contact` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.login
@@ -226,21 +240,23 @@ CREATE TABLE IF NOT EXISTS `login` (
   `count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'Number of times to hash password+salt.',
   `salt` varchar(256) DEFAULT NULL COMMENT 'The salt to use when encrypting the password.',
   `passwd` varchar(256) DEFAULT NULL COMMENT 'The encrypted password.',
-  PRIMARY KEY (`userid`)
+  PRIMARY KEY (`userid`),
+  CONSTRAINT `FK_login_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the user''s login data.';
 
--- Dumping data for table userdata.login: ~2 rows (approximately)
+-- Dumping data for table userdata.login: ~3 rows (approximately)
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `active`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
-	(1, 1, 0, 0, 1531643774, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
-	(2, 1, 0, 0, 1531645842, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73');
+	(1, 1, 0, 1532714506, 1532835415, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(2, 1, NULL, 0, 1532746908, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
+	(34, 1, 0, 1532817751, 1532818490, 0, 1540594510, 'SHA256', 100, 'b5de956016daa9da4bc7f407f36b56435222ee6329bafb17d78341669552f90e', 'a1193259f2fd91064d9ef5123bfec68fe80b29ca95fb395348579936c1c995cb');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.oauth
 CREATE TABLE IF NOT EXISTS `oauth` (
   `userid` int(11) NOT NULL COMMENT 'The numerical user ID from the users table.',
+  `provider` int(11) NOT NULL COMMENT 'The OAuth provider identifier.',
   `state` varchar(16) NOT NULL COMMENT 'Random set of bytes for the connection.',
-  `provider` varchar(32) NOT NULL COMMENT 'The OAuth provider identifier.',
   `token` varchar(32) NOT NULL COMMENT 'The OAuth token.',
   `tokentype` varchar(32) NOT NULL COMMENT 'The OAuth token type.',
   `issue` bigint(20) NOT NULL COMMENT 'The time that the OAuth token was issued.',
@@ -248,9 +264,10 @@ CREATE TABLE IF NOT EXISTS `oauth` (
   `refresh` varchar(50) NOT NULL,
   `scope` varchar(256) NOT NULL COMMENT 'The allowed access scope that the user permits to their information.',
   PRIMARY KEY (`userid`),
-  KEY `FK_oauth_configuration.oauth` (`provider`),
   KEY `state` (`state`),
-  CONSTRAINT `FK_oauth_configuration.oauth` FOREIGN KEY (`provider`) REFERENCES `configuration`.`oauth` (`provider`) ON UPDATE CASCADE
+  KEY `FK_oauth_provider_configuration.oauth_provider` (`provider`),
+  CONSTRAINT `FK_oauth_provider_configuration.oauth_provider` FOREIGN KEY (`provider`) REFERENCES `configuration`.`oauth` (`provider`) ON UPDATE CASCADE,
+  CONSTRAINT `FK_oauth_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains per-user OAuth data.';
 
 -- Dumping data for table userdata.oauth: ~0 rows (approximately)
@@ -259,9 +276,15 @@ CREATE TABLE IF NOT EXISTS `oauth` (
 
 -- Dumping structure for table userdata.openid
 CREATE TABLE IF NOT EXISTS `openid` (
-  `userid` int(11) NOT NULL,
-  `provider` varchar(32) NOT NULL,
-  PRIMARY KEY (`userid`)
+  `userid` int(11) NOT NULL COMMENT 'Key Field: The user''s ID number.',
+  `provider` int(11) NOT NULL COMMENT 'The OpenID provider identification key.',
+  `ident` varchar(512) NOT NULL COMMENT 'The user''s OpenID ID.',
+  `issue` bigint(20) NOT NULL COMMENT 'Time/Date that the authentication was issued.',
+  `expire` bigint(20) NOT NULL COMMENT 'Time/Date that the authentication is to expire.',
+  PRIMARY KEY (`userid`),
+  KEY `FK_openid_provider_configuration.openid_provider` (`provider`),
+  CONSTRAINT `FK_openid_provider_configuration.openid_provider` FOREIGN KEY (`provider`) REFERENCES `configuration`.`openid` (`provider`) ON UPDATE CASCADE,
+  CONSTRAINT `FK_openid_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Holds OpenID information for the user.';
 
 -- Dumping data for table userdata.openid: ~0 rows (approximately)
@@ -270,22 +293,24 @@ CREATE TABLE IF NOT EXISTS `openid` (
 
 -- Dumping structure for table userdata.users
 CREATE TABLE IF NOT EXISTS `users` (
-  `username` varchar(32) NOT NULL COMMENT 'The name that the user logs in with.',
   `userid` int(11) NOT NULL COMMENT 'The numeric user ID.',
+  `username` varchar(32) NOT NULL COMMENT 'The name that the user logs in with.',
   `profileid` int(11) NOT NULL DEFAULT '0' COMMENT 'The numeric profile ID.',
   `method` int(11) NOT NULL DEFAULT '0' COMMENT 'The login method.  0: native, 1: OAuth, 2: OpenID',
-  PRIMARY KEY (`username`),
+  PRIMARY KEY (`userid`),
+  UNIQUE KEY `UNIQUE` (`userid`,`username`),
   KEY `username` (`username`),
   KEY `FK_users_login` (`userid`),
   KEY `FK_users_profile` (`profileid`),
   CONSTRAINT `FK_users_profile` FOREIGN KEY (`profileid`) REFERENCES `configuration`.`profile` (`profileid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table maps the user''s login name to their User ID and Profile ID.';
 
--- Dumping data for table userdata.users: ~2 rows (approximately)
+-- Dumping data for table userdata.users: ~3 rows (approximately)
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` (`username`, `userid`, `profileid`, `method`) VALUES
-	('admin', 2, 2, 0),
-	('vendor', 1, 1, 0);
+INSERT INTO `users` (`userid`, `username`, `profileid`, `method`) VALUES
+	(1, 'vendor', 1, 0),
+	(2, 'admin', 2, 0),
+	(34, 'testuser', 435, 0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

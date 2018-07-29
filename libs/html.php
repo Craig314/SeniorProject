@@ -124,6 +124,7 @@ class html implements html_interface
 	static private $fsize_default = false;
 	static private $base_url = NULL;
 	static private $base_url2 = NULL;
+	static private $networkPort = 0;
 
 
 	/* ******** CONSTRUCTOR METHOD ******** */
@@ -503,20 +504,25 @@ class html implements html_interface
 		if ($CONFIGVAR['server_secure']['value'] == 1)
 		{
 			// Encrypted Connection
-			$url = 'https://';
+			$protocol = 'https';
 			$defaultPort = 443;
+			$port = $CONFIGVAR['server_https_port']['value'];
 		}
 		else
 		{
 			// Unencrypted Connection
-			$url = 'http://';
+			$protocol = 'http';
 			$defaultPort = 80;
+			$port = $CONFIGVAR['server_http_port']['value'];
 		}
-		$port = $CONFIGVAR['server_http_port']['value'];
-		$url .= $CONFIGVAR['server_hostname']['value'];
-		if ($port != $defaultPort) $url .= ':' . $port;
+		$hostname = $CONFIGVAR['server_hostname']['value'];
+		if ($port != $defaultPort)
+			$url = $protocol . '://' . $hostname . ':' . $port;
+		else
+			$url = $protocol . '://' . $hostname;
 		self::$base_url2 = $url . '/';
 		self::$base_url = $url;
+		self::$networkPort = $port;
 		
 		// Set default sizes
 		self::$lsize_default = $CONFIGVAR['html_default_label_size']['value'];
@@ -535,6 +541,8 @@ class html implements html_interface
 	{
 		global $CONFIGVAR;
 
+		if (strcasecmp($_SERVER['REQUEST_SCHEME'], 'https') == 0)
+			return true;
 		if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'))
 			return true;
 		if ($_SERVER['SERVER_PORT'] == $CONFIGVAR['server_https_port']['value'])
@@ -562,29 +570,29 @@ class html implements html_interface
 	{
 		global $CONFIGVAR;
 
+		//var_dump($_SERVER, self::$networkPort);
+		if ($_SERVER['SERVER_PORT'] != self::$networkPort)
+		{
+			self::redirect($_SERVER['REQUEST_URI']);
+			exit(0);
+		}
 		if ($CONFIGVAR['server_secure']['value'] == 1)
 		{
 			if (!self::ishttps())
 			{
-				self::redirect($_SERVER['SCRIPT_NAME']);
-				exit;
+				self::redirect($_SERVER['REQUEST_URI']);
+				exit(0);
 			}
-			$port = $CONFIGVAR['server_https_port']['value'];
 		}
 		else
 		{
 			if (self::ishttps())
 			{
-				self::redirect($_SERVER['SCRIPT_NAME']);
-				exit;
+				self::redirect($_SERVER['REQUEST_URI']);
+				exit(0);
 			}
-			$port = $CONFIGVAR['server_http_port']['value'];
 		}
-		if ($_SERVER['SERVER_PORT'] != $port)
-		{
-			self::redirect($_SERVER['SCRIPT_NAME']);
-			exit;
-		}
+		//echo '<br>checkRequestPort Finished<br>';
 	}
 
 	// Sends a response code to the client.

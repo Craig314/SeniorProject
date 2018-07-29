@@ -164,6 +164,7 @@ function change_password()
 	global $vfystr;
 	global $ajax;
 	global $herr;
+	global $CONFIGVAR;
 
 	// We would like to do base64 decoding, but if someone tries
 	// to screw with the parameter, then we just error it out.
@@ -261,7 +262,7 @@ function change_password()
 		error_exit('The new password cannot match your username.');
 
 	// Make sure that the new password does not contain the username.
-	if (stripos($newpass, $username) !== false)
+	if (stripos($newpass1, $username) !== false)
 		error_exit('The new password cannot contain your username.');
 
 	// Make sure that the new password complies with

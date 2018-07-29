@@ -284,6 +284,7 @@ function updateRecordAction()
 	global $ajax;
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 
@@ -351,6 +352,7 @@ function insertRecordAction()
 	global $ajax;
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 
@@ -403,7 +405,10 @@ function insertRecordAction()
 // XXX: Requires customization.
 function deleteRecordAction()
 {
+	global $ajax;
 	global $herr;
+	global $vfystr;
+	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 
@@ -423,7 +428,7 @@ function deleteRecordAction()
 	if ($key != $id)
 		handleError('Database key mismatch.');
 	
-	// Now remove the module from the database.
+	// Now remove the record from the database.
 	$result = $DATABASE_DELETE_OPERATION($key);	// XXX: Set This
 	if ($result == false)
 	{

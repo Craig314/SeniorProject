@@ -202,16 +202,18 @@ function loadAdditionalContent()
 		// Now we have to bash the module id against the modaccess list.
 		// If the module id is not on the modaccess list, then that module
 		// is not displayed.
-		foreach($rxa as $kxb => $vxb)
+		if (!empty($rxa))
 		{
-			if ($modId == $vxb['moduleid'] && $profId == $vxb['profileid'])
+			foreach($rxa as $kxb => $vxb)
 			{
-				writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
-				$access = true;
-				break;
+				if ($modId == $vxb['moduleid'] && $profId == $vxb['profileid'])
+				{
+					writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
+					$access = true;
+					break;
+				}
 			}
 		}
-
 	}
 
 	// If $access is still false, then we print an error.

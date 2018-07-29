@@ -401,19 +401,16 @@ var ajaxProcessData = ({
 		mark = str.indexOf(String.fromCharCode(29));
 		text1 = str.slice(cst + 1, mark);
 		try {
-			console.log(text1);
 			var statusArray = JSON.parse(text1);
 		}
 		catch (error) {
 			writeError(error.message);
 			return;
 		}
-		console.log('GS Marker: ' + mark);
 		if (mark > 0)
 		{
 			text2 = str.slice(mark + 1);
 			try {
-				console.log(text2);
 				var fieldArray = JSON.parse(text2);
 			}
 			catch (error) {

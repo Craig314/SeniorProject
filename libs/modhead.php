@@ -115,6 +115,7 @@ function checkUserSecurity()
 	global $moduleData;
 	global $vendor;
 	global $admin;
+	global $dbconf;
 
 	// The vendor account always has access.
 	if ($vendor != 0) return;
@@ -131,8 +132,12 @@ function checkUserSecurity()
 	// then don't bother with the rest of the checks.
 	if ($moduleData['allusers'] == 1) return;
 
+	// If this is one of the portals, then all users have access.
+	if ($moduleId == $CONFIGVAR['html_grid_mod_id']['value']) return;
+	if ($moduleId == $CONFIGVAR['html_link_mod_id']['value']) return;
+
 	// Now check if the user has access according to their profile.
-	if ($dbconf->queryModaccess($module_id, $_SESSION['profileId']) == false)
+	if ($dbconf->queryModaccess($moduleId, $_SESSION['profileId']) == false)
 		redirectPortal();
 }
 
