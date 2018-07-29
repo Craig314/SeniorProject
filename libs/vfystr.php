@@ -37,11 +37,14 @@ interface verifyStringInterface
 	const STR_FILENAME		= 15;	// Filename
 	const STR_URI			= 16;	// Uniform Resource Identifier
 	const STR_URL			= 17;	// Uniform Resource Location
+	const STR_TIMEDISP		= 18;	// Time Displacement
+	const STR_ALPHASPEC		= 19;	// Alpha Spec'd (a-z_ only)
+	const STR_DESC			= 20;	// Descriptions
 
 	// Start custom checks at 100
 
 	public function errstat();
-	public function strchk($data, $field, $id, $type, $blank = true, $max = 0, $min = 0);
+	public function strchk($data, $field, $id, $type, $blank = true, $max = -1, $min = 0);
 }
 
 
@@ -79,16 +82,16 @@ class verifyString implements verifyStringInterface
 		// Common Checks
 		if ($blank)
 		{
-			if ($this->chkblank($data, $field, $id))
+			if ($this->checkBlank($data, $field, $id))
 			{
 				if ($type != self::STR_NUMERIC && $type != self::STR_PINTEGER
 					&& $type != self::STR_FLOAT)
 				{
-					if (!$this->chklenmin($data, $field, $id, $min)) return false;
-					if (!$this->chklenmax($data, $field, $id, $max)) return false;
+					if (!$this->checkLengthMinimum($data, $field, $id, $min)) return false;
+					if (!$this->checkLengthMaximum($data, $field, $id, $max)) return false;
 				}
 				if ($type != self::STR_PASSWD)
-					if (!$this->chkchrcssa($data, $field, $id)) return false;
+					if (!$this->checkCharCSSA($data, $field, $id)) return false;
 			}
 			else return false;
 		}
@@ -99,11 +102,11 @@ class verifyString implements verifyStringInterface
 				if ($type != self::STR_NUMERIC && $type != self::STR_PINTEGER
 					&& $type != self::STR_FLOAT)
 				{
-					if (!$this->chklenmin($data, $field, $id, $min)) return false;
-					if (!$this->chklenmax($data, $field, $id, $max)) return false;
+					if (!$this->checkLengthMinimum($data, $field, $id, $min)) return false;
+					if (!$this->checkLengthMaximum($data, $field, $id, $max)) return false;
 				}
 				if ($type != self::STR_PASSWD)
-					if (!$this->chkchrcssa($data, $field, $id)) return false;
+					if (!$this->checkCharCSSA($data, $field, $id)) return false;
 			}
 			else return true;
 		}
@@ -112,58 +115,67 @@ class verifyString implements verifyStringInterface
 		switch ($type)
 		{
 			case self::STR_USERID:
-				$result = $this->chkchrlogin($data, $field, $id);
+				$result = $this->checkCharLogin($data, $field, $id);
 				break;
 			case self::STR_PASSWD:
-				$result = $this->chkchrascii($data, $field, $id);
+				$result = $this->checkCharASCII($data, $field, $id);
 				break;
 			case self::STR_NAME:
-				$result = $this->chkchrascii($data, $field, $id);
+				$result = $this->checkCharAlpha($data, $field, $id);
 				break;
 			case self::STR_ADDR:
-				$result = $this->chkchrasciiformat($data, $field, $id);
+				$result = $this->checkCharASCIIFormat($data, $field, $id);
 				break;
 			case self::STR_PHONE:
-				$result = $this->chkchrphone($data, $field, $id);
+				$result = $this->checkCharPhone($data, $field, $id);
 				break;
 			case self::STR_EMAIL:
-				$result = $this->validate_email($data, $field, $id);
+				$result = $this->validateEmail($data, $field, $id);
 				break;
 			case self::STR_ASCII:
-				$result = $this->chkchrascii($data, $field, $id);
+				$result = $this->checkCharASCII($data, $field, $id);
 				break;
 			case self::STR_ALPHA:
-				$result = $this->chkchralpha($data, $field, $id);
+				$result = $this->checkCharAlpha($data, $field, $id);
 				break;
 			case self::STR_NUMERIC:
-				$result = $this->chkchrnumber($data, $field, $id, $max, $min);
+				$result = $this->checkCharNumeric($data, $field, $id, $max, $min);
 				break;
 			case self::STR_ALPHANUM:
-				$result = $this->chkchralphanum($data, $field, $id);
+				$result = $this->checkCharAlphaNum($data, $field, $id);
 				break;
 			case self::STR_PINTEGER:
-				$result = $this->chkchrpint($data, $field, $id, $max, $min);
+				$result = $this->checkCharPosInteger($data, $field, $id, $max, $min);
 				break;
 			case self::STR_INTEGER:
-				$result = $this->checkchrint($data, $field, $id, $max, $min);
+				$result = $this->checkCharInteger($data, $field, $id, $max, $min);
 				break;
 			case self::STR_FLOAT:
-				$result = $this->chkchrfloat($data, $field, $id, $max, $min);
+				$result = $this->checkCharFloat($data, $field, $id, $max, $min);
 				break;
 			case self::STR_DATE:
-				$result = $this->validate_date($data, $field, $id);
+				$result = $this->validateDate($data, $field, $id);
 				break;
 			case self::STR_DATEUNIX:
-				$result = $this->validate_date_unix($data, $field, $id);
+				$result = $this->validateDateUnix($data, $field, $id);
 				break;
 			case self::STR_FILENAME:
-				$result = $this->validate_filename($data, $field, $id);
+				$result = $this->checkCharFilename($data, $field, $id);
 				break;
 			case self::STR_URI:
-				$result = $this->validate_uri($data, $field, $id);
+				$result = $this->checkCharURI($data, $field, $id);
 				break;
 			case self::STR_URL:
-				$result = $this->validate_url($data, $field, $id);
+				$result = $this->checkCharURL($data, $field, $id);
+				break;
+			case self::STR_TIMEDISP:
+				$result = $this->validateTimeDisp($data, $field, $id);
+				break;
+			case self::STR_ALPHASPEC:
+				$result = $this->checkCharAlphaSpec($data, $field, $id);
+				break;
+			case self::STR_DESC:
+				$result = $this->chechCharASCIIFormat($data, $field, $id);
 				break;
 			default:
 				$herr->errorPutMessage($this->etype,
@@ -176,7 +188,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Checks string maximum length.
-	private function chklenmax($data, $field, $id, $len)
+	private function checkLengthMaximum($data, $field, $id, $len)
 	{
 		global $herr;
 
@@ -192,7 +204,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Checks string minimum length.
-	private function chklenmin($data, $field, $id, $len)
+	private function checkLengthMinimum($data, $field, $id, $len)
 	{
 		global $herr;
 
@@ -208,7 +220,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Checks for blank string.
-	private function chkblank($data, $field, $id)
+	private function checkBlank($data, $field, $id)
 	{
 		global $herr;
 
@@ -222,7 +234,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Checks for invalid characters in user id string.
-	private function chkchrlogin($data, $field, $id)
+	private function checkCharLogin($data, $field, $id)
 	{
 		global $herr;
 
@@ -240,7 +252,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Checks for % for cross site scripting attacks.
-	private function chkchrcssa($data, $field, $id)
+	private function checkCharCSSA($data, $field, $id)
 	{
 		global $herr;
 
@@ -255,7 +267,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Checks to make sure string characters are in ASCII range.
-	private function chkchrascii($data, $field, $id)
+	private function checkCharASCII($data, $field, $id)
 	{
 		global $herr;
 
@@ -273,7 +285,7 @@ class verifyString implements verifyStringInterface
 
 	// Checks to make sure string characters are in ASCII range,
 	// including new line, carrage return, and tab.
-	private function chkchrasciiformat($data, $field, $id)
+	private function checkCharASCIIFormat($data, $field, $id)
 	{
 		global $herr;
 
@@ -291,7 +303,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Check phone numbers for invalid characters.
-	private function chkchrphone($data, $field, $id)
+	private function checkCharPhone($data, $field, $id)
 	{
 		global $herr;
 
@@ -308,7 +320,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Letters only
-	private function chkchralpha($data, $field, $id)
+	private function checkCharAlpha($data, $field, $id)
 	{
 		global $herr;
 
@@ -325,7 +337,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Numbers only (+/-)
-	private function chkchrnumber($data, $field, $id, $max, $min)
+	private function checkCharNumeric($data, $field, $id, $max, $min)
 	{
 		global $herr;
 
@@ -360,7 +372,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Letters and numbers (+/-)
-	private function chkchralphanum($data, $field, $id)
+	private function checkCharAlphaNum($data, $field, $id)
 	{
 		global $herr;
 
@@ -377,7 +389,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Positive integers
-	private function chkchrpint($data, $field, $id, $max, $min)
+	private function checkCharPosInteger($data, $field, $id, $max, $min)
 	{
 		global $herr;
 
@@ -412,7 +424,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Integer
-	private function chkchrint($data, $field, $id, $max, $min)
+	private function checkCharInteger($data, $field, $id, $max, $min)
 	{
 		global $herr;
 
@@ -440,7 +452,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Floating point
-	private function chkchrfloat($data, $field, $id, $max, $min)
+	private function checkCharFloat($data, $field, $id, $max, $min)
 	{
 		global $herr;
 
@@ -478,7 +490,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Validates an email address.
-	private function validate_email($data, $field, $id)
+	private function validateEmail($data, $field, $id)
 	{
 		global $herr;
 
@@ -504,7 +516,7 @@ class verifyString implements verifyStringInterface
 	// Validates the correct date was entered.
 	// Year range 1600-9999 should be sufficient for most
 	// purposes.
-	private function validate_date($data, $field, $id)
+	private function validateDate($data, $field, $id)
 	{
 		helper_validate_date($data, $field, $id, 1600, 9999);
 	}
@@ -513,7 +525,7 @@ class verifyString implements verifyStringInterface
 	// This confines the date range to the range supported
 	// by unix.  The range 1970-9999 is 253,369,036,800
 	// seconds which easily fits into a 64-bit integer.
-	private function validate_date_unix($data, $field, $id)
+	private function validateDateUnix($data, $field, $id)
 	{
 		// Checks to see if the system time has rolled over.  If it has,
 		// then stop, *NOW*
@@ -613,7 +625,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Validates filenames
-	private function validate_filename($data, $field, $id)
+	private function checkCharFilename($data, $field, $id)
 	{
 		global $herr;
 
@@ -630,7 +642,7 @@ class verifyString implements verifyStringInterface
 	}
 
 	// Validates URIs
-	private function validate_uri($data, $field, $id)
+	private function checkCharURI($data, $field, $id)
 	{
 		global $herr;
 
@@ -655,8 +667,8 @@ class verifyString implements verifyStringInterface
 		return true;
 	}
 
-	// Validates URIs
-	private function validate_url($data, $field, $id)
+	// Validates URLs
+	private function checkCharURL($data, $field, $id)
 	{
 		global $herr;
 
@@ -672,8 +684,42 @@ class verifyString implements verifyStringInterface
 		if ($result != 1)
 		{
 			$herr->errorPutMessage($this->etype,
-			'An invalid URL has been detected.',
-			$this->estate, $field, $id);
+				'An invalid URL has been detected.',
+				$this->estate, $field, $id);
+			return false;
+		}
+		return true;
+	}
+
+	// Validates the time displacement
+	private function validateTimeDisp($data, $field, $id)
+	{
+		global $herr;
+
+		$regex = '/^[+|-](([0-1]?[0-9])|(2[0-3])):[0-5][0-9]$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
+		{
+			$herr->errorPutMessage($this->etype,
+				'Invalid time displacement format or values out of range.' .
+				'<br>Must be +/-00:00 to +/-23:59',
+				$this->estate, $field, $id);
+			return false;
+		}
+		return true;
+	}
+
+	private function checkCharAlphaSpec($data, $field, $id)
+	{
+		global $herr;
+
+		$regex = '/^[a-z\_]+$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
+		{
+			$herr->errorPutMessage($this->etype,
+				'Invalid characters detected.  Only a-z and _ are allowed.',
+				$this->estate, $field, $id);
 			return false;
 		}
 		return true;

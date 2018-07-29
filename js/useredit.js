@@ -3,15 +3,17 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-Template JavaScript File
+User Editor JavaScript File
 
 */
 
+// Don't change this.
 var ident = [
 	'select_table',
 	'hiddenForm',
 ]
 
+// Don't change this.
 var data = [
 	'dataForm',
 ]
@@ -36,29 +38,18 @@ var fields = [
 	'wphone',
 ]
 
-// List of radio button names
+// List of radio button names.
 var radios = [
 ]
 
 
-// Additional functionality
-var loginList = [
+// List of hidden divs controlled by drop down list.
+// This must match the hiddenSelect ID select tag in item count and
+// the items must correspond to each other.
+// Do not remove this or other things will break;
+var hiddenList = [
 	'nativeLogin',
 	'oauthLogin',
 	'openidLogin',
 ]
-
-function setHidden() {
-	selectObject = document.getElementById('method');
-	optionList = selectObject.children;
-	if (optionList != null) {
-		for (i = 0; i < optionList.length; i++) {
-			targetId = document.getElementById(loginList[i]);
-			if (optionList[i].selected) {
-				targetId.hidden = false;
-			} else {
-				targetId.hidden = true;
-			}
-		}
-	}
-}
+var hiddenSelect = 'method';

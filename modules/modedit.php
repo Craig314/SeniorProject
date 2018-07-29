@@ -394,8 +394,6 @@ function updateRecordAction()
 
 	// Safely encode all strings to prevent XSS attacks.
 	$name = safeEncodeString($name);
-	$file = safeEncodeString($file);
-	$icon = safeEncodeString($icon);
 	$desc = safeEncodeString($desc);
 	
 	// Convert boolean values
@@ -578,7 +576,6 @@ function formPage($mode, $rxa)
 			$warn = '';
 			$btnset = html::BTNTYP_INSERT;
 			$action = 'submitInsert()';
-			$hideValue = '';
 			$disable = false;
 			$default = false;
 			$key = false;
@@ -604,7 +601,7 @@ function formPage($mode, $rxa)
 	}
 
 	// Hidden field to pass key data
-	if (!empty($hideValue))
+	if (isset($hideValue))
 	{
 		$hidden = array(
 			'type' => html::TYPE_HIDE,

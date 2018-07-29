@@ -34,7 +34,7 @@ $moduleTitle = 'User Editor';
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 10;
+$moduleId = 12;
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
@@ -1342,7 +1342,6 @@ function formPage($mode, $rxa)
 			$warn = '';
 			$btnset = html::BTNTYP_INSERT;
 			$action = 'submitInsert()';
-			$hideValue = '';
 			$disable = false;
 			$default = false;
 			$key = false;
@@ -1648,7 +1647,7 @@ function formPage($mode, $rxa)
 	}
 
 	// Hidden field to pass key data
-	if (!empty($hideValue))
+	if (isset($hideValue))
 	{
 		$hidden = array(
 			'type' => html::TYPE_HIDE,

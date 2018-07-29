@@ -19,7 +19,7 @@ interface database_config_interface
 	public function queryConfigAllAdmin();
 	public function queryConfigAll();
 	public function updateConfigValue($setting, $value);
-	public function updateConfigAll($settng, $type, $name, $dispname, $value, $desc, $admin);
+	public function updateConfigAll($setting, $type, $name, $dispname, $value, $desc, $admin);
 	public function insertConfig($setting, $type, $name, $dispname, $value, $desc, $admin);
 	public function deleteConfig($setting);
 
@@ -134,7 +134,7 @@ class database_config implements database_config_interface
 		return($dbcore->launchUpdateSingle($table, 'setting', $setting, databaseCore::PTINT, $qxa));
 	}
 
-	public function updateConfigAll($settng, $type, $name, $dispname, $value, $desc, $admin)
+	public function updateConfigAll($setting, $type, $name, $dispname, $value, $desc, $admin)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.config';
@@ -144,7 +144,7 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('value', $value, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('admin', $admin, databaseCore::PTINT, $qxa);
-		return($dbcore->launchUpdate($table, 'setting', $setting, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'setting', $setting, databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a configuration parameter.

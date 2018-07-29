@@ -161,6 +161,46 @@ function loadAdditionalContent()
 {
 	global $baseUrl;
 
+	// Get data from database.
+	$rxa = $DATABASE_QUERY_ALL();	// XXX Set This
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('There are no ' . $moduleDisplayLower . 's in the database to edit.');
+	}
+
+	// Generate Selection Table.
+	$list = array(
+		'type' => html::TYPE_RADTABLE,
+		'name' => 'select_item',
+		'titles' => array(
+			// Add column titles here
+			'',
+		),
+		'tdata' => array(),
+		'tooltip' => array(),
+	);
+	foreach ($rxa as $kx => $vx)
+	{
+		if (!$vendor)
+		{
+			// The administrator does not have access to all settings.
+			if ($vx['admin'] == 0) continue;
+		}
+		$tdata = array(
+			// These are the values that show up under the columns above.
+			// The *FIRST* value is the value that is sent when a row
+			// is selected.  AKA Key Field.
+			$vx[''],
+			$vx[''],
+			$vx[''],
+		);
+		array_push($list['tdata'], $tdata);
+		array_push($list['tooltip'], $vx['description']);
+	}
+
 	// Generate rest of page.
 	$data = array(
 		array(
@@ -177,6 +217,7 @@ function loadAdditionalContent()
 		),
 
 		// Enter custom data here.
+		$list,
 
 
 		array('type' => html::TYPE_FORMCLOSE),
@@ -327,10 +368,10 @@ function updateRecordAction()
 	}
 
 	// Safely encode all strings to prevent XSS attacks.
-	$ = safeEncodeString($);
-	$ = safeEncodeString($);
-	$ = safeEncodeString($);
-	$ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
 	
 	// We are good, update the record
 	$result = $DATABASE_UPDATE_OPERATION($key);	// XXX: Set This
@@ -382,10 +423,10 @@ function insertRecordAction()
 	}
 
 	// Safely encode all strings to prevent XSS attacks.
-	$ = safeEncodeString($);
-	$ = safeEncodeString($);
-	$ = safeEncodeString($);
-	$ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
 	
 	// We are good, update the record
 	$result = $DATABASE_INSERT_OPERATION($id);	// XXX: Set This
@@ -480,7 +521,6 @@ function formPage($mode, $rxa)
 			$warn = '';
 			$btnset = html::BTNTYP_INSERT;
 			$action = 'submitInsert()';
-			$hideValue = '';
 			$disable = false;
 			$default = false;
 			$key = false;
@@ -502,7 +542,7 @@ function formPage($mode, $rxa)
 	}
 
 	// Hidden field to pass key data
-	if (!empty($hideValue))
+	if (isset($hideValue))
 	{
 		$hidden = array(
 			'type' => html::TYPE_HIDE,
@@ -574,7 +614,11 @@ function generateField($type, $name, $label, $size = 0, $value = '',
 	);
 	if ($size != 0) $data['fsize'] = $size;
 	if ($disabled == true) $data['disable'] = true;
-	if ($default != false) $data['value'] = $value;
+	if ($default != false)
+	{
+		$data['value'] = $value;
+		$data['default'] = $value;
+	}
 	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
 	return $data;
 }

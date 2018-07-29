@@ -374,8 +374,8 @@ function loginShowHeader()
 		</div>
 		<div class="vspace5"></div>
 		<div class="width75">
-			<div class="color-blue" id="responseTarget"></div>
-			<div class="color-red" id="errorTarget"></div>
+			<div class="color-blue text-center" id="responseTarget"></div>
+			<div class="color-red text-center" id="errorTarget"></div>
 			<div id="main"></div>
 		</div>
 <?php

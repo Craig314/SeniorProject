@@ -18,11 +18,12 @@ var data = [
 	'dataForm',
 ]
 
-// List of field names/IDs (except radio buttons).
+// List of field names/IDs (except radio buttons)
 var fields = [
+	'datavalue',
 ]
 
-// List of radio button names.
+// List of radio button names
 var radios = [
 ]
 

@@ -624,7 +624,7 @@ class html implements html_interface
 			else $fname = '';
 		if (!empty($data['name'])) $name = 'name="' . $data['name'] . '" id="' . $data['name'] . '"';
 			else $name = '';
-		if (!empty($data['data'])) $value = $data['data'];
+		if (isset($data['data'])) $value = $data['data'];
 			else $value = '';
 ?>
 	<div>

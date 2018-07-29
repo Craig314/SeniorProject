@@ -117,6 +117,9 @@ function clearForm() {
 			nodeObject.checked = nodeObject.defaultChecked;
 		}
 	}
+
+	// Reset hidden objects if needed.
+	if (hiddenList.length > 0) setHidden();
 }
 
 // Resets the error status of all fields.
@@ -143,6 +146,36 @@ function resetErrorStatus() {
 		case 'select':
 			ajaxProcessData.setStatusTextDefault(fields[i], '');
 			break;
+		}
+	}
+}
+
+// Hides/Shows different form elements based on a selection.
+// The length of hiddenList and optionList (from the select
+// tag on the page HTML) must match and the items must
+// correspond.  Otherwise, unpredictible results may occurr.
+// If the action of an option is repeated, then repeat that
+// option in hiddenList.
+function setHidden() {
+	selectObject = document.getElementById(hiddenSelect);
+	optionList = selectObject.children;
+	if (optionList != null) {
+		if (optionList.length != hiddenList.length) {
+			console.log('WANRING: Length of hiddenList and optionList do not match.');
+			loopterm = Math.max(hiddenList.length, optionList.length);
+		} else {
+			loopterm = optionList.length;
+		}
+		repeat = null;
+		for (i = 0; i < loopterm; i++) {
+			targetId = document.getElementById(hiddenList[i]);
+			if (optionList[i].selected) {
+				targetId.hidden = false;
+				repeat = targetId;
+			} else {
+				if (targetId === repeat) continue;
+				targetId.hidden = true;
+			}
 		}
 	}
 }

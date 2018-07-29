@@ -20,6 +20,13 @@ var data = [
 
 // List of field names/IDs (except radio buttons).
 var fields = [
+	'setting',
+	'intname',
+	'dispname',
+	'description',
+	'datatype',
+	'datavalue1',
+	'datavalue3',
 ]
 
 // List of radio button names.
@@ -31,5 +38,10 @@ var radios = [
 // the items must correspond to each other.
 // Do not remove this or other things will break;
 var hiddenList = [
+	'dataOther',
+	'dataOther',
+	'dataBoolean',
+	'dataLongString',
+	'dataOther',
 ]
-var hiddenSelect = '';
+var hiddenSelect = 'datatype';
