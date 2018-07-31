@@ -4,9 +4,7 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application Configuration Editor
-
-This edits configuration data for the application.
+PHP Web Application OAuth Provider Edit
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -27,24 +25,24 @@ the features/abilities they represent are being used:
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = 'configedit.php';
+$moduleFilename = 'oauthedit.php';
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
-$moduleTitle = 'Configuration Editor';
+$moduleTitle = 'OAuth Provider Editor';
 
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 4;
+$moduleId = 12;
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
-$moduleDisplayUpper = 'Configuration';
+$moduleDisplayUpper = 'OAuth Provider';
 
 // The lowercase short display name of the module.  This shows up in
 // various messages.
-$moduleDisplayLower = 'configuration';
+$moduleDisplayLower = 'provider';
 
 // Set to true if this is a system module.
 $moduleSystem = true;
@@ -56,20 +54,10 @@ $modulePermissions = array();
 
 
 // These are the data editing modes.
-const MODE_VIEW		= 0;
+const MODE_VIEW	= 0;
 const MODE_UPDATE	= 1;
 const MODE_INSERT	= 2;
 const MODE_DELETE	= 3;
-
-// These are the configuration data types in the database.
-const DBTYPE_STRING		= 0;
-const DBTYPE_INTEGER	= 1;
-const DBTYPE_BOOLEAN	= 2;
-const DBTYPE_LONGSTR	= 3;
-const DBTYPE_TIMEDISP	= 10;
-
-// Other misculanious constants.
-const DBSTR_LENGTH		= 20;
 
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
@@ -130,7 +118,7 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/common.js',
-			'/js/configedit.js',
+			'/js/oauthedit.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -173,16 +161,16 @@ function loadAdditionalContent()
 {
 	global $baseUrl;
 	global $dbconf;
-	global $vendor;
 
 	// Get data from database.
-	$rxa = $dbconf->queryConfigAll();
+	$rxa = $dbconf->queryOAuthAll();
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
 		else
-			handleError('There are no ' . $moduleDisplayLower . 's in the database to edit.');
+			handleError('There are no ' . $moduleDisplayLower .
+				's in the database to edit.');
 	}
 
 	// Generate Selection Table.
@@ -190,38 +178,40 @@ function loadAdditionalContent()
 		'type' => html::TYPE_RADTABLE,
 		'name' => 'select_item',
 		'titles' => array(
+			// Add column titles here
 			'Name',
 			'ID',
-			'Type',
-			'Value',
+			'Module',
+			'Expire',
+			'Client ID',
 		),
 		'tdata' => array(),
 		'tooltip' => array(),
 	);
 	foreach ($rxa as $kx => $vx)
 	{
-		if (!$vendor)
-		{
-			// The administrator does not have access to all settings.
-			if ($vx['admin'] == 0) continue;
-		}
 		$tdata = array(
-			$vx['setting'],
-			$vx['dispname'],
-			$vx['setting'],
-			convertType($vx['type']),
-			convertLongString($vx['type'], $vx['value']),
+			// These are the values that show up under the columns above.
+			// The *FIRST* value is the value that is sent when a row
+			// is selected.  AKA Key Field.
+			$vx['provider'],
+			$vx['name'],
+			$vx['provider'],
+			$vx['module'],
+			$vx['expire'],
+			$vx['clientid'],
 		);
 		array_push($list['tdata'], $tdata);
-		array_push($list['tooltip'], $vx['description']);
+		array_push($list['tooltip'], $vx['name']);
 	}
 
 	// Generate rest of page.
 	$data = array(
 		array(
 			'type' => html::TYPE_HEADING,
-			'message1' => 'Configuration Editor',
-			'warning' => 'Changing values here can render the<br>application unusable.',
+			'message1' => 'OAuth Provider Edit',
+			'message2' => '',	// Delete if not needed.
+			'warning' => '',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
@@ -232,6 +222,7 @@ function loadAdditionalContent()
 
 		// Enter custom data here.
 		$list,
+
 
 		array('type' => html::TYPE_FORMCLOSE),
 		array('type' => html::TYPE_WDCLOSE),
@@ -271,9 +262,6 @@ function commandProcessor($commandId)
 		case 14:	// Submit Delete
 			deleteRecordAction();
 			break;
-		case 12:	// Submit Update
-			updateRecordAction();
-			break;
 		default:
 			// If we get here, then the command is undefined.
 			$ajax->sendCode(ajaxClass::CODE_NOTIMP,
@@ -294,15 +282,17 @@ function databaseLoad()
 
 	$key = getPostValue('select_item', 'hidden');
 	if ($key == NULL)
-		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
-	$rxa = $dbconf->queryConfig($key);
+		handleError('You must select a ' . $moduleDisplayLower .
+			' from the list view.');
+	// The below line requires customization for database loading.	
+	$rxa = $dbconf->queryOAuth($key);
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
 		else
-			handleError('Database Error: Unable to retrieve required ' .
-				$moduleDisplayLower . ' data.');
+			handleError('Database Error: Unable to retrieve required '
+				. $moduleDisplayLower . ' data.');
 	}
 	return $rxa;
 }
@@ -347,24 +337,31 @@ function updateRecordAction()
 
 	// Set the field list.
 	$fieldlist = array(
-		'setting',
-		'intname',
-		'dispname',
-		'description',
-		'datatype',
-		'datavalue1',
-		'datavalue3',
+		'provider',
+		'name',
+		'module',
+		'expire',
+		'clientid',
+		'clientsecret',
+		'scope',
+		'authtype',
+		'authurl',
+		'redirect',
+		'resource1',
+		'resource2',
+		'resource3',
+		'resource4',
 	);
 	
 	// Get data
 	$key = getPostValue('hidden');
-	$id = getPostValue('setting');
+	$id = getPostValue('provider');
 
 	// Check key data.
 	if ($key == NULL)
 		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
 	if ($id == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' key data.');
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
 	if (!is_numeric($key))
 		handleError('Malformed key sequence.');
 	if (!is_numeric($id))
@@ -372,49 +369,49 @@ function updateRecordAction()
 	if ($key != $id)
 		handleError('Database key mismatch.');
 
-	// Get data value and check it.
-	$datatype = getPostValue('datatype');
-	switch ($datatype)
-	{
-		case DBTYPE_STRING:
-			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_ASCII, true, 512, 1);
-			break;
-		case DBTYPE_INTEGER:
-			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_INTEGER, true);
-			break;
-		case DBTYPE_BOOLEAN:
-			$value = getPostValue('datavalue2');
-			if (!empty($value)) $value = 1; else $value = 0;
-			break;
-		case DBTYPE_LONGSTR:
-			$value = getPostValue('datavalue1');
-			$vfystr->strchk($value, 'Value', 'datavalue1', verifyString::STR_ASCII, true, 512, 1);
-			break;
-		case DBTYPE_TIMEDISP:
-			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_TIMEDISP, true, 6, 5);
-			break;
-		default:
-			handleError('Invalid datatype detected.');
-			break;
-	}
+	// Get data.
+	$name = getPostValue('name');
+	$module = getPostValue('module');
+	$expire = getPostValue('expire');
+	$clientid = getPostValue('clientid');
+	$clientsecret = getPostValue('clientsecret');
+	$scope = getPostValue('scope');
+	$authtype = getPostValue('authtype');
+	$authurl = getPostValue('authurl');
+	$redirect = getPostValue('redirect');
+	$resource1 = getPostValue('resource1');
+	$resource2 = getPostValue('resource2');
+	$resource3 = getPostValue('resource3');
+	$resource4 = getPostValue('resource4');
 
-	// Get the other values.
-	$intname = getPostValue('intname');
-	$dispname = getPostValue('dispname');
-	$description = getPostValue('description');
-	$accadmin = getPostValue('accadmin');
+	// Check mandatory fields.
+	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 3);
+	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
+		true, 32, 3);
+	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
+		true, 1209600, 900);
+	$vfystr->strchk($clientid, 'Client ID', 'clientid',
+		verifyString::STR_ALPHANUM, true, 32, 3);
+	$vfystr->strchk($scope, 'Scope', 'scope', verifyString::STR_ALPHANUMPUNCT, true,
+		256, 3);
+	$vfystr->strchk($authtype, 'Authentication Type', 'authtype',
+		verifyString::STR_ALPHANUM, true, 16, 1);
+	$vfystr->strchk($authurl, 'Authentication URL', 'authurl',
+		verifyString::STR_URI, true, 512, 3);
+	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
+		verifyString::STR_URI, true, 512, 3);
+	$vfystr->strchk($resource1, 'Resource URL 1', 'resource1',
+		verifyString::STR_URI, true, 512, 3);
 
-	// Check the other values.
-	$vfystr->strchk($intname, 'Internal Name', 'intname',
-		verifyString::STR_ALPHASPEC, true, 32, 1);
-	$vfystr->strchk($dispname, 'Display Name', 'dispname',
-		verifyString::STR_ALPHANUM, true, 64, 1);
-	$vfystr->strchk($description, 'Description', 'description',
-		verifyString::STR_ASCII, true, 256, 1);
-	if (!empty($accadmin)) $accadmin = 1; else $accadmin = 0;
+	// Check optional fields.
+	$vfystr->strchk($clientsecret, 'Client Secret', 'clientsecret',
+		verifyString::STR_ALPHANUM, false, 64, 3);
+	$vfystr->strchk($resource2, 'Resource URL 2', 'resource2',
+		verifyString::STR_URI, false, 512, 3);
+	$vfystr->strchk($resource3, 'Resource URL 3', 'resource3',
+		verifyString::STR_URI, false, 512, 3);
+	$vfystr->strchk($resource4, 'Resource URL 4', 'resource4',
+		verifyString::STR_URI, false, 512, 3);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -426,10 +423,14 @@ function updateRecordAction()
 			exit(1);
 		}
 	}
+
+	// Safely encode all strings to prevent XSS attacks.
+	$name = safeEncodeString($name);
 	
 	// We are good, update the record
-	$result = $dbconf->updateConfigAll($key, $datatype, $intname, $dispname,
-		$value, $description, $accadmin);
+	$result = $dbconf->updateOAuth($key, $name, $module, $expire, $clientid,
+		$clientsecret, $scope, $authtype, $authurl, $redirect, $resource1,
+		$resource2, $resource3, $resource4);
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -438,10 +439,6 @@ function updateRecordAction()
 			handleError('Database: Record update failed. Key = ' . $key);
 	}
 	sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
-
-	// Reload the shared memory for configuration.
-	processSharedMemoryReload();
-
 	exit(0);
 }
 
@@ -454,66 +451,71 @@ function insertRecordAction()
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
-	global $dbconf;
 
 	// Set the field list.
 	$fieldlist = array(
-		'setting',
-		'intname',
-		'dispname',
-		'description',
-		'datatype',
-		'datavalue1',
-		'datavalue3',
+		'provider',
+		'name',
+		'module',
+		'expire',
+		'clientid',
+		'clientsecret',
+		'scope',
+		'authtype',
+		'authurl',
+		'redirect',
+		'resource1',
+		'resource2',
+		'resource3',
+		'resource4',
 	);
 	
 	// Get data
-	$id = getPostValue('setting');
-	$vfystr->strchk($id, 'Setting Number', 'setting', verifyString::STR_INTEGER, true);
+	$id = getPostValue('provider');
+	$name = getPostValue('name');
+	$module = getPostValue('module');
+	$expire = getPostValue('expire');
+	$clientid = getPostValue('clientid');
+	$clientsecret = getPostValue('clientsecret');
+	$scope = getPostValue('scope');
+	$authtype = getPostValue('authtype');
+	$authurl = getPostValue('authurl');
+	$redirect = getPostValue('redirect');
+	$resource1 = getPostValue('resource1');
+	$resource2 = getPostValue('resource2');
+	$resource3 = getPostValue('resource3');
+	$resource4 = getPostValue('resource4');
 
-	// Get data value and check it.
-	$datatype = getPostValue('datatype');
-	switch ($datatype)
-	{
-		case DBTYPE_STRING:
-			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_ASCII, true, 512, 1);
-			break;
-		case DBTYPE_INTEGER:
-			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_INTEGER, true);
-			break;
-		case DBTYPE_BOOLEAN:
-			$value = getPostValue('datavalue2');
-			if (!empty($value)) $value = 1; else $value = 0;
-			break;
-		case DBTYPE_LONGSTR:
-			$value = getPostValue('datavalue1');
-			$vfystr->strchk($value, 'Value', 'datavalue1', verifyString::STR_ASCII, true, 512, 1);
-			break;
-		case DBTYPE_TIMEDISP:
-			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_TIMEDISP, true, 6, 5);
-			break;
-		default:
-			handleError('Invalid datatype detected.');
-			break;
-	}
+	// Check mandatory fields.
+	$vfystr->strchk($id, 'Provider', 'provider', verifyString::STR_PINTEGER,
+		true, 2147483647, 0);
+	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 3);
+	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
+		true, 32, 3);
+	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
+		true, 1209600, 900);
+	$vfystr->strchk($clientid, 'Client ID', 'clientid',
+		verifyString::STR_ALPHANUM, true, 32, 3);
+	$vfystr->strchk($scope, 'Scope', 'scope', verifyString::STR_ALPHANUMPUNCT, true,
+		256, 3);
+	$vfystr->strchk($authtype, 'Authentication Type', 'authtype',
+		verifyString::STR_ALPHANUM, true, 16, 1);
+	$vfystr->strchk($authurl, 'Authentication URL', 'authurl',
+		verifyString::STR_URI, true, 512, 3);
+	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
+		verifyString::STR_URI, true, 512, 3);
+	$vfystr->strchk($resource1, 'Resource URL 1', 'resource1',
+		verifyString::STR_URI, true, 512, 3);
 
-	// Get the other values.
-	$intname = getPostValue('intname');
-	$dispname = getPostValue('dispname');
-	$description = getPostValue('description');
-	$accadmin = getPostValue('accadmin');
-
-	// Check the other values.
-	$vfystr->strchk($intname, 'Internal Name', 'intname',
-		verifyString::STR_ALPHASPEC, true, 32, 1);
-	$vfystr->strchk($dispname, 'Display Name', 'dispname',
-		verifyString::STR_ALPHANUM, true, 64, 1);
-	$vfystr->strchk($description, 'Description', 'description',
-		verifyString::STR_ASCII, true, 256, 1);
-	if (!empty($accadmin)) $accadmin = 1; else $accadmin = 0;
+	// Check optional fields.
+	$vfystr->strchk($clientsecret, 'Client Secret', 'clientsecret',
+		verifyString::STR_ALPHANUM, false, 64, 3);
+	$vfystr->strchk($resource2, 'Resource URL 2', 'resource2',
+		verifyString::STR_URI, false, 512, 3);
+	$vfystr->strchk($resource3, 'Resource URL 3', 'resource3',
+		verifyString::STR_URI, false, 512, 3);
+	$vfystr->strchk($resource4, 'Resource URL 4', 'resource4',
+		verifyString::STR_URI, false, 512, 3);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -526,9 +528,13 @@ function insertRecordAction()
 		}
 	}
 
+	// Safely encode all strings to prevent XSS attacks.
+	$name = safeEncodeString($name);
+	
 	// We are good, insert the record
-	$result = $dbconf->insertConfig($id, $datatype, $intname, $dispname,
-		$value, $description, $accadmin);
+	$result = $dbconf->insertOAuth($id, $name, $module, $expire, $clientid,
+		$clientsecret, $scope, $authtype, $authurl, $redirect, $resource1,
+		$resource2, $resource3, $resource4);
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -551,10 +557,11 @@ function deleteRecordAction()
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 	global $dbconf;
+	global $dbuser;
 
 	// Gather data...
 	$key = getPostValue('hidden');
-	$id = getPostValue('setting');
+	$id = getPostValue('provider');
 
 	// ...and check it.
 	if ($key == NULL)
@@ -568,14 +575,20 @@ function deleteRecordAction()
 	if ($key != $id)
 		handleError('Database key mismatch.');
 	
-	// Failsafe Check: If the id is < 1000 then it's a system
-	// setting and we exit with error.
-	if ($id < 1000)
-		handleError('System settings (Setting Number < 1000) cannot be ' .
-			'deleted.<br>It can only be deleted manually from the database.');
+	// Check if any users are using this provider.
+	$result = $dbuser->queryOAuthProvAll($key);
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+	}
+	else
+	{
+		handleError('Unable to delete provider while users are still using it.');
+	}
 	
 	// Now remove the record from the database.
-	$result = $dbconf->deleteConfig($key);
+	$result = $dbconf->deleteOAuth($key);
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -600,28 +613,29 @@ function formPage($mode, $rxa)
 	{
 		case MODE_VIEW:			// View
 			$msg1 = 'Viewing ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['dispname'];
+			$msg2 = $rxa['name'];
 			$warn = '';
 			$btnset = html::BTNTYP_VIEW;
 			$action = '';
-			$hideValue = $rxa['setting'];
+			$hideValue = $rxa['provider'];
 			$disable = true;
 			$default = true;
 			$key = true;
 			break;
 		case MODE_UPDATE:		// Update
 			$msg1 = 'Updating ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['dispname'];
-			$warn = 'Changing a setting can make the application unusable.';
+			$msg2 = $rxa['name'];
+			$warn = 'Updating a provider will affect all users who use that provider.';
 			$btnset = html::BTNTYP_UPDATE;
 			$action = 'submitUpdate()';
-			$hideValue = $rxa['setting'];
+			$hideValue = $rxa['provider'];
 			$disable = false;
 			$default = true;
 			$key = true;
 			break;
 		case MODE_INSERT:		// Insert
 			$msg1 = 'Inserting ' . $moduleDisplayUpper . ' Data';
+			$msg2 = $rxa['name'];
 			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_INSERT;
@@ -632,11 +646,11 @@ function formPage($mode, $rxa)
 			break;
 		case MODE_DELETE:		// Delete
 			$msg1 = 'Deleting ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['dispname'];
-			$warn = 'Deleting a setting may cause the application to crash.';
+			$msg2 = $rxa['name'];
+			$warn = 'A provider can only be deleted when there are no users using it.';
 			$btnset = html::BTNTYP_DELETE;
 			$action = 'submitDelete()';
-			$hideValue = $rxa['setting'];
+			$hideValue = $rxa['provider'];
 			$disable = true;
 			$default = true;
 			$key = true;
@@ -665,80 +679,75 @@ function formPage($mode, $rxa)
 		// Datafill this array with dummy values to prevent PHP
 		// from issuing errors.
 		$rxa = array(
-			'setting' => '',
+			'provider' => 0,
 			'name' => '',
-			'dispname' => '',
-			'description' => '',
-			'type' => '',
-			'value' => '',
-			'admin' => '',
+			'module' => '',
+			'expire' => 3600,
+			'clientid' => '',
+			'clientsecret' => '',
+			'scope' => '',
+			'authtype' => '',
+			'authurl' => '',
+			'redirecturl' => '',
+			'resourceurl1' => '',
+			'resourceurl2' => '',
+			'resourceurl3' => '',
+			'resourceurl4' => '',
 		);
 	}
 
 	// Custom field rendering code
-	$setting = generateField(html::TYPE_TEXT, 'setting', 'Setting Number', 2,
-		$rxa['setting'], 'The setting ID index.', $default, $key);
-	$intname = generateField(html::TYPE_TEXT, 'intname', 'Internal Name', 6,
-		$rxa['name'], 'The internal name of the setting.', $default, $disable);
-	$dispname = generateField(html::TYPE_TEXT, 'dispname', 'Display Name', 6,
-		$rxa['dispname'], 'The display name of the setting.', $default, $disable);
-	$description = generateField(html::TYPE_AREA, 'description', 'Description', 6,
-		$rxa['description'], 'The long description of the setting.', $default, $disable);
-	$description['rows'] = 5;
-	if ($mode == MODE_UPDATE || $mode == MODE_INSERT)
-	{
-		$datatype = array(
-			'type' => html::TYPE_PULLDN,
-			'label' => 'Value Type',
-			'default' => $rxa['type'],
-			'name' => 'datatype',
-			'fsize' => 4,
-			'optlist' => array(
-				'String' => DBTYPE_STRING,
-				'Integer' => DBTYPE_INTEGER,
-				'Boolean' => DBTYPE_BOOLEAN,
-				'Long String' => DBTYPE_LONGSTR,
-				'Time Displacement' => DBTYPE_TIMEDISP,
-			),
-			'tooltip' => 'Sets the data type of the value.',
-			'disable' => $disable,
-			'event' => 'onchange',
-			'action' => 'setHidden()',
-		);
-	}
-	else
-	{
-		$datatype = generateField(html::TYPE_TEXT, 'datatype', 'Value Type', 4,
-			convertType($rxa['type']), 'The value data type.', $default, $disable);
-	}
-	switch ($rxa['type'])
-	{
-		case DBTYPE_LONGSTR:
-			$hideLStr = false;
-			$hideBool = true;
-			$hideOther = true;
-			break;
-		case DBTYPE_BOOLEAN:
-			$hideLStr = true;
-			$hideBool = false;
-			$hideOther = true;
-			break;
-		default:
-			$hideLStr = true;
-			$hideBool = true;
-			$hideOther = false;
-			break;
-	}
-	$value1 = generateField(html::TYPE_AREA, 'datavalue1', 'Value', 6,
-		$rxa['value'], 'The setting\'s value.', $default, $disable);
-	$value1['rows'] = 5;
-	$value2 = generateField(html::TYPE_CHECK, 'datavalue2', 'Value', 1,
-		$rxa['value'], 'The setting\'s value.', $default, $disable);
-	$value3 = generateField(html::TYPE_TEXT, 'datavalue3', 'Value', 6,
-		$rxa['value'], 'The setting\'s value.', $default, $disable);
-	$accadmin = generateField(html::TYPE_CHECK, 'accadmin', 'Admin Access', 1,
-		$rxa['admin'], 'When checked, the Administrator has access to this setting.',
+	$provider = generateField(html::TYPE_TEXT, 'provider', 'Provider', 3,
+		$rxa['provider'], 'The provider\'s identification number', $default,
+		$key);
+	$name = generateField(html::TYPE_TEXT, 'name', 'Provider Name', 5,
+		$rxa['name'], 'The name of the provider.', $default, $disable);
+	$module = generateField(html::TYPE_TEXT, 'module', 'Module', 5,
+		$rxa['module'], 'The module that the provider communicates with.',
 		$default, $disable);
+	$expire = generateField(html::TYPE_TEXT, 'expire', 'Expire', 3,
+		$rxa['expire'], 'Default time that a user\'s login expires.',
+		true, $disable);
+	$clientid = generateField(html::TYPE_TEXT, 'clientid', 'Client ID', 4,
+		$rxa['clientid'], 'The client ID as given by the provider.',
+		$default, $disable);
+	$clientsecret = generateField(html::TYPE_TEXT, 'clientsecret',
+		'Client Secret', 4, $rxa['clientsecret'],
+		'The client password that the application uses to authenticate' .
+		chr(13) . ' to the provider. It must be kept confidential.',
+		$default, $disable);
+	$scope = generateField(html::TYPE_AREA, 'scope', 'Authority Scope', 8,
+		$rxa['scope'], 'The default scope of authority as granted by the user.',
+		$default, $disable);
+	$scope['rows'] = 5;
+	$authtype = generateField(html::TYPE_TEXT, 'authtype', 'Authentication Type',
+		5, $rxa['authtype'], 'The type of authentication requested.',
+		$default, $disable);
+	$authurl = generateField(html::TYPE_AREA, 'authurl', 'Authentication URL', 8,
+		$rxa['authurl'], 'The URL to redirect the user to for authentication' .
+		' by the provider.', $default, $disable);
+	$authurl['rows'] = 5;
+	$redirect = generateField(html::TYPE_AREA, 'redirect', 'Redirect URL', 8,
+		$rxa['redirecturl'], 'The URL that the user is redirected to when ' .
+		'authentication is completed.',
+		$default, $disable);
+	$redirect['rows'] = 5;
+	$resource1 = generateField(html::TYPE_AREA, 'resource1', 'Resource URL 1', 8,
+		$rxa['resourceurl1'], 'The provider\'s URL which provides the access' .
+		chr(13) . 'to the resources of the user\'s account', $default, $disable);
+	$resource1['rows'] = 5;
+	$resource2 = generateField(html::TYPE_AREA, 'resource2', 'Resource URL 2', 8,
+		$rxa['resourceurl1'], 'The provider\'s URL which provides the access' .
+		chr(13) . 'to the resources of the user\'s account', $default, $disable);
+	$resource2['rows'] = 5;
+	$resource3 = generateField(html::TYPE_AREA, 'resource3', 'Resource URL 3', 8,
+		$rxa['resourceurl1'], 'The provider\'s URL which provides the access' .
+		chr(13) . 'to the resources of the user\'s account', $default, $disable);
+	$resource3['rows'] = 5;
+	$resource4 = generateField(html::TYPE_AREA, 'resource4', 'Resource URL 4', 8,
+		$rxa['resourceurl1'], 'The provider\'s URL which provides the access' .
+		chr(13) . 'to the resources of the user\'s account', $default, $disable);
+	$resource4['rows'] = 5;
 
 	// Build out the form array.
 	$data = array(
@@ -761,60 +770,48 @@ function formPage($mode, $rxa)
 			'type' => html::TYPE_FSETOPEN,
 			'name' => 'Key',
 		),
-		$setting,
+		$provider,
 		array(
 			'type' => html::TYPE_FSETCLOSE,
 		),
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Description',
+			'name' => 'Provider Settings',
 		),
-		$dispname,
-		$intname,
-		$description,
+		$name,
+		$module,
+		$expire,
 		array(
 			'type' => html::TYPE_FSETCLOSE,
 		),
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Data',
+			'name' => 'Client Authentication',
 		),
-		$datatype,
-		array(
-			'type' => html::TYPE_HIDEOPEN,
-			'name' => 'dataLongString',
-			'hidden' => $hideLStr,
-		),
-		$value1,
-		array(
-			'type' => html::TYPE_HIDECLOSE,
-		),
-		array(
-			'type' => html::TYPE_HIDEOPEN,
-			'name' => 'dataBoolean',
-			'hidden' => $hideBool,
-		),
-		$value2,
-		array(
-			'type' => html::TYPE_HIDECLOSE,
-		),
-		array(
-			'type' => html::TYPE_HIDEOPEN,
-			'name' => 'dataOther',
-			'hidden' => $hideOther,
-		),
-		$value3,
-		array(
-			'type' => html::TYPE_HIDECLOSE,
-		),
+		$clientid,
+		$clientsecret,
 		array(
 			'type' => html::TYPE_FSETCLOSE,
 		),
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Access Security',
+			'name' => 'User Authentication',
 		),
-		$accadmin,
+		$authtype,
+		$authurl,
+		$scope,
+		$redirect,
+		array(
+			'type' => html::TYPE_FSETCLOSE,
+		),
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'User Account Resources',
+		),
+		$resource1,
+		$resource2,
+		$resource3,
+		$resource4,
 		array(
 			'type' => html::TYPE_FSETCLOSE,
 		),
@@ -853,11 +850,12 @@ function generateField($type, $name, $label, $size = 0, $value = '',
 		$data['default'] = $value;
 	}
 	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
+	$data['lsize'] = 3;
 	return $data;
 }
 
 // Returns the first argument match of a $_POST value.  If no
-// values are found, then returns NULL.
+// values are found, then returns null.
 function getPostValue(...$list)
 {
 	foreach($list as $param)
@@ -867,51 +865,5 @@ function getPostValue(...$list)
 	return NULL;
 }
 
-// Converts type numbers into names.
-function convertType($type)
-{
-	switch ($type)
-	{
-		case DBTYPE_STRING:
-			return 'String';
-			break;
-		case DBTYPE_INTEGER:
-			return 'Integer';
-			break;
-		case DBTYPE_BOOLEAN:
-			return 'Boolean';
-			break;
-		case DBTYPE_LONGSTR:
-			return 'Long String';
-			break;
-		case DBTYPE_TIMEDISP:
-			return 'Time Displacement';
-			break;
-		default:
-			return 'Unknown';
-			break;
-	}
-}
-
-// Converts long string values to shorter strings for display.
-function convertLongString($type, $value)
-{
-	if ($type == DBTYPE_LONGSTR)
-	{
-		$len = strlen($value);
-		$data = '';
-		if ($len > DBSTR_LENGTH)
-		{
-			for ($i = 0; $i < DBSTR_LENGTH; $i++)
-			{
-				$data .= $value[$i];
-			}
-			$data .= '...';
-		}
-		else $data = $value;
-		return $data;
-	}
-	return $value;
-}
 
 ?>

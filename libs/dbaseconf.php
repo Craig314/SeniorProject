@@ -19,8 +19,10 @@ interface database_config_interface
 	public function queryConfigAllAdmin();
 	public function queryConfigAll();
 	public function updateConfigValue($setting, $value);
-	public function updateConfigAll($setting, $type, $name, $dispname, $value, $desc, $admin);
-	public function insertConfig($setting, $type, $name, $dispname, $value, $desc, $admin);
+	public function updateConfigAll($setting, $type, $name, $dispname, $value,
+		$desc, $admin);
+	public function insertConfig($setting, $type, $name, $dispname, $value,
+		$desc, $admin);
 	public function deleteConfig($setting);
 
 	//Table: flagdesc_app
@@ -42,8 +44,10 @@ interface database_config_interface
 	public function queryModuleAll();
 	public function updateModuleInfo($modid, $name, $desc, $file, $icon);
 	public function updateModuleActivation($modid, $active);
-	public function updateModule($modid, $name, $desc, $file, $icon, $active, $allusers, $system, $vendor);
-	public function insertModule($modid, $name, $desc, $file, $icon, $active, $allusers, $system, $vendor);
+	public function updateModule($modid, $name, $desc, $file, $icon, $active,
+		$allusers, $system, $vendor);
+	public function insertModule($modid, $name, $desc, $file, $icon, $active,
+		$allusers, $system, $vendor);
 	public function deleteModule($modid);
 
 	// Table: modaccess
@@ -66,8 +70,10 @@ interface database_config_interface
 	// Table: openid
 	public function queryOpenId($provider);
 	public function queryOpenIdAll();
-	public function updateOpenId($provider, $name, $module, $serverurl, $redirecturl);
-	public function insertOpenId($provider, $name, $module, $serverurl, $redirecturl);
+	public function updateOpenId($provider, $name, $module, $expire,
+		$serverurl, $redirecturl);
+	public function insertOpenId($provider, $name, $module, $expire,
+		$serverurl, $redirecturl);
 	public function deleteOpenId($provider);
 
 	// Table: profile
@@ -131,10 +137,12 @@ class database_config implements database_config_interface
 		$table = $this->tablebase . '.config';
 		$column = '*';
 		$qxa = $dbcore->buildArray('value', $value, databaseCore::PTSTR);
-		return($dbcore->launchUpdateSingle($table, 'setting', $setting, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'setting', $setting,
+			databaseCore::PTINT, $qxa));
 	}
 
-	public function updateConfigAll($setting, $type, $name, $dispname, $value, $desc, $admin)
+	public function updateConfigAll($setting, $type, $name, $dispname, $value,
+		$desc, $admin)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.config';
@@ -144,11 +152,13 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('value', $value, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('admin', $admin, databaseCore::PTINT, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'setting', $setting, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'setting', $setting,
+			databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a configuration parameter.
-	public function insertConfig($setting, $type, $name, $dispname, $value, $desc, $admin)
+	public function insertConfig($setting, $type, $name, $dispname, $value,
+		$desc, $admin)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.config';
@@ -167,7 +177,8 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.config';
-		return($dbcore->launchDeleteSingle($table, 'setting', $setting, databaseCore::PTINT));
+		return($dbcore->launchDeleteSingle($table, 'setting', $setting,
+			databaseCore::PTINT));
 	}
 
 
@@ -206,7 +217,8 @@ class database_config implements database_config_interface
 		$table = $this->tablebase . '.flagdesc_app';
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'flag', $flag, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'flag', $flag,
+			databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts data for a specific flag.
@@ -263,7 +275,8 @@ class database_config implements database_config_interface
 		$table = $this->tablebase . '.flagdesc_core';
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'flag', $flag, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'flag', $flag,
+			databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts data for a specific flag.
@@ -324,7 +337,8 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('description', $file, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('filename', $file, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('iconname', $icon, databaseCore::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid,
+			databaseCore::PTINT, $qxa));
 	}
 
 	// Updates the activation data for a module.
@@ -333,11 +347,13 @@ class database_config implements database_config_interface
 		global $dbcore;
 		$table = $this->tablebase . '.module';
 		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTSTR);
-		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid,
+			databaseCore::PTINT, $qxa));
 	}
 
 	// Updates all information about a module.
-	public function updateModule($modid, $name, $desc, $file, $icon, $active, $allusers, $system, $vendor)
+	public function updateModule($modid, $name, $desc, $file, $icon, $active,
+		$allusers, $system, $vendor)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
@@ -349,11 +365,13 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('allusers', $allusers, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('system', $system, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('vendor', $vendor, databaseCore::PTINT, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'moduleid', $modid,
+			databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a module into the database.
-	public function insertModule($modid, $name, $desc, $file, $icon, $active, $allusers, $system, $vendor)
+	public function insertModule($modid, $name, $desc, $file, $icon, $active,
+		$allusers, $system, $vendor)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
@@ -374,7 +392,8 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.module';
-		return($dbcore->launchDeleteSingle($table, 'moduleid', $modid, databaseCore::PTINT));
+		return($dbcore->launchDeleteSingle($table, 'moduleid', $modid,
+			databaseCore::PTINT));
 	}
 
 
@@ -475,7 +494,8 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('resourceurl2', $resurl2, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl3', $resurl3, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl4', $resurl4, databaseCore::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'provider', $provier, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'provider', $provider,
+			databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a new OAuth provider in the database.
@@ -507,7 +527,8 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.oauth';
-		return($dbcore->lauchDeleteSingle($table, 'provider', $provider, databaseCore::PTINT));
+		return($dbcore->lauchDeleteSingle($table, 'provider', $provider,
+			databaseCore::PTINT));
 	}
 
 
@@ -534,36 +555,40 @@ class database_config implements database_config_interface
 		return($dbcore->launchQueryDumpTable($table, $column));
 	}
 
-	   public function updateOpenId($provider, $name, $module, $serverurl, $redirecturl)
+	public function updateOpenId($provider, $name, $module, $expire,
+	   	$serverurl, $redirecturl)
 	{
 		global $dbcore;
-		$table = $this->tablebase . '.oauth';
+		$table = $this->tablebase . '.openid';
 		$qxa = $dbcore->buildArray('module', $module, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('serverurl', $serverurl, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('redirecturl', $redirecturl, databaseCore::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'provider', $provier, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'provider', $provier,
+			databaseCore::PTINT, $qxa));
 	}
 
-	public function insertOpenId($provider, $name, $module, $serverurl, $redirecturl)
+	public function insertOpenId($provider, $name, $module, $expire,
+		$serverurl, $redirecturl)
 	{
 		global $dbcore;
-		$table = $this->tablebase . '.oauth';
+		$table = $this->tablebase . '.openid';
 		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('module', $module, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('serverurl', $serverurl, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('redirecturl', $redirecturl, databaseCore::PTSTR, $qxa);
-		return($dbcore->launchInsert($table, $rxa));
+		return($dbcore->launchInsert($table, $qxa));
 	}
 
 	public function deleteOpenId($provider)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.openid';
-		return($dbcore->lauchDeleteSingle($table, 'provider', $provider, databaseCore::PTINT));
+		return($dbcore->lauchDeleteSingle($table, 'provider', $provider,
+			databaseCore::PTINT));
 	}
 
    
@@ -605,7 +630,8 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildarray('portal', $portal, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildarray('bitmap_core', $bmc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildarray('bitmap_app', $bma, databaseCore::PTSTR, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'profileid', $profid, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'profileid', $profid,
+			databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a new profile in the database.
@@ -627,7 +653,8 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.profile';
-		return($dbcore->launchDeleteSingle($table, 'profileid', $profid, databaseCore::PTINT));
+		return($dbcore->launchDeleteSingle($table, 'profileid', $profid,
+			databaseCore::PTINT));
 	}
 }
 

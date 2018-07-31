@@ -29,17 +29,18 @@ interface verifyStringInterface
 	const STR_ALPHA			= 7;	// Alpha Only
 	const STR_NUMERIC		= 8;	// Numeric Only
 	const STR_ALPHANUM		= 9;	// Alphanumeric
-	const STR_PINTEGER		= 10;	// Positive Integer
-	const STR_INTEGER		= 11;	// Integer (decimal or 0x hex format)
-	const STR_FLOAT			= 12;	// Floating Point
-	const STR_DATE			= 13;	// Date
-	const STR_DATEUNIX		= 14;	// Unix Date Timestamp
-	const STR_FILENAME		= 15;	// Filename
-	const STR_URI			= 16;	// Uniform Resource Identifier
-	const STR_URL			= 17;	// Uniform Resource Location
-	const STR_TIMEDISP		= 18;	// Time Displacement
-	const STR_ALPHASPEC		= 19;	// Alpha Spec'd (a-z_ only)
-	const STR_DESC			= 20;	// Descriptions
+	const STR_ALPHANUMPUNCT	= 10;	// Alphanumeric + Punctuation.
+	const STR_PINTEGER		= 11;	// Positive Integer
+	const STR_INTEGER		= 12;	// Integer (decimal or 0x hex format)
+	const STR_FLOAT			= 13;	// Floating Point
+	const STR_DATE			= 14;	// Date
+	const STR_DATEUNIX		= 15;	// Unix Date Timestamp
+	const STR_FILENAME		= 16;	// Filename
+	const STR_URI			= 17;	// Uniform Resource Identifier
+	const STR_URL			= 18;	// Uniform Resource Location
+	const STR_TIMEDISP		= 19;	// Time Displacement
+	const STR_ALPHASPEC		= 20;	// Alpha Spec'd (a-z_ only)
+	const STR_DESC			= 21;	// Descriptions
 
 	// Start custom checks at 100
 
@@ -143,6 +144,9 @@ class verifyString implements verifyStringInterface
 				break;
 			case self::STR_ALPHANUM:
 				$result = $this->checkCharAlphaNum($data, $field, $id);
+				break;
+			case self::STR_ALPHANUMPUNCT:
+				$result = $this->checkCharAlphaNumPunct($data, $field, $id);
 				break;
 			case self::STR_PINTEGER:
 				$result = $this->checkCharPosInteger($data, $field, $id, $max, $min);
@@ -388,6 +392,22 @@ class verifyString implements verifyStringInterface
 		return true;
 	}
 
+	// Letters, numbers, and punctuation.
+	private function checkCharAlphaNumPunct($data, $field, $id)
+	{
+		global $herr;
+
+		$regex = '/^[A-Za-z0-9\ \_\-\,\.\!\;\:\'\"\`\?]+$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
+		{
+			$herr->errorPutMessage($this->etype,
+				'Invalid characters detected.<br>Only letters, numbers,' .
+				' _- SP are allowed.', $this->estate, $field, $id);
+			return false;
+		}
+		return true;
+	}
 	// Positive integers
 	private function checkCharPosInteger($data, $field, $id, $max, $min)
 	{

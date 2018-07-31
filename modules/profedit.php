@@ -269,7 +269,6 @@ function commandProcessor($commandId)
 
 // Helper function for the view functions below that loads information
 // from the database and check for errors.
-// XXX: Requires customization.
 function databaseLoad()
 {
 	global $dbconf;
@@ -319,7 +318,6 @@ function deleteRecordView()
 }
 
 // Updates the record in the database.
-// XXX: Requires customization.
 function updateRecordAction()
 {
 	global $ajax;
@@ -421,7 +419,6 @@ function updateRecordAction()
 }
 
 // Inserts the record into the database.
-// XXX: Requires customization.
 function insertRecordAction()
 {
 	global $ajax;
@@ -499,7 +496,6 @@ function insertRecordAction()
 }
 
 // Deletes the record from the database.
-// XXX: Requires customization.
 function deleteRecordAction()
 {
 	global $herr;

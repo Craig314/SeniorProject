@@ -34,7 +34,7 @@ $moduleTitle = 'User Editor';
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 12;
+$moduleId = 14;
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
@@ -368,7 +368,6 @@ function commandProcessor($commandId)
 
 // Helper function for the view functions below that loads information
 // from the database and check for errors.
-// XXX: Requires customization.
 function databaseLoad()
 {
 	global $herr;
@@ -420,7 +419,6 @@ function deleteRecordView()
 }
 
 // Updates the record in the database.
-// XXX: Requires customization.
 function updateRecordAction()
 {
 	global $ajax;
@@ -889,7 +887,6 @@ function updateRecordAction()
 }
 
 // Inserts the record into the database.
-// XXX: Requires customization.
 function insertRecordAction()
 {
 	global $ajax;
@@ -1181,7 +1178,6 @@ function insertRecordAction()
 }
 
 // Deletes the record from the database.
-// XXX: Requires customization.
 function deleteRecordAction()
 {
 	global $ajax;

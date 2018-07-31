@@ -37,6 +37,7 @@ interface database_userdata_interface
 
 	// Table: oath
 	public function queryOAuth($userid);
+	public function queryOAuthProvAll($provider);
 	public function updateOAuth($userid, $state, $provider, $token, $tokentype,
 		$issue, $expire, $refresh, $scope);
 	public function updateOAuthLogin($userid, $state, $token, $tokentype,
@@ -48,6 +49,8 @@ interface database_userdata_interface
 
 	// Table: openid
 	public function queryOpenId($userid);
+	public function queryOpenIdState($state);
+	public function queryOpenIdProvAll($provider);
 	public function updateOpenId($userid, $provider, $ident, $issue, $expire);
 	public function updateOpenIdLogin($userid, $issue, $expire);
 	public function insertOpenId($userid, $provider, $ident, $issue, $expire);
@@ -272,6 +275,16 @@ class database_user implements database_userdata_interface
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
+	// Multi-Query that returns all user IDs which are using the
+	// specified provider.
+	public function queryOAuthProvAll($provider)
+	{
+		$table = $this->tablebase . '.oauth';
+		$column = 'userid,provider';
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
+		return($dbcore->launchQueryMultiple($table, $column, $qxa));
+	}
+
 	public function updateOAuth($userid, $state, $provider, $token, $tokentype,
 		$issue, $expire, $refresh, $scope)
 	{		global $dbcore;
@@ -347,6 +360,26 @@ class database_user implements database_userdata_interface
 		$column = '*';
 		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	// Queries a user's OpenID data according to state.
+	public function queryOpenIdState($state)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.openid';
+		$column = '*';
+		$qxa = $dbcore->buildArray('state', $state, databaseCore::PTSTR);
+		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	// Multi-Query that returns all user IDs which are using the
+	// specified provider.
+	public function queryOpenIdProvAll($provider)
+	{
+		$table = $this->tablebase . '.openid';
+		$column = 'userid,provider';
+		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
+		return($dbcore->launchQueryMultiple($table, $column, $qxa));
 	}
 
 	// Updates a user's OpenID data.

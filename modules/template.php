@@ -184,11 +184,6 @@ function loadAdditionalContent()
 	);
 	foreach ($rxa as $kx => $vx)
 	{
-		if (!$vendor)
-		{
-			// The administrator does not have access to all settings.
-			if ($vx['admin'] == 0) continue;
-		}
 		$tdata = array(
 			// These are the values that show up under the columns above.
 			// The *FIRST* value is the value that is sent when a row
@@ -428,7 +423,7 @@ function insertRecordAction()
 	// $ = safeEncodeString($);
 	// $ = safeEncodeString($);
 	
-	// We are good, update the record
+	// We are good, insert the record
 	$result = $DATABASE_INSERT_OPERATION($id);	// XXX: Set This
 	if ($result == false)
 	{

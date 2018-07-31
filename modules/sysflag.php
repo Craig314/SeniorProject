@@ -4,10 +4,7 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application Parameter Editor
-
-This edits the configuration parameters that controls application
-function.
+PHP Web Application Module Template
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -28,24 +25,24 @@ the features/abilities they represent are being used:
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = 'paramedit.php';
+$moduleFilename = 'sysflag.php';
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
-$moduleTitle = 'Parameter Editor';
+$moduleTitle = 'System Flags';
 
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 5;
+$moduleId = 6;
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
-$moduleDisplayUpper = 'Parameter';
+$moduleDisplayUpper = 'System Flags';
 
 // The lowercase short display name of the module.  This shows up in
 // various messages.
-$moduleDisplayLower = 'parameter';
+$moduleDisplayLower = 'system flags';
 
 // Set to true if this is a system module.
 $moduleSystem = true;
@@ -57,20 +54,10 @@ $modulePermissions = array();
 
 
 // These are the data editing modes.
-const MODE_VIEW		= 0;
+const MODE_VIEW	= 0;
 const MODE_UPDATE	= 1;
 const MODE_INSERT	= 2;
 const MODE_DELETE	= 3;
-
-// These are the configuration data types in the database.
-const DBTYPE_STRING		= 0;
-const DBTYPE_INTEGER	= 1;
-const DBTYPE_BOOLEAN	= 2;
-const DBTYPE_LONGSTR	= 3;
-const DBTYPE_TIMEDISP	= 10;
-
-// Other misculanious constants.
-const DBSTR_LENGTH		= 20;
 
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
@@ -118,7 +105,9 @@ function loadInitialContent()
 		// $funcBar = array();
 		$funcBar = array(
 			array(
+				'Insert' => 'insertDataItem',
 				'Update' => 'updateDataItem',
+				'Delete' => 'deleteDataItem',
 			),
 			'View' => 'viewDataItem',
 			'List' => 'listDataItems',
@@ -129,7 +118,7 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/common.js',
-			'/js/paramedit.js',
+			'/js/sysflag.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -172,16 +161,34 @@ function loadAdditionalContent()
 {
 	global $baseUrl;
 	global $dbconf;
-	global $vendor;
+	global $herr;
 
-	// Get data from database.
-	$rxa = $dbconf->queryConfigAll();
+	// First we build the unassigned array.
+	$flag = array();
+	for ($i = 0; $i < FLAG_COUNT_SYSTEM; $i++)
+	{
+		$temp = array(
+			'flag' => $i,
+			'name' => 'Unassigned',
+			'desc' => 'This flag is currently unassigned.',
+		);
+		$flag[$i] = $temp;
+	}
+
+	// Get data from database and merge it into the above array.
+	$rxa = $dbconf->queryFlagdescCoreAll();
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
-		else
-			handleError('There are no ' . $moduleDisplayLower . 's in the database to edit.');
+	}
+	else
+	{
+		foreach ($rxa as $kx => $vx)
+		{
+			$flag[$vx['flag']]['name'] = $vx['name'];
+			$flag[$vx['flag']]['desc'] = $vx['description'];
+		}
 	}
 
 	// Generate Selection Table.
@@ -189,38 +196,34 @@ function loadAdditionalContent()
 		'type' => html::TYPE_RADTABLE,
 		'name' => 'select_item',
 		'titles' => array(
+			// Add column titles here
 			'Name',
 			'ID',
-			'Type',
-			'Value',
 		),
 		'tdata' => array(),
 		'tooltip' => array(),
 	);
-	foreach ($rxa as $kx => $vx)
+	foreach ($flag as $kx => $vx)
 	{
-		if (!$vendor)
-		{
-			// The administrator does not have access to all settings.
-			if ($vx['admin'] == 0) continue;
-		}
 		$tdata = array(
-			$vx['setting'],
-			$vx['dispname'],
-			$vx['setting'],
-			convertType($vx['type']),
-			convertLongString($vx['type'], $vx['value']),
+			// These are the values that show up under the columns above.
+			// The *FIRST* value is the value that is sent when a row
+			// is selected.  AKA Key Field.
+			$vx['flag'],
+			$vx['name'],
+			$vx['flag'],
 		);
 		array_push($list['tdata'], $tdata);
-		array_push($list['tooltip'], $vx['description']);
+		array_push($list['tooltip'], $vx['desc']);
 	}
 
 	// Generate rest of page.
 	$data = array(
 		array(
 			'type' => html::TYPE_HEADING,
-			'message1' => 'Parameter Editor',
-			'warning' => 'Changing values here can render the<br>application unusable.',
+			'message1' => 'Module Template Page',
+			'message2' => '',	// Delete if not needed.
+			'warning' => '',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
@@ -231,6 +234,7 @@ function loadAdditionalContent()
 
 		// Enter custom data here.
 		$list,
+
 
 		array('type' => html::TYPE_FORMCLOSE),
 		array('type' => html::TYPE_WDCLOSE),
@@ -255,8 +259,20 @@ function commandProcessor($commandId)
 		case 2:		// Update
 			updateRecordView();
 			break;
+		case 3:		// Insert
+			insertRecordView();
+			break;
+		case 4:		// Delete
+			deleteRecordView();
+			break;
 		case 12:	// Submit Update
 			updateRecordAction();
+			break;
+		case 13:	// Submit Insert
+			insertRecordAction();
+			break;
+		case 14:	// Submit Delete
+			deleteRecordAction();
 			break;
 		default:
 			// If we get here, then the command is undefined.
@@ -270,23 +286,23 @@ function commandProcessor($commandId)
 
 // Helper function for the view functions below that loads information
 // from the database and check for errors.
+// XXX: Requires customization.
 function databaseLoad()
 {
 	global $herr;
 	global $moduleDisplayLower;
-	global $dbconf;
 
 	$key = getPostValue('select_item', 'hidden');
 	if ($key == NULL)
 		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
-	$rxa = $dbconf->queryConfig($key);
+	// The below line requires customization for database loading.	
+	$rxa = $DATABASE_QUERY_OPERATION($key);	// XXX: Set This
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
 		else
-			handleError('Database Error: Unable to retrieve required ' .
-				$moduleDisplayLower . ' data.');
+			handleError('Database Error: Unable to retrieve required ' . $moduleDisplayLower . ' data.');
 	}
 	return $rxa;
 }
@@ -305,7 +321,21 @@ function updateRecordView()
 	formPage(MODE_UPDATE, $rxa);
 }
 
+// The Add Record view.
+function insertRecordView()
+{
+	formPage(MODE_INSERT, NULL);
+}
+
+// The Delete Record view.
+function deleteRecordView()
+{
+	$rxa = databaseLoad();
+	formPage(MODE_DELETE, $rxa);
+}
+
 // Updates the record in the database.
+// XXX: Requires customization.
 function updateRecordAction()
 {
 	global $ajax;
@@ -314,16 +344,15 @@ function updateRecordAction()
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
-	global $dbconf;
 
 	// Set the field list.
 	$fieldlist = array(
-		'datavalue',
+		'',
 	);
 	
 	// Get data
 	$key = getPostValue('hidden');
-	$id = getPostValue('setting');
+	$id = getPostValue('');
 
 	// Check key data.
 	if ($key == NULL)
@@ -337,42 +366,11 @@ function updateRecordAction()
 	if ($key != $id)
 		handleError('Database key mismatch.');
 
-	// Launch database query.
-	$rxa = $dbconf->queryConfig($key);
-	if ($rxa == false)
-	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
-		else
-			handleError('Database Error: Unable to read configuration ' .
-				'setting. Key = ' . $key);
-	}
-
-	// Get value data.
-	$value = getPostValue('datavalue');
-
 	// Check mandatory fields.
-	switch ($rxa['type'])
-	{
-		case DBTYPE_STRING:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_ASCII, true, 512, 1);
-			break;
-		case DBTYPE_INTEGER:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_INTEGER, true);
-			break;
-		case DBTYPE_BOOLEAN:
-			if (!empty($value)) $value = 1; else $value = 0;
-			break;
-		case DBTYPE_LONGSTR:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_ASCII, true, 512, 1);
-			break;
-		case DBTYPE_TIMEDISP:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_TIMEDISP, true, 6, 5);
-			break;
-		default:
-			handleError('Invalid datatype from database detected.');
-			break;
-	}
+	$vfystr->strchk();
+
+	// Check optional fields.
+	$vfystr->strchk();
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -384,9 +382,15 @@ function updateRecordAction()
 			exit(1);
 		}
 	}
+
+	// Safely encode all strings to prevent XSS attacks.
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
 	
 	// We are good, update the record
-	$result = $dbconf->updateConfigValue($key, $value);
+	$result = $DATABASE_UPDATE_OPERATION($key);	// XXX: Set This
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -395,10 +399,103 @@ function updateRecordAction()
 			handleError('Database: Record update failed. Key = ' . $key);
 	}
 	sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
+	exit(0);
+}
 
-	// Reload the shared memory for configuration.
-	processSharedMemoryReload();
+// Inserts the record into the database.
+// XXX: Requires customization.
+function insertRecordAction()
+{
+	global $ajax;
+	global $herr;
+	global $vfystr;
+	global $CONFIGVAR;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
 
+	// Set the field list.
+	$fieldlist = array(
+		'',
+	);
+	
+	// Get data
+	$id = getPostValue('');
+
+	// Check mandatory fields.
+	$vfystr->strchk();
+
+	// Check optional fields.
+	$vfystr->strchk();
+
+	// Handle any errors from above.
+	if ($vfystr->errstat() == true)
+	{
+		if ($herr->checkState() == true)
+		{
+			$rxe = $herr->errorGetData();
+			$ajax->sendStatus($rxe, $fieldlist);
+			exit(1);
+		}
+	}
+
+	// Safely encode all strings to prevent XSS attacks.
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	
+	// We are good, insert the record
+	$result = $DATABASE_INSERT_OPERATION($id);	// XXX: Set This
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database: Record insert failed. Key = ' . $id);
+	}
+	sendResponseClear($moduleDisplayUpper . ' insert completed: key = '
+		. $id);
+	exit(0);
+}
+
+// Deletes the record from the database.
+// XXX: Requires customization.
+function deleteRecordAction()
+{
+	global $ajax;
+	global $herr;
+	global $vfystr;
+	global $CONFIGVAR;
+	global $moduleDisplayUpper;
+	global $moduleDisplayLower;
+
+	// Gather data...
+	$key = getPostValue('hidden');
+	$id = getPostValue('');		// XXX: Set This
+
+	// ...and check it.
+	if ($key == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' module selection data.');
+	if ($id == NULL)
+		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
+	if (!is_numeric($key))
+		handleError('Malformed key sequence.');
+	if (!is_numeric($id))
+		handleError('Malformed key sequence.');
+	if ($key != $id)
+		handleError('Database key mismatch.');
+	
+	// Now remove the record from the database.
+	$result = $DATABASE_DELETE_OPERATION($key);	// XXX: Set This
+	if ($result == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
+				' data. Key = ' . $key);
+	}
+	sendResponse($moduleDisplayUpper . ' delete completed: key = ' . $key);
 	exit(0);
 }
 
@@ -414,23 +511,44 @@ function formPage($mode, $rxa)
 	{
 		case MODE_VIEW:			// View
 			$msg1 = 'Viewing ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['dispname'];
+			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_VIEW;
 			$action = '';
-			$hideValue = $rxa['setting'];
+			$hideValue = '';
 			$disable = true;
 			$default = true;
 			$key = true;
 			break;
 		case MODE_UPDATE:		// Update
 			$msg1 = 'Updating ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['dispname'];
-			$warn = 'Changing a setting can make the application unusable.';
+			$msg2 = '';
+			$warn = '';
 			$btnset = html::BTNTYP_UPDATE;
 			$action = 'submitUpdate()';
-			$hideValue = $rxa['setting'];
+			$hideValue = '';
 			$disable = false;
+			$default = true;
+			$key = true;
+			break;
+		case MODE_INSERT:		// Insert
+			$msg1 = 'Inserting ' . $moduleDisplayUpper . ' Data';
+			$msg2 = '';
+			$warn = '';
+			$btnset = html::BTNTYP_INSERT;
+			$action = 'submitInsert()';
+			$disable = false;
+			$default = false;
+			$key = false;
+			break;
+		case MODE_DELETE:		// Delete
+			$msg1 = 'Deleting ' . $moduleDisplayUpper . ' Data For';
+			$msg2 = '';
+			$warn = '';
+			$btnset = html::BTNTYP_DELETE;
+			$action = 'submitDelete()';
+			$hideValue = '';
+			$disable = true;
 			$default = true;
 			$key = true;
 			break;
@@ -440,7 +558,7 @@ function formPage($mode, $rxa)
 	}
 
 	// Hidden field to pass key data
-	if (!empty($hideValue))
+	if (isset($hideValue))
 	{
 		$hidden = array(
 			'type' => html::TYPE_HIDE,
@@ -463,33 +581,7 @@ function formPage($mode, $rxa)
 	}
 
 	// Custom field rendering code
-	$setting = generateField(html::TYPE_TEXT, 'setting', 'Setting Number', 2,
-		$rxa['setting'], 'The setting ID index.', true, true);
-	$intname = generateField(html::TYPE_TEXT, 'intname', 'Internal Name', 6,
-		$rxa['name'], 'The internal name of the setting.', true, true);
-	$dispname = generateField(html::TYPE_TEXT, 'dispname', 'Display Name', 6,
-		$rxa['dispname'], 'The display name of the setting.', true, true);
-	$description = generateField(html::TYPE_AREA, 'description', 'Description', 6,
-		$rxa['description'], 'The long description of the setting.', true, true);
-	$description['rows'] = 5;
-	$datatype = generateField(html::TYPE_TEXT, 'datatype', 'Value Type', 4,
-		convertType($rxa['type']), 'The value data type.', true, true);
-	switch ($rxa['type'])
-	{
-		case DBTYPE_LONGSTR:
-			$value = generateField(html::TYPE_AREA, 'datavalue', 'Value', 6,
-				$rxa['value'], 'The setting\'s value.', $default, $disable);
-			$value['rows'] = 5;
-			break;
-		case DBTYPE_BOOLEAN:
-			$value = generateField(html::TYPE_CHECK, 'datavalue', 'Value', 1,
-				$rxa['value'], 'The setting\'s value.', $default, $disable);
-			break;
-		default:
-			$value = generateField(html::TYPE_TEXT, 'datavalue', 'Value', 6,
-				$rxa['value'], 'The setting\'s value.', $default, $disable);
-			break;
-	}
+
 
 	// Build out the form array.
 	$data = array(
@@ -508,33 +600,7 @@ function formPage($mode, $rxa)
 		),
 
 		// Enter custom field data here.
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Key',
-		),
-		$setting,
-		array(
-			'type' => html::TYPE_FSETCLOSE,
-		),
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Description',
-		),
-		$dispname,
-		$intname,
-		$description,
-		array(
-			'type' => html::TYPE_FSETCLOSE,
-		),
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Data',
-		),
-		$datatype,
-		$value,
-		array(
-			'type' => html::TYPE_FSETCLOSE,
-		),
+
 
 		array(
 			'type' => html::TYPE_ACTBTN,
@@ -584,51 +650,5 @@ function getPostValue(...$list)
 	return NULL;
 }
 
-// Converts type numbers into names.
-function convertType($type)
-{
-	switch ($type)
-	{
-		case DBTYPE_STRING:
-			return 'String';
-			break;
-		case DBTYPE_INTEGER:
-			return 'Integer';
-			break;
-		case DBTYPE_BOOLEAN:
-			return 'Boolean';
-			break;
-		case DBTYPE_LONGSTR:
-			return 'Long String';
-			break;
-		case DBTYPE_TIMEDISP:
-			return 'Time Displacement';
-			break;
-		default:
-			return 'Unknown';
-			break;
-	}
-}
-
-// Converts long string values to shorter strings for display.
-function convertLongString($type, $value)
-{
-	if ($type == DBTYPE_LONGSTR)
-	{
-		$len = strlen($value);
-		$data = '';
-		if ($len > DBSTR_LENGTH)
-		{
-			for ($i = 0; $i < DBSTR_LENGTH; $i++)
-			{
-				$data .= $value[$i];
-			}
-			$data .= '...';
-		}
-		else $data = $value;
-		return $data;
-	}
-	return $value;
-}
 
 ?>
