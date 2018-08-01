@@ -98,11 +98,14 @@ function loadInitialContent()
 		// 	'datepick',
 		// 	'tooltip',
 		// );
+		$htmlFiles = array(
+		 	'tooltip',
+		);
 	
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
-	    '', '', '', $jsFiles, $cssFiles, '');
+	    '', '', '', $jsFiles, $cssFiles, $htmlFiles); 
 	}
 	else
 	{
@@ -244,8 +247,9 @@ function commandProcessor($commandId)
 // This is the function that writes the HTML to the client.
 function writeModuleIcon($url, $id, $iname, $dname, $desc)
 {
+	$tooltip = 'data-toggle="tooltip" data-html="true" title="' . $desc . '"';
 ?>
-	<div class="icon" onclick="loadModule(<?php echo $id; ?>)">
+	<div class="icon" onclick="loadModule(<?php echo $id; ?>)" <?php echo $tooltip; ?>>
 		<div class="iconimg">
 			<img src="<?php echo $url. "/images/icon128/" . $iname; ?>">
 		</div>

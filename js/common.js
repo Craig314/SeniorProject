@@ -40,7 +40,8 @@ $('#updateDataItem').on('click', function() {
 
 // Button click handler for Add.
 $('#insertDataItem').on('click', function() {
-	ajaxServerCommand.sendCommand(3);
+	params = getParameters();
+	ajaxServerCommand.sendCommand(3, params);
 });
 
 // Button click handler for Delete.

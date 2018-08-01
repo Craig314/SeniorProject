@@ -419,6 +419,14 @@ function bannerShowContinue($hidden)
 		<div id="block_continue"<?php echo $hide; ?>>
 			<br>
 			<div class="width75">
+				<div class="text-center">
+					<h4 class="color-blue">
+						Last Login:
+						<span class="color-red">
+							<?php echo timedate::unix2canonical($_SESSION['loginLast']); ?>
+						</span>
+					</h4>
+				</div>
 				<form class="form-horizontal">
 					<div class="button">
 						<div class="form-group">

@@ -4,7 +4,7 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application Module Template
+PHP Web Application System Flag Editor
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -25,24 +25,24 @@ the features/abilities they represent are being used:
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = 'sysflag.php';
+$moduleFilename = 'appflag.php';
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
-$moduleTitle = 'System Flags';
+$moduleTitle = 'Application Flags';
 
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 6;
+$moduleId = 7;
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
-$moduleDisplayUpper = 'System Flags';
+$moduleDisplayUpper = 'Application Flags';
 
 // The lowercase short display name of the module.  This shows up in
 // various messages.
-$moduleDisplayLower = 'system flags';
+$moduleDisplayLower = 'application flags';
 
 // Set to true if this is a system module.
 $moduleSystem = true;
@@ -118,7 +118,7 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/common.js',
-			'/js/sysflag.js',
+			'/js/appflag.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -176,7 +176,7 @@ function loadAdditionalContent()
 	}
 
 	// Get data from database and merge it into the above array.
-	$rxa = $dbconf->queryFlagdescCoreAll();
+	$rxa = $dbconf->queryFlagdescAppAll();
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
@@ -221,7 +221,7 @@ function loadAdditionalContent()
 	$data = array(
 		array(
 			'type' => html::TYPE_HEADING,
-			'message1' => 'System Flags',
+			'message1' => 'Application Flags',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
@@ -294,7 +294,7 @@ function databaseLoad()
 	$key = getPostValue('select_item', 'hidden');
 	if ($key == NULL)
 		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
-	$rxa = $dbconf->queryFlagdescCore($key);
+	$rxa = $dbconf->queryFlagdescApp($key);
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
@@ -396,14 +396,14 @@ function updateRecordAction()
 	$desc = safeEncodeString($desc);
 	
 	// We are good, insert or update the record
-	$res = $dbconf->queryFlagdescCore($key);
+	$res = $dbconf->queryFlagdescApp($key);
 	if ($res == false)
 	{
-		$result = $dbconf->insertFlagdescCore($key, $name, $desc);
+		$result = $dbconf->insertFlagdescApp($key, $name, $desc);
 	}
 	else
 	{
-		$result = $dbconf->updateFlagdescCore($key, $name, $desc);
+		$result = $dbconf->updateFlagdescApp($key, $name, $desc);
 	}
 	if ($result == false)
 	{
@@ -452,7 +452,7 @@ function deleteRecordAction()
 		handleError('Database key mismatch.');
 	
 	// Now remove the record from the database.
-	$result = $dbconf->deleteFlagdescCore($key);
+	$result = $dbconf->deleteFlagdescApp($key);
 	if ($result == false)
 	{
 		if ($herr->checkState())

@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`setting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains configuration information about the application.\r\nThe following numerical ranges are defined:\r\n0-9  Server\r\n10-19 HTML\r\n20-29 SSL\r\n30-49 Security\r\n50-59 Session\r\n60-69 Time/Timezone\r\n70-79 Account/Profile\r\n1000+ Application Specific';
 
--- Dumping data for table configuration.config: ~44 rows (approximately)
+-- Dumping data for table configuration.config: ~45 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
 	(0, 0, 'server_document_root', 'Appliation Root Directory', '/Servers/webdocs', 'This sets the application root directory on the server.', 1),
@@ -130,15 +130,19 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~5 rows (approximately)
+-- Dumping data for table configuration.module: ~9 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
 	(3, 'Module Data Editor', 'Edits module data in the database.', 'modedit.php', 'icon_gears', 1, 0, 1, 1),
-	(4, 'Configuration Editor', 'Edits the application configuration parameters', 'configedit.php', 'icon_tools3', 1, 0, 1, 0),
-	(5, 'Parameter Editor', 'Edits the configuration parameter values for the application.', 'paramedit.php', 'icon_tools4', 1, 0, 1, 1),
-	(10, 'Change Password', 'Allows on to change their login password', 'passwd.php', 'icon_padlock', 1, 1, 1, 0),
-	(11, 'Profile Editor', 'Edits the available profiles that defines what access rights a user has.', 'profedit.php', 'icon_keys', 1, 0, 1, 0),
-	(12, 'User Editor', 'Edits the user database', 'useredit.php', 'icon_users2', 1, 0, 1, 0);
+	(4, 'Configuration Editor', 'Edits the application configuration parameters&period;&NewLine;This allows inserting and deleting of configuration&NewLine;items in the database&period;', 'configedit.php', 'icon_tools3', 1, 0, 1, 1),
+	(5, 'Parameter Editor', 'Edits the configuration parameter values for the application&period;&NewLine;This only allows changing the configuration parameter values&period;', 'paramedit.php', 'icon_tools4', 1, 0, 1, 0),
+	(6, 'System Flags', 'This module edits the system flags which&NewLine;are used by the various user profiles&period;', 'sysflag.php', 'icon_checklist', 1, 0, 1, 1),
+	(7, 'Application Flags', 'This module edits the application flags&NewLine;which are used by the various user profiles&period;', 'appflag.php', 'icon_checklist', 1, 0, 1, 0),
+	(10, 'Change Password', 'Allows a user to change their login password&period;', 'passwd.php', 'icon_padlock', 1, 1, 1, 0),
+	(11, 'Profile Editor', 'Edits the available profiles that defines&NewLine;what access rights a user has&period;', 'profedit.php', 'icon_keys', 1, 0, 1, 0),
+	(12, 'OAuth Provider Edit', 'Edits the known list of external OAuth authentication providers&period;', 'oauthedit.php', 'icon_oauth', 1, 0, 1, 0),
+	(13, 'OpenID Provider Edit', 'Edits the known list of external OpenID authentication providers&period;', 'openidedit.php', 'icon_openid', 1, 0, 1, 0),
+	(14, 'User Editor', 'Edits the user database', 'useredit.php', 'icon_users2', 1, 0, 1, 0);
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.oauth
@@ -146,7 +150,7 @@ CREATE TABLE IF NOT EXISTS `oauth` (
   `provider` int(11) NOT NULL COMMENT 'Key Field: The OAuth provider',
   `name` varchar(50) NOT NULL COMMENT 'The name of the OAuth provider.',
   `module` varchar(32) NOT NULL COMMENT 'The OAuth API module in the OAuth directory to use.',
-  `expire` bigint(20) unsigned NOT NULL COMMENT 'The default expire time if it is not given in the token.',
+  `expire` bigint(20) NOT NULL COMMENT 'The default expire time if it is not given in the token.',
   `clientid` varchar(32) NOT NULL COMMENT 'The Client ID of this application that is given by the provider.',
   `clientsecret` varchar(64) DEFAULT NULL COMMENT 'The Client Secret that is supplied by the provider.',
   `scope` varchar(256) NOT NULL COMMENT 'The scope of the request.',
@@ -160,10 +164,10 @@ CREATE TABLE IF NOT EXISTS `oauth` (
   PRIMARY KEY (`provider`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains OAuth information about this client';
 
--- Dumping data for table configuration.oauth: ~1 rows (approximately)
+-- Dumping data for table configuration.oauth: ~0 rows (approximately)
 /*!40000 ALTER TABLE `oauth` DISABLE KEYS */;
 INSERT INTO `oauth` (`provider`, `name`, `module`, `expire`, `clientid`, `clientsecret`, `scope`, `authtype`, `authurl`, `redirecturl`, `resourceurl1`, `resourceurl2`, `resourceurl3`, `resourceurl4`) VALUES
-	(0, 'No Provider', 'XXXX', 0, 'NONE', NULL, 'NONE', 'NONE', 'NONE', 'NONE', 'NONE', NULL, NULL, NULL);
+	(0, 'Test Provider', 'XXXX', 3600, '3hdh2S6FKD8574qjpzx', '', 'real_name,home_address,mailing_address,email,home_phone,mobile_phone,work_phone', 'password', 'https://oauth.someprovider.com/oauth/authenticate.php', 'https://strata.danielrudy.org/oauth/redir_response.php', 'https://oauth.someprovider.com/oauth/resources.php', '', '', '');
 /*!40000 ALTER TABLE `oauth` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.openid
@@ -177,10 +181,11 @@ CREATE TABLE IF NOT EXISTS `openid` (
   PRIMARY KEY (`provider`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This hold information on each provider for the OpenID login protocol.';
 
--- Dumping data for table configuration.openid: ~1 rows (approximately)
+-- Dumping data for table configuration.openid: ~2 rows (approximately)
 /*!40000 ALTER TABLE `openid` DISABLE KEYS */;
 INSERT INTO `openid` (`provider`, `name`, `module`, `expire`, `serverurl`, `redirecturl`) VALUES
-	(0, 'No Provider', 'XXXX', 0, 'NONE', 'NONE');
+	(0, 'No Provider', 'XXXX', 0, 'NONE', 'NONE'),
+	(1, 'OpenID Test User', 'XXXX', 3600, 'https://openid.someprovider.net/openid/users/authenticate.php', 'https://strata.danielrudy.org/openid/response.php');
 /*!40000 ALTER TABLE `openid` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.profile
@@ -222,12 +227,13 @@ CREATE TABLE IF NOT EXISTS `contact` (
   CONSTRAINT `FK_contact_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the user contact information.';
 
--- Dumping data for table userdata.contact: ~3 rows (approximately)
+-- Dumping data for table userdata.contact: ~4 rows (approximately)
 /*!40000 ALTER TABLE `contact` DISABLE KEYS */;
 INSERT INTO `contact` (`userid`, `name`, `haddr`, `maddr`, `email`, `hphone`, `cphone`, `wphone`) VALUES
 	(1, 'Application Vendor', 'SEA-CORE International LTD.', NULL, 'seacoregroup@gmail.com', '', '', ''),
 	(2, 'Application Admin', 'SEA-CORE International LTD&period;', 'SEA-CORE International LTD&period;', 'seacoregroup&commat;gmail&period;com', '', '', ''),
-	(34, 'Test User', 'Test user for developmental purposes only&period;', 'Test user for developmental purposes only&period;', 'testuser&commat;localhost', '707-555-3343', '916-555-1212', '916-278-6000');
+	(34, 'Test User', 'Test user for developmental purposes only&period;', 'Test user for developmental purposes only&period;', 'testuser&commat;localhost', '707-555-3343', '916-555-1212', '916-278-6000'),
+	(324, 'Test User 2', '', '', '', '', '', '');
 /*!40000 ALTER TABLE `contact` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.login
@@ -247,12 +253,13 @@ CREATE TABLE IF NOT EXISTS `login` (
   CONSTRAINT `FK_login_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the user''s login data.';
 
--- Dumping data for table userdata.login: ~3 rows (approximately)
+-- Dumping data for table userdata.login: ~4 rows (approximately)
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `active`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
-	(1, 1, 0, 1532714506, 1532877877, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 1, 0, 1532714506, 1533128920, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, 1, NULL, 0, 1532847480, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
-	(34, 1, 0, 1532817751, 1532818490, 0, 1540594510, 'SHA256', 100, 'b5de956016daa9da4bc7f407f36b56435222ee6329bafb17d78341669552f90e', 'a1193259f2fd91064d9ef5123bfec68fe80b29ca95fb395348579936c1c995cb');
+	(34, 1, 0, 1532817751, 1532818490, 0, 1540594510, 'SHA256', 100, 'b5de956016daa9da4bc7f407f36b56435222ee6329bafb17d78341669552f90e', 'a1193259f2fd91064d9ef5123bfec68fe80b29ca95fb395348579936c1c995cb'),
+	(324, 1, 0, 0, 0, 0, 0, 'SHA256', 100, '59590d7e1f679dde2bc7a373ba5f25f60bf4060540fb50a2841b98a322cd1f71', 'e5bc3e1b91b086fda581afb04f16d32cbd89797adebd2b4b118cbff86675f2e0');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.oauth
@@ -308,12 +315,13 @@ CREATE TABLE IF NOT EXISTS `users` (
   CONSTRAINT `FK_users_profile` FOREIGN KEY (`profileid`) REFERENCES `configuration`.`profile` (`profileid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table maps the user''s login name to their User ID and Profile ID.';
 
--- Dumping data for table userdata.users: ~3 rows (approximately)
+-- Dumping data for table userdata.users: ~4 rows (approximately)
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` (`userid`, `username`, `profileid`, `method`) VALUES
 	(1, 'vendor', 1, 0),
 	(2, 'admin', 2, 0),
-	(34, 'testuser', 435, 0);
+	(34, 'testuser', 435, 0),
+	(324, 'test2', 435, 0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
