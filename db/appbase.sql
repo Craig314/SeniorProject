@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS `config` (
 -- Dumping data for table configuration.config: ~45 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
-	(0, 0, 'server_document_root', 'Appliation Root Directory', '/Servers/webdocs', 'This sets the application root directory on the server.', 1),
-	(1, 0, 'server_hostname', 'Server Hostname', 'localhost', 'This is the server hostname.  It is used to build the base\r\nURL which is used throughout the application.', 1),
+	(0, 0, 'server_document_root', 'Appliation Root Directory', '/usr/local/www/apache24/data', 'This sets the application root directory on the server.', 1),
+	(1, 0, 'server_hostname', 'Server Hostname', 'strata.danielrudy.org', 'This is the server hostname.  It is used to build the base\r\nURL which is used throughout the application.', 1),
 	(2, 2, 'server_secure', 'Use HTTPS', '0', 'The flag which indicates that the encrypted HTTPS protocol is to be used.', 1),
 	(3, 1, 'server_http_port', 'HTTP Port Number', '22080', 'The network port number that the application is to use\r\nwhen using the unencrypted HTTP protocol.  Default is\r\n80.', 1),
 	(4, 1, 'server_https_port', 'HTTPS Port Number', '443', 'The network port number that the application is to use\r\nwhen using the encrypted HTTPS protocol. Default is\r\n443.', 1),
@@ -86,8 +86,13 @@ CREATE TABLE IF NOT EXISTS `flagdesc_app` (
   PRIMARY KEY (`flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the names and descriptions of application flags from the userdata.profile table.  The flag attribute is the bit position of the flag.';
 
--- Dumping data for table configuration.flagdesc_app: ~0 rows (approximately)
+-- Dumping data for table configuration.flagdesc_app: ~4 rows (approximately)
 /*!40000 ALTER TABLE `flagdesc_app` DISABLE KEYS */;
+INSERT INTO `flagdesc_app` (`flag`, `name`, `description`) VALUES
+	(0, 'Test Flag A1', 'This flag is for testing purposes only&period;'),
+	(1, 'Test Flag A2', 'This flag is for testing purposes only&period;'),
+	(2, 'Test Flag A3', 'This flag is for testing purposes only&period;'),
+	(8, 'Test Flag A8', 'This flag is for testing purposes only&period;');
 /*!40000 ALTER TABLE `flagdesc_app` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.flagdesc_core
@@ -98,8 +103,16 @@ CREATE TABLE IF NOT EXISTS `flagdesc_core` (
   PRIMARY KEY (`flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the names and descriptions of core system flags from the userdata.profile table.  The flag attribute is the bit position of the flag.';
 
--- Dumping data for table configuration.flagdesc_core: ~0 rows (approximately)
+-- Dumping data for table configuration.flagdesc_core: ~7 rows (approximately)
 /*!40000 ALTER TABLE `flagdesc_core` DISABLE KEYS */;
+INSERT INTO `flagdesc_core` (`flag`, `name`, `description`) VALUES
+	(0, 'Test Flag S1', 'This flag is for testing purposes only&period;'),
+	(1, 'Test Flag S2', 'This flag is for testing purposes only&period;'),
+	(2, 'Test Flag S3', 'This flag is for testing purposes only&period;'),
+	(3, 'Test Flag S4', 'This flag is for testing purposes only&period;'),
+	(4, 'Test Flag S5', 'This flag is for testing purposes only&period;'),
+	(25, 'Test Flag S6', 'This flag is for testing purposes only&period;'),
+	(26, 'Test Flag S7', 'This flag is for testing purposes only&period;');
 /*!40000 ALTER TABLE `flagdesc_core` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.modaccess
@@ -130,7 +143,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~9 rows (approximately)
+-- Dumping data for table configuration.module: ~10 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
 	(3, 'Module Data Editor', 'Edits module data in the database.', 'modedit.php', 'icon_gears', 1, 0, 1, 1),
@@ -205,7 +218,7 @@ INSERT INTO `profile` (`profileid`, `name`, `description`, `portal`, `bitmap_cor
 	(0, 'NONE', NULL, 1, NULL, NULL),
 	(1, 'Vendor', 'Profile for use only by the application vendor.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
 	(2, 'Admin', 'Profile for use only by the application admin.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
-	(435, 'Test Profile', 'This profile is for development testing purposes&period;', 0, _binary 0x00000000000000000000000000000000, _binary 0x00000000000000000000000000000000);
+	(435, 'Test Profile', 'This profile is for development testing purposes&period;', 0, _binary 0x02000006000000000000000000000000, _binary 0x00010000000000000000000000000000);
 /*!40000 ALTER TABLE `profile` ENABLE KEYS */;
 
 
@@ -256,7 +269,7 @@ CREATE TABLE IF NOT EXISTS `login` (
 -- Dumping data for table userdata.login: ~4 rows (approximately)
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `active`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
-	(1, 1, 0, 1532714506, 1533128920, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 1, 0, 1532714506, 1533190478, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, 1, NULL, 0, 1532847480, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
 	(34, 1, 0, 1532817751, 1532818490, 0, 1540594510, 'SHA256', 100, 'b5de956016daa9da4bc7f407f36b56435222ee6329bafb17d78341669552f90e', 'a1193259f2fd91064d9ef5123bfec68fe80b29ca95fb395348579936c1c995cb'),
 	(324, 1, 0, 0, 0, 0, 0, 'SHA256', 100, '59590d7e1f679dde2bc7a373ba5f25f60bf4060540fb50a2841b98a322cd1f71', 'e5bc3e1b91b086fda581afb04f16d32cbd89797adebd2b4b118cbff86675f2e0');
