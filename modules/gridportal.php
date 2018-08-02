@@ -168,7 +168,7 @@ function loadAdditionalContent()
 		$modId = $vxa['moduleid'];
 		$modName = $vxa['name'];
 		$modDesc = $vxa['description'];
-		$modIcon = $vxa['iconname'];
+		$modIcon = $vxa['iconname'] . '.png';
 
 		// Don't change the order of these checks.
 		// Order Matters.
