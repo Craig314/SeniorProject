@@ -331,7 +331,7 @@ function native_login()
 	$_SESSION['passChange'] = $changePass;
 	$_SESSION['portalType'] = $portalType;
 	$_SESSION['regenTimeLast'] = time() + $CONFIGVAR['session_regen_time']['value'];
-	$_SESSION['flagSystem'] = $rxa_profile['bitmap_core'];
+	$_SESSION['flagSys'] = $rxa_profile['bitmap_core'];
 	$_SESSION['flagApp'] = $rxa_profile['bitmap_app'];
 
 	// The user is now logged in.  Initiate forced redirect

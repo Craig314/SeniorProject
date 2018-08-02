@@ -71,6 +71,7 @@ $htmlInjectFile = false;
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
+require_once BASEDIR . 'flag.php';
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -390,19 +391,31 @@ function updateRecordAction()
 		}
 	}
 	
-	// This is to be removed when the flags systems is implemented.
+	// Set default flag values based on profile type.
 	if ($key == $CONFIGVAR['profile_id_vendor']['value'] ||
 		$key == $CONFIGVAR['profile_id_admin']['value'])
 	{
-		// System profiles have all 1's set.
+		// Admin and Vendor profiles have all 1's set.
 		$bmfs = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
 		$bmfa = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
 	}
 	else
 	{
-		// Non-system profiles have all 0's set.
+		// All other profiles require checking flags.
+		// Start with all flags off.
 		$bmfs = hex2bin('00000000000000000000000000000000');
 		$bmfa = hex2bin('00000000000000000000000000000000');
+
+		// Scan the $_POST variable for checked flags.
+		for ($i = 0; $i < FLAG_COUNT_SYSTEM; $i++)
+		{
+			$sysflag = getPostValue(html::CHECKFLAG_NAME . 'sys_' . $i);
+			$appflag = getPostValue(html::CHECKFLAG_NAME . 'app_' . $i);
+			if (empty($sysflag)) flag::setFlag($i, $bmfs, false);
+				else flag::setFlag($i, $bmfs, true);
+			if (empty($appflag)) flag::setFlag($i, $bmfa, false);
+				else flag::setFlag($i, $bmfa, true);
+		}
 	}
 
 	// We are good, update the record
@@ -466,20 +479,33 @@ function insertRecordAction()
 	$name = safeEncodeString($name);
 	$desc = safeEncodeString($desc);
 	
-	// This is to be removed when the flags systems is implemented.
-	if ($id == $CONFIGVAR['profile_id_vendor']['value'] ||
-		$id == $CONFIGVAR['profile_id_admin']['value'])
+	// Set default flag values based on profile type.
+	if ($key == $CONFIGVAR['profile_id_vendor']['value'] ||
+		$key == $CONFIGVAR['profile_id_admin']['value'])
 	{
-		// System profiles have all 1's set.
+		// Admin and Vendor profiles have all 1's set.
 		$bmfs = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
 		$bmfa = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
 	}
 	else
 	{
-		// Non-system profiles have all 0's set.
+		// All other profiles require checking flags.
+		// Start with all flags off.
 		$bmfs = hex2bin('00000000000000000000000000000000');
 		$bmfa = hex2bin('00000000000000000000000000000000');
+
+		// Scan the $_POST variable for checked flags.
+		for ($i = 0; $i < FLAG_COUNT_SYSTEM; $i++)
+		{
+			$sysflag = getPostValue(html::CHECKFLAG_NAME . 'sys_' . $i);
+			$appflag = getPostValue(html::CHECKFLAG_NAME . 'app_' . $i);
+			if (empty($sysflag)) flag::setFlag($i, $bmfs, false);
+				else flag::setFlag($i, $bmfs, true);
+			if (empty($appflag)) flag::setFlag($i, $bmfa, false);
+				else flag::setFlag($i, $bmfa, true);
+		}
 	}
+	var_dump($bmfs, $bmfa);
 
 	// We are good, update the record
 	$result = $dbconf->insertProfile($id, $name, $desc, $port, $bmfs, $bmfa);
@@ -552,6 +578,7 @@ function formPage($mode, $rxa)
 	global $moduleDisplayUpper;
 	global $CONFIGVAR;
 	global $vendor;
+	global $dbconf;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -650,7 +677,81 @@ function formPage($mode, $rxa)
 			'Link Portal' => 1,
 		),
 	);
+
+	// This generates the system flag checkbox list
+	$rxcs = $dbconf->queryFlagdescCoreAll();
+	if ($rxcs == false)
+	{
+		$clsysfo = NULL;
+		$clsysfc = NULL;
+		$clsys = NULL;
+	}
+	else
+	{
+		$clsysfo = array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'System Flags',
+		);
+		$clsysfc = array(
+			'type' => html::TYPE_FSETCLOSE,
+		);
+		$clsys= array(
+			'type' => html::TYPE_CHECKLIST,
+			'list' => array(),
+			'lsize' => 4,
+			'fsize' => 1,
+			'default' => $default,
+			'disable' => $disable,
+		);
+		foreach ($rxcs as $kx => $vx)
+		{
+			$flag = array(
+				'flag' => 'sys_' . $vx['flag'],
+				'label' => $vx['name'],
+				'tooltip' => $vx['description'],
+				'default' => flag::getFlag($vx['flag'], $rxa['bitmap_core']),
+			);
+			array_push($clsys['list'], $flag);
+		}
+	}
 	
+	// This generates the application flag checkbox list
+	$rxca = $dbconf->queryFlagdescAppAll();
+	if ($rxca == false)
+	{
+		$clappfo = NULL;
+		$clappfc = NULL;
+		$clapp = NULL;
+	}
+	else
+	{
+		$clappfo = array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Application Flags',
+		);
+		$clappfc = array(
+			'type' => html::TYPE_FSETCLOSE,
+		);
+		$clapp= array(
+			'type' => html::TYPE_CHECKLIST,
+			'list' => array(),
+			'lsize' => 4,
+			'fsize' => 1,
+			'default' => $default,
+			'disable' => $disable,
+		);
+		foreach ($rxca as $kx => $vx)
+		{
+			$flag = array(
+				'flag' => 'app_' . $vx['flag'],
+				'label' => $vx['name'],
+				'tooltip' => $vx['description'],
+				'default' => flag::getFlag($vx['flag'], $rxa['bitmap_app']),
+			);
+			array_push($clapp['list'], $flag);
+		}
+	}
+
 	// System profile warnings.
 	if (!$vendor)
 	{
@@ -693,6 +794,12 @@ function formPage($mode, $rxa)
 		$profname,
 		$profdesc,
 		$profport,
+		$clappfo,
+		$clapp,
+		$clappfc,
+		$clsysfo,
+		$clsys,
+		$clsysfc,
 
 		array(
 			'type' => html::TYPE_ACTBTN,

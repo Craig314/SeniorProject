@@ -21,6 +21,9 @@ require_once 'session.php';
 
 interface html_interface
 {
+	// Some misculanious constants.
+	const CHECKFLAG_NAME = 'chkbox_';
+
 	// Field error status.  These constants must match values in both
 	// error.php and ajax.js
 	const STAT_NONE = 0;
@@ -49,6 +52,7 @@ interface html_interface
 	const TYPE_ACTBTN		= 9;	// Action button set
 	const TYPE_RADTABLE		= 10;	// Radio button item selection table
 	const TYPE_HEADING		= 11;	// Banner headings
+	const TYPE_CHECKLIST	= 12;	// Checkbox Lists
 	const TYPE_FORMOPEN		= 20;	// Open form with name
 	const TYPE_FORMCLOSE	= 21;	// Close form
 	const TYPE_FSETOPEN		= 22;	// Open field set with title
@@ -86,6 +90,7 @@ interface html_interface
 	static public function insertActionButtons($data);
 	static public function insertSelectionTable($data);
 	static public function insertHeadingBanner($data);
+	static public function insertCheckList($data);
 
 	// Other HTML Constructs
 	static public function openForm($data);
@@ -806,7 +811,7 @@ class html implements html_interface
 			case 1:		// Dual Mode: Right
 ?>
 				<div<?php echo $fclass; ?>>
-				<?php
+<?php
 				if ($toggle != 0)
 				{
 ?>
@@ -815,7 +820,7 @@ class html implements html_interface
 				}
 ?>
 					<input type="checkbox" value="true" class="form-control"<?php echo $printout;?>>
-					<?php
+<?php
 				if ($toggle == 1)
 				{
 ?>
@@ -844,7 +849,7 @@ class html implements html_interface
 			<div class="form-group">
 				<label <?php echo $lclass . $forx; ?>><?php echo $label; ?></label>
 				<div<?php echo $fclass; ?>>
-				<?php
+<?php
 				if ($toggle != 0)
 				{
 ?>
@@ -853,7 +858,7 @@ class html implements html_interface
 				}
 ?>
 					<input type="checkbox" value="true" class="form-control"<?php echo $printout;?>>
-					<?php
+<?php
 				if ($toggle == 1)
 				{
 ?>
@@ -1385,6 +1390,62 @@ class html implements html_interface
 		}
 	}
 
+	// Generates a list of checkboxes.
+	// lsize, fsize, and the list array.
+	// The list array uses the same format for each entry:
+	// flag - flag number
+	// label - display label
+	// tooltip - popup description
+	// - indicates if the item is checked or not
+	static public function insertCheckList($data)
+	{
+		$lsize = NULL;
+		$fsize = NULL;
+		$default = NULL;
+		$disable = NULL;
+
+		// Check to make sure list is an array.  If it's not, then
+		// there is no point in running the rest of the code.
+		if (!is_array($data['list'])) return;
+		$count = count($data['list']);
+		if ($count == 0) return;
+
+		// Parameters
+		if (isset($data['lsize'])) $lsize = $data['lsize'];
+			else if (self::$lsize_default !== false) $lsize = self::$lsize_default;
+			else $lsize = 0;
+		if (isset($data['fsize'])) $fsize = $data['fsize'];
+			else if (self::$fsize_default !== false) $fsize = self::$fsize_default;
+			else $fsize = 1;
+		if (isset($data['default'])) $default = $data['default'];
+			else $default = false;
+		if (isset($data['disable'])) $disable = $data['disable'];
+			else $disable = false;
+
+		// Loop
+		$loopterm = ($count & 0x00000001) ? $count - 1 : $count;
+		$count = 0;
+		foreach ($data['list'] as $kx => $vx)
+		{
+			$dxa = array(
+				'name' => self::CHECKFLAG_NAME . $vx['flag'],
+				'label' => $vx['label'],
+				'lsize' => $lsize,
+				'fsize' => $fsize,
+				'default' => ($default) ? $vx['default'] : false,
+				'disable' => $disable,
+				'tooltip' => $vx['tooltip'],
+			);
+			if ($count < $loopterm)
+			{
+				$dxa['sidemode'] = true;
+				$dxa['side'] = ($count & 0x00000001) ? 1 : 0;
+			}
+			self::insertFieldCheckbox($dxa);
+			$count++;
+		}
+	}
+
 	// Opens a form element.
 	// name - name of the form
 	// method - send method (GET/POST)
@@ -1598,6 +1659,9 @@ class html implements html_interface
 						break;
 					case self::TYPE_HEADING:
 						self::insertHeadingBanner($vx);
+						break;
+					case self::TYPE_CHECKLIST:
+						self::insertCheckList($vx);
 						break;
 					case self::TYPE_FORMOPEN:
 						self::openForm($vx);

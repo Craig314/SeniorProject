@@ -11,6 +11,9 @@ only values which are required to access shared memory and the database
 should be in here as all other settings are stored in the database.  This
 allows for a module to configure settings.
 
+There are some exceptions to the above rules.  Login methods, flag counts,
+and debugging values are included here to make them globally available.
+
 */
 
 // User login methods
