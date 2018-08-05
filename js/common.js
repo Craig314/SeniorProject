@@ -121,6 +121,9 @@ function clearForm() {
 
 	// Reset hidden objects if needed.
 	if (hiddenList.length > 0) setHidden();
+
+	// Call a custom reset form if needed
+	if (typeof customResetForm == 'function') customResetForm();
 }
 
 // Resets the error status of all fields.

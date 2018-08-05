@@ -202,6 +202,42 @@ var ajaxServerSend = {
 		}
 	},
 
+	// Initiates an Ajax POST call to the server to upload one or more files.
+	// This operates in async mode only which means that this happens in the
+	// background in a separate browser thread.
+	filePost: function(linkObject, fileObject, alertObject, securityToken, command) {
+		fileObject.append('token_data', securityToken);
+		fileObject.append('COMMAND', command);
+		link = linkObject.getCommLink();
+		link.open('POST', linkObject.getUrlPath());
+		link.onreadystatechange = function() {
+			if (link.responseText.length > 0) {
+				this.responseHandler(link, linkObject);
+			} else {
+				alertObject.innerHTML = alertObject.defaultText;
+			}
+		}.bind(this);
+		link.send(fileObject);
+	},
+
+	// Initiates an Ajax PUT call to the server to upload one or more files.
+	// This operates in async mode only which means that this happens in the
+	// background in a separate browser thread.
+	filePut: function(linkObject, fileObject, alertObject, securityToken, command) {
+		link = linkObject.getCommLink();
+		link.open('PUT', linkObject.getUrlPath());
+		link.setRequestHeader('X-COMMAND', command);
+		link.setRequestHeader('X-TOKEN', securityToken);
+		link.onreadystatechange = function() {
+			if (link.responseText.length > 0) {
+				this.responseHandler(link, linkObject);
+			} else {
+				alertObject.innerHTML = alertObject.defaultText;
+			}
+		}.bind(this);
+		link.send(fileObject);
+	},
+
 	// This is called when the server updates the client through
 	// a previous Ajax call.  
 	responseHandler: function(link, dataObject) {

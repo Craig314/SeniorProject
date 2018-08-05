@@ -535,6 +535,7 @@ function formPage($mode, $rxa)
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $baseUrl;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -604,6 +605,14 @@ function formPage($mode, $rxa)
 	}
 	else $hidden = array();
 
+	// Another hidden field to pass the base URL.
+	$hideurl = array(
+		'type' => html::TYPE_HIDE,
+		'fname'=> 'base_urlForm',
+		'name' => 'base_url',
+		'data' => $baseUrl,
+	);
+
 	// Load $rxa with dummy values for insert mode.
 	if ($mode == MODE_INSERT)
 	{
@@ -623,6 +632,7 @@ function formPage($mode, $rxa)
 	// Scans the icon directory for icon file names and creates a
 	// pulldown list of them on insert or update modes.  Otherwise
 	// the field is a text box.
+	$firstimage = '';
 	if ($mode == MODE_INSERT || $mode == MODE_UPDATE)
 	{
 		// Setup
@@ -641,6 +651,7 @@ function formPage($mode, $rxa)
 			$index = strrpos($vx, '.');
 			$temp = substr($vx, 0, $index);
 			$iconlist[$temp] = $temp;
+			if (empty($firstimage)) $firstimage = $temp;
 		}
 		unset($icon);
 		$modicon = array(
@@ -653,6 +664,8 @@ function formPage($mode, $rxa)
 			'tooltip' => 'The icon name that the module uses&#013' .
 				'when displayed on the portal page.',
 			'disable' => $disable,
+			'event' => 'onchange',
+			'action' => 'changeImage()',
 		);
 	}
 	else
@@ -705,6 +718,32 @@ function formPage($mode, $rxa)
 			$disable);
 	}
 
+	// Icon images
+	switch ($mode)
+	{
+			case MODE_VIEW:
+			case MODE_UPDATE:
+			case MODE_DELETE:
+				$imagefile = $baseUrl . '/images/icon128/' . $rxa['iconname']
+					. '.png';
+				$imagealt = $rxa['iconname'];
+				break;
+			case MODE_INSERT:
+				$imagefile = $baseUrl . '/images/icon128/' . $firstimage
+					. '.png';
+				$imagealt = $firstimage;
+				break;
+	}
+	$iconimage = array(
+		'type' => html::TYPE_IMAGE,
+		'name' => 'icon_image',
+		'src' => $imagefile,
+		'alt' => $imagealt,
+		'width' => 128,
+		'height' => 128,
+		'lsize' => 4,
+	);
+
 	// Custom field rendering code
 	$modid   = generateField(html::TYPE_TEXT, 'modid', 'Module ID', 3,
 		$rxa['moduleid'], 'The numeric ID of the module.', $default, $key);
@@ -737,6 +776,7 @@ function formPage($mode, $rxa)
 	// Build out the form array.
 	$data = array(
 		$hidden,
+		$hideurl,
 		array(
 			'type' => html::TYPE_HEADING,
 			'message1' => $msg1,
@@ -756,6 +796,7 @@ function formPage($mode, $rxa)
 		$moddesc,
 		$modfile,
 		$modicon,
+		$iconimage,
 		$modact,
 		$modall,
 		$modvend,

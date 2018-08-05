@@ -143,15 +143,29 @@ function checkUserSecurity()
 
 // Checks to make sure that the token is present and the same
 // as when the page was first sent to the user.
-function checkTokenSecurity()
+function checkTokenSecurity($method = 0)
 {
 	global $CONFIGVAR;
 
 	if ($CONFIGVAR['session_use_tokens']['value'] != 0)
 	{
-		if (!isset($_POST['token']))
-			printErrorImmediate('Security Error: Missing Access Token.');
-		$result = strcasecmp($_SESSION['token'], $_POST['token']);
+		switch ($method)
+		{
+			case 0:		// POST method
+				if (!isset($_POST['token']))
+					printErrorImmediate('Security Error: Missing Access Token.');
+				$secToken = $_POST['token'];
+				break;
+			case 1:		// PUT method
+				if (!isset($_SERVER['HTTP_X_TOKEN']))
+					printErrorImmediate('Security Error: Missing Access Token.');
+				$secToken = $_SERVER['HTTP_X_TOKEN'];
+				break;
+			default:
+				$secToken = '';
+				break;
+		}
+		$result = strcasecmp($_SESSION['token'], $secToken);
 		if ($result != 0)
 			printErrorImmediate('Security Error: Invalid Access Token.');
 	}
@@ -208,6 +222,164 @@ function redirectPortalAjax()
 	exit;
 }
 
+// This will try to find a command parameter by checking
+// several different places.  If a command is not found,
+// then an error is displayed.
+function extractCommandId()
+{
+	// First we try the POST superglobal.
+	if (isset($_POST['COMMAND']))
+	{
+		if (!is_numeric($_POST['COMMAND']))
+		{
+			$ajax->sendCode(ajaxClass::CODE_BADREQ);
+			exit(1);
+		}
+		$command = (integer)$_POST['COMMAND'];
+		return $command;
+	}
+
+	// Next is the REQUEST superglobal.
+	if (isset($_REQUEST['COMMAND']))
+	{
+		if (!is_numeric($_REQUEST['COMMAND']))
+		{
+			$ajax->sendCode(ajaxClass::CODE_BADREQ);
+			exit(1);
+		}
+		$command = (integer)$_REQUEST['COMMAND'];
+		return $command;
+	}
+
+	// Finally we check to see if it was sent as part of the
+	// header.
+	if (isset($_SERVER['HTTP_X_COMMAND']))
+	{
+		if (!is_numeric($_SERVER['HTTP_X_COMMAND']))
+		{
+			$ajax->sendCode(ajaxClass::CODE_BADREQ);
+			exit(1);
+		}
+		$command = (integer)$_SERVER['HTTP_X_COMMAND'];
+		return $command;
+	}
+
+	// If we get to this point, then we don't have a valid command
+	// parameter which means that we cannot continue.  Send back
+	// an error.
+	$ajax->sendCode(ajaxClass::CODE_BADREQ);
+	exit(1);
+}
+
+// The HTTP GET method is the initial request to the server
+// when a module loads.
+function httpMethod_GET()
+{
+	// We need to make sure that the user has access.
+	checkUserSecurity();
+
+	// Now we call the module specific initial content
+	// generator (usually the template page) and then
+	// exit the script.
+	loadInitialContent();
+	exit(0);
+}
+
+// The HTTP POST request is used on subsequent queries to the
+// server.  This is where command processing takes place.
+function httpMethod_POST()
+{
+	global $ajax;
+	global $CONFIGVAR;
+
+	// We need to make sure that the user has access.
+	checkUserSecurity();
+
+	// In additon, we also need to check the tokens as well.
+	checkTokenSecurity(0);
+
+	// Now we *NEED* the command to determine what we are going
+	// to do.  If it's missing, then this function will not
+	// return.
+	$commandId = extractCommandId();
+
+	// Command Dispatcher
+	// Should be integers and all the commands that the server
+	// will recognize from the client will go here.
+	switch ($commandId)
+	{
+		case -1:      // Load Additional Content
+			loadAdditionalContent();
+			exit(0);
+			break;
+		case -2:      // Heartbeat
+			$ajax->sendCode(ajaxClass::CODE_OK, 'Heartbeat OK');
+			exit(0);
+			break;
+		case -3:      // LOGOUT
+			$_SESSION = array();
+			$cookie = session_get_cookie_params();
+			setcookie(session_name(), '', time() - 42000, $cookie['path'],
+			$cookie['domain'], $cookie['secure'], $cookie['httponly']);
+			session_destroy();
+			$ajax->redirect('/' . $CONFIGVAR['html_login_page']['value']);
+			exit(0);
+			break;
+		case -4:      // HOME
+			redirectPortalAjax();
+			exit(0);
+			break;
+		default:
+			// If we get here, then proceed to module specific code.
+			commandProcessor($commandId);
+			exit(0);
+			break;
+	}
+}
+
+// The HTTP PUT method is used primarilly for bulk data transfer
+// that POST may not be able to handle, such as uploading large
+// files (File Size > 8MB).  Note, the module must enable this
+// method by setting httpMethod_PUT_ENABLE to true.
+function httpMethod_PUT()
+{
+	global $ajax;
+
+	// Make sure that this method is enabled in the module.  If it is,
+	// then we know that the module is expecting it.
+	if (!isset($httpMethod_PUT_ENABLE))
+	{
+		// Unknown request method
+		$ajax->sendCode(ajaxClass::CODE_NOMETH);
+		exit(1);
+	}
+	else
+	{
+		if ($httpMethod_PUT_ENABLE !== true)
+		{
+			// Unknown request method
+			$ajax->sendCode(ajaxClass::CODE_NOMETH);
+			exit(1);
+		}
+	}
+
+	// We need to make sure that the user has access.
+	checkUserSecurity();
+
+	// In additon, we also need to check the tokens as well.
+	checkTokenSecurity(1);
+
+	// Now we *NEED* the command to determine what we are going
+	// to do.  If it's missing, then this function will not
+	// return.
+	$commandId = extractCommandId();
+
+	// The PUT method uses custom commands only.
+	// XXX: This should probably go to a separate command
+	// processor specific for PUT.
+	commandProcessor($commandId);
+}
+
 // Check to make sure that mandatory variables have been set.
 if (!isset($moduleId) || empty($moduleId))
 	printErrorImmediate('Internal Error: Module ID is not set.');
@@ -250,77 +422,26 @@ if ($moduleId != $CONFIGVAR['html_grid_mod_id']['value'] &&
 // Sets the base URL
 $baseUrl = html::getBaseURL();
 
-// The HTTP GET method is the initial request to the server
-// when a module loads.
-if ($_SERVER['REQUEST_METHOD'] == 'GET')
+
+switch ($_SERVER['REQUEST_METHOD'])
 {
-	// If the method is GET, then we call the module specific
-	// initial content generator.
-	loadInitialContent();
-
-	exit(0);
-}
-
-// The HTTP POST request is used on subsequent queries to the
-// server.  This is where command processing takes place.
-else if ($_SERVER['REQUEST_METHOD'] == 'POST')
-{
-	// If the method is POST, then we need to check a few things
-	// to make sure that the request is legit.
-	if (isset($_POST['COMMAND']))
-	{
-		// We need to make sure that the user has access.
-		checkUserSecurity();
-
-		// In additon, we also need to check the tokens as well.
-		checkTokenSecurity();
-
-		// Command Dispatcher
-		// Should be integers and all the commands that the server
-		// will recognize from the client will go here.
-		$commandId = (int)$_POST['COMMAND'];
-		switch ($commandId)
-		{
-			case -1:      // Load Additional Content
-				loadAdditionalContent();
-				exit(0);
-				break;
-			case -2:      // Heartbeat
-				$ajax->sendCode(ajaxClass::CODE_OK, 'Heartbeat OK');
-				exit(0);
-				break;
-			case -3:      // LOGOUT
-				$_SESSION = array();
-				$cookie = session_get_cookie_params();
-				setcookie(session_name(), '', time() - 42000, $cookie['path'],
-				$cookie['domain'], $cookie['secure'], $cookie['httponly']);
-				session_destroy();
-				$ajax->redirect('/' . $CONFIGVAR['html_login_page']['value']);
-				exit(0);
-				break;
-			case -4:      // HOME
-				redirectPortalAjax();
-				exit(0);
-				break;
-			default:
-				// If we get here, then proceed to module specific code.
-				commandProcessor($commandId);
-				exit(0);
-				break;
-		}
-	}
-	else
-	{
-		// Malformed request
-		$ajax->sendCode(ajaxClass::CODE_BADREQ);
+	case 'GET':
+		// GET request method
+		httpMethod_GET();
+		break;
+	case 'POST':
+		// POST request method
+		httpMethod_POST();
+		break;
+	case 'PUT':
+		// PUT request method
+		httpMethod_PUT();
+		break;
+	default:
+		// Unknown request method
+		$ajax->sendCode(ajaxClass::CODE_NOMETH);
 		exit(1);
-	}
-}
-else
-{
-	// Unknown request method
-	$ajax->sendCode(ajaxClass::CODE_NOMETH);
-	exit(1);
+		break;
 }
 
 

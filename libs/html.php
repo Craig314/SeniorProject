@@ -43,16 +43,18 @@ interface html_interface
 	const TYPE_HIDE			= 0;	// Hidden input field
 	const TYPE_TEXT			= 1;	// Text input field
 	const TYPE_PASS			= 2;	// Password input field
-	const TYPE_AREA			= 3;	// Textarea tag input field
-	const TYPE_CHECK		= 4;	// Checkbox
-	const TYPE_RADIO		= 5;	// Radio button group
-	const TYPE_PULLDN		= 6;	// Pulldown selection menu/list
-	const TYPE_BLIST		= 7;	// Standard nested list
-	const TYPE_BUTTON		= 8;	// Button group
-	const TYPE_ACTBTN		= 9;	// Action button set
-	const TYPE_RADTABLE		= 10;	// Radio button item selection table
-	const TYPE_HEADING		= 11;	// Banner headings
-	const TYPE_CHECKLIST	= 12;	// Checkbox Lists
+	const TYPE_FILE			= 3;	// File input field
+	const TYPE_AREA			= 4;	// Textarea tag input field
+	const TYPE_CHECK		= 5;	// Checkbox
+	const TYPE_RADIO		= 6;	// Radio button group
+	const TYPE_PULLDN		= 7;	// Pulldown selection menu/list
+	const TYPE_BLIST		= 8;	// Standard nested list
+	const TYPE_BUTTON		= 9;	// Button group
+	const TYPE_ACTBTN		= 10;	// Action button set
+	const TYPE_RADTABLE		= 11;	// Radio button item selection table
+	const TYPE_HEADING		= 12;	// Banner headings
+	const TYPE_CHECKLIST	= 13;	// Checkbox Lists
+	const TYPE_IMAGE		= 14;	// Image File
 	const TYPE_FORMOPEN		= 20;	// Open form with name
 	const TYPE_FORMCLOSE	= 21;	// Close form
 	const TYPE_FSETOPEN		= 22;	// Open field set with title
@@ -81,6 +83,7 @@ interface html_interface
 	static public function insertFieldHidden($data);
 	static public function insertFieldText($data);
 	static public function insertFieldPassword($data);
+	static public function insertFieldFile($data);
 	static public function insertFieldTextArea($data);
 	static public function insertFieldCheckbox($data);
 	static public function insertRadioButtons($data);
@@ -91,6 +94,7 @@ interface html_interface
 	static public function insertSelectionTable($data);
 	static public function insertHeadingBanner($data);
 	static public function insertCheckList($data);
+	static public function insertImage($data);
 
 	// Other HTML Constructs
 	static public function openForm($data);
@@ -453,6 +457,8 @@ class html implements html_interface
 		$label = NULL;
 		$lclass = NULL;
 		$fclass = NULL;
+		$lclass = NULL;
+
 		$tooltip = NULL;
 		$icond = NULL;
 		$icons = NULL;
@@ -650,6 +656,44 @@ class html implements html_interface
 	static public function insertFieldPassword($data)
 	{
 		self::insertFieldTextCommon('password', $data);
+	}
+
+	// Inserts a file picker field
+	static public function insertFieldFile($data)
+	{
+		$fclass = NULL;
+		$lclass = NULL;
+		$label = NULL;
+
+		self::helperLabel($data, $label);
+		self::helperLabelSizeText($data, $lclass);
+		self::helperFieldSizeText($data, $fclass);
+		if (!empty($data['fname'])) $fname = 'name="' . $data['fname'] . '"';
+			else $fname = '';
+		if (!empty($data['name'])) $name = 'id="' . $data['name'] . '"';
+			else $name = '';
+		if (!empty($data['bname'])) $bname = 'id="' . $data['bname'] . '"';
+			else $bname = '';
+		if (!empty($data['action'])) $action = ' onclick="' . $data['action'] . '"';
+			else $action = '';
+?>
+		<form <?php echo $fname; ?>>
+			<div class="row">
+				<div class="form-group">
+					<label <?php echo $lclass; ?>><?php echo $label; ?></label>
+					<div<?php echo $fclass; ?>>
+						<input type="file" <?php echo $name; ?> class="form-control" multiple>
+					</div>
+				</div>
+			</div>
+		</form>
+		<div class="row">
+			<div class="form-group">
+				<span <?php echo $lclass; ?>></span>
+				<button <?php echo $bname . $action; ?> class="btn btn-default">Upload</button>
+			</div>
+		</div>
+<?php
 	}
 
 	// Inserts a mutli-line text box.
@@ -1446,6 +1490,41 @@ class html implements html_interface
 		}
 	}
 
+	// Inserts a image type.
+	// name - id of the image tag
+	// src - URL of the image source
+	// alt - Alternate text for the image.
+	// width - width of the image
+	// height - height of the image
+	// lsize - size offset from left side
+	static public function insertImage($data)
+	{
+		$lclass = NULL;
+		
+		self::helperLabelSizeText($data, $lclass);
+		if (!empty($data['name'])) $name = 'id="' . $data['name'] . '"';
+			else $name = '';
+		if (!empty($data['src'])) $source = ' src="' . $data['src'] . '"';
+			else $source = '';
+		if (!empty($data['alt'])) $altxt = ' alt=' . $data['alt'] . '"';
+			else $altxt = '';
+		if (!empty($data['width'])) $width = ' width="' . $data['width'] . '"';
+			else $width = '';
+		if (!empty($data['height'])) $height = ' height="' . $data['height'] . '"';
+			else $height = '';
+		$printout = $name . $source . $altxt . $width . $height;
+	?>
+		<div class="row">
+			<div class="form-group">
+				<label <?php echo $lclass; ?>></label>
+				<div>
+					<img <?php echo $printout; ?>>
+				</div>
+			</div>
+		</div>
+	<?php
+	}
+
 	// Opens a form element.
 	// name - name of the form
 	// method - send method (GET/POST)
@@ -1633,6 +1712,9 @@ class html implements html_interface
 					case self::TYPE_PASS:
 						self::insertFieldPassword($vx);
 						break;
+					case self::TYPE_FILE:
+						self::insertFieldFile($vx);
+						break;
 					case self::TYPE_AREA:
 						self::insertFieldTextArea($vx);
 						break;
@@ -1662,6 +1744,9 @@ class html implements html_interface
 						break;
 					case self::TYPE_CHECKLIST:
 						self::insertCheckList($vx);
+						break;
+					case self::TYPE_IMAGE:
+						self::insertImage($vx);
 						break;
 					case self::TYPE_FORMOPEN:
 						self::openForm($vx);
