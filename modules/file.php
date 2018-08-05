@@ -128,9 +128,6 @@ function loadInitialContent()
 		$left = array(
 			'Home' => 'returnHome',
 			'Git Pull' => 'gitPull',
-			'Up Dir' => 'directoryUp',
-			'Down Dir' => 'directoryDown',
-			'Home Dir' => 'directoryHome',
 		);
 		//$right = array(
 		//);
@@ -141,15 +138,25 @@ function loadInitialContent()
 		// $funcBar = array();
 		$funcBar = array(
 			array(
-				'Upload File' => 'fileUpload',
-				'Download File' => 'fileDownload',
-				'Rename File' => 'fileRename',
-				'Remove File' => 'fileDelete',
+				'File UP' => 'fileUpload',
+				'File DN' => 'fileDownload',
+			),
+			'View File' => 'fileView',
+			array(
+				'mv File' => 'fileRename',
+				'rm File' => 'fileDelete',
+			),
+		);
+		$funcBar2 = array(
+			array(
+				'Home Dir' => 'directoryHome',
+				'UP Dir' => 'directoryUp',
+				'DN Dir' => 'directoryDown',
 			),
 			array(
-				'Create Dir' => 'directoryCreate',
-				'Rename Dir' => 'directoryRename',
-				'Remove Dir' => 'directoryDelete',
+				'MkDir' => 'directoryCreate',
+				'MvDir' => 'directoryRename',
+				'RmDir' => 'directoryDelete',
 			),
 		);
 
@@ -180,7 +187,7 @@ function loadInitialContent()
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
-			$left, '', $funcBar, $jsFiles, '', $htmlFlags);
+			$left, '', $funcBar, $jsFiles, '', $htmlFlags, $funcBar2);
 	}
 	else
 	{
@@ -294,6 +301,12 @@ function fileUpload()
 	global $herr;
 	global $vfystr;
 	global $CONFIGVAR;
+
+	// Check the request method.  This function only works with the
+	// PUT method.
+	if ($_SERVER['REQUEST_METHOD'] != 'PUT')
+		handleError('Protocol Error: Uploading files requires the ' .
+			'PUT method.');
 
 	// Retrieve the current path, if possible.
 	$currentPath = getPostValue('hidden');
@@ -587,12 +600,8 @@ function convertMode($mode)
 // Builds a file listing selection table of the given path.
 function buildDirectoryList($path)
 {
-	// Check if the path ends in a slash.  If not, then add one.
-	// $length = strlen($path);
-	// $pos = strrpos($path, '/');
-	// if ($pos === false) $path .= '/';
-	// else if ($pos != $length) $path .= '/';
 
+	// Set the current path as hidden data.
 	$hidden = array(
 		'type' => html::TYPE_HIDE,
 		'fname'=> 'hiddenForm',
@@ -726,7 +735,8 @@ function buildDirectoryList($path)
 
 		array('type' => html::TYPE_FORMCLOSE),
 		array('type' => html::TYPE_WDCLOSE),
-		array('type' => html::TYPE_BOTB1)
+		array('type' => html::TYPE_BOTB1),
+		array('type' => html::TYPE_VTAB10),
 	);
 
 	// Render

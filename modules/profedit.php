@@ -809,7 +809,8 @@ function formPage($mode, $rxa)
 		),
 		array('type' => html::TYPE_FORMCLOSE),
 		array('type' => html::TYPE_WDCLOSE),
-		array('type' => html::TYPE_BOTB2)
+		array('type' => html::TYPE_BOTB2),
+		array('type' => html::TYPE_VTAB10),
 	);
 
 	// Render

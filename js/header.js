@@ -59,18 +59,11 @@ $(window).resize(function()
 	windowResize();
 });
 
-// XXX: Possible Bug
 // Adjusts the content height so it will scroll down the window
-// without the header scrolling.  Note that by subtracting from
-// the content height, the scroll data zone gets larger.  This
-// is counter-intuitive and may be a bug...but it works.
+// without the header scrolling.
 function windowResize() {
-	var window_height = $(window).height();
-	var header_height = $('nav#navigationBar.navbar.navbar-default').height();
-	var funbar_height = 0;
-	var fbarObj = document.getElementById("functionBar");
-	if (fbarObj != null)
-		funbar_height = $("nav#functionBar.nav.nav-inline").height();
-	var content_height = window_height - (header_height + funbar_height + 2);
-	$(".main-wrapper-div").height(content_height - 30);
+	heightWindow = $(window).height();
+	heightHeader = $('div#navigationBarHeader').height();
+	heightContent = heightWindow - heightHeader;
+	$(".main-wrapper-div").height(heightContent);
 }

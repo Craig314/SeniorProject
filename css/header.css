@@ -15,7 +15,6 @@ button:focus {
 .main-wrapper-div {
 	overflow-y: auto;
 	overflow-x: hidden;
-	height: 200px;
 }
 
 /* body {

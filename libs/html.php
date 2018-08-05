@@ -65,9 +65,11 @@ interface html_interface
 	const TYPE_TOPB2		= 31;	// Top border type 2
 	const TYPE_BOTB1		= 32;	// Bottom border type 1
 	const TYPE_BOTB2		= 33;	// Bottom border type 2
-	const TYPE_WD50OPEN		= 40;	// Open a area of 50% width
-	const TYPE_WD75OPEN		= 41;	// Open a area of 75% width
+	const TYPE_WD75OPEN		= 40;	// Open a area of 75% width
+	const TYPE_WD50OPEN		= 41;	// Open a area of 50% width
 	const TYPE_WDCLOSE		= 49;	// Close width area
+	const TYPE_VTAB5		= 50;	// Vertical tab 5%
+	const TYPE_VTAB10		= 51;	// Vertical tab 10%
 
 	// Utility
 	static public function initialize();
@@ -108,11 +110,14 @@ interface html_interface
 	static public function width50open();
 	static public function width75open();
 	static public function widthClose();
+	static public function verticalTab5();
+	static public function verticalTab10();
 
 	// Templates and Engines
 	static public function pageAutoGenerate($data);
-	static public function loadTemplatePage($title, $url, $fname, $left, $right, $funcbar,
-		$js_files, $css_files, $html_flags);
+	static public function loadTemplatePage($title, $url, $fname, $left,
+		$right, $funcbar, $js_files, $css_files, $html_flags, $funcbar2 = NULL,
+		$funcbar3 = NULL);
 }
 
 
@@ -1685,6 +1690,22 @@ class html implements html_interface
 </div>
 <?php
 	}
+
+	// Inserts a 5% vertical tab
+	static public function verticalTab5()
+	{
+?>
+<div class="vspace5"></div>
+<?php
+	}
+	
+	// Inserts a 10% vertical tab
+	static public function verticalTab10()
+	{
+?>
+<div class="vspace10"></div>
+<?php
+	}
 	
 	// Generates an HTML page according to input data.
 	// Each element requires a type parameter
@@ -1787,6 +1808,12 @@ class html implements html_interface
 					case self::TYPE_WDCLOSE:
 						self::widthClose();
 						break;
+					case self::TYPE_VTAB5:
+						self::verticalTab5();
+						break;
+					case self::TYPE_VTAB10:
+						self::verticalTab10();
+						break;
 					default:
 				}
 			}
@@ -1804,8 +1831,9 @@ class html implements html_interface
 	// js_file - additional javascript files to load
 	// css_files - additional css files to load
 	// html_flags - various flags such as feature activations
-	static public function loadTemplatePage($title, $url, $fname, $left, $right, $funcbar,
-		$js_files, $css_files, $html_flags)
+	static public function loadTemplatePage($title, $url, $fname, $left,
+		$right, $funcbar, $js_files, $css_files, $html_flags, $funcbar2 = NULL,
+		$funcbar3 = NULL)
 	{
 		global $session;
 
@@ -1813,6 +1841,8 @@ class html implements html_interface
 		if (is_array($left))       $flag_left = true;     else $flag_left = false;
 		if (is_array($right))      $flag_right = true;    else $flag_right = false;
 		if (is_array($funcbar))    $flag_fbar = true;     else $flag_fbar = false;
+		if (is_array($funcbar2))   $flag_fbar2 = true;    else $flag_fbar2 = false;
+		if (is_array($funcbar3))   $flag_fbar3 = true;    else $flag_fbar3 = false;
 		if (is_array($js_files))   $flag_jsfile = true;   else $flag_jsfile = false;
 		if (is_array($css_files))  $flag_cssfile = true;  else $flag_cssfile = false;
 		// Used to activate features
@@ -1860,87 +1890,88 @@ class html implements html_interface
 	</head>
 	<body href-link="<?php echo $fname; ?>">
 		<!-- Beginning of header Nav Bar -->
-		<!-- Navbar header with logo, time, and logout button -->
-		<nav id="navigationBar" class="navbar navbar-default">
-			<div class="container-fluid">
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-						<span class="sr-only">Toggle navigation</span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					</button>
-					<!-- Sea-Core Logo Image -->
-					<img class="navbar-brand" alt="Brand" src="<?php echo $url; ?>/images/seacore_logo_base_small.png">
-					<!-- Div for the time -->
-					<div class="navbar-text" id="timeday"></div>
-				</div>
-				<!-- Collect the nav links, forms, and other content for toggling -->
-				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		<div id="navigationBarHeader">
+			<!-- Navbar header with logo, time, and logout button -->
+			<nav id="navigationBar" class="navbar navbar-default">
+				<div class="container-fluid">
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+							<span class="sr-only">Toggle navigation</span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+							<span class="icon-bar"></span>
+						</button>
+						<!-- Sea-Core Logo Image -->
+						<img class="navbar-brand" alt="Brand" src="<?php echo $url; ?>/images/seacore_logo_base_small.png">
+						<!-- Div for the time -->
+						<div class="navbar-text" id="timeday"></div>
+					</div>
+					<!-- Collect the nav links, forms, and other content for toggling -->
+					<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 <?php
 		// Navigation Bar, Left Side
 		if ($flag_left)
 		{
 ?>
-					<!-- Nav Bar, Left Side -->
-					<ul class="nav navbar-nav">
+						<!-- Nav Bar, Left Side -->
+						<ul class="nav navbar-nav">
 <?php
 			foreach($left as $kx => $vx)
 			{
 ?>
-						<button type="button" id="<?php echo $vx; ?>" class="btn btn-default navbar-btn"><?php echo $kx; ?></button>
+							<button type="button" id="<?php echo $vx; ?>" class="btn btn-default navbar-btn"><?php echo $kx; ?></button>
 <?php
 			}
 ?>
-					</ul>
+						</ul>
 <?php
 		}
 ?>
-					<!-- Nav Bar, Right Side -->
-					<ul class="nav navbar-nav navbar-right">
-						<li>
+						<!-- Nav Bar, Right Side -->
+						<ul class="nav navbar-nav navbar-right">
+							<li>
 <?php
 		if ($flag_right)
 		{
 			foreach($right as $kx => $vx)
 			{
 ?>
-							<button type="button" id="<?php echo $vx; ?>" class="btn btn-default navbar-btn"><?php echo $kx; ?></button>
+								<button type="button" id="<?php echo $vx; ?>" class="btn btn-default navbar-btn"><?php echo $kx; ?></button>
 <?php
 			}
 		}
 ?>
-							<!-- All pages have the logout button -->
-							<button type="button" id="logout" class="btn btn-default navbar-btn">Logout</button>
-						</li>
-					</ul>
-					<span class="icon-bar"> </span>
-				</div><!-- /.navbar-collapse -->
-			</div><!-- /.container-fluid -->
-		</nav>
-		<!-- End of header Nav Bar -->
+								<!-- All pages have the logout button -->
+								<button type="button" id="logout" class="btn btn-default navbar-btn">Logout</button>
+							</li>
+						</ul>
+						<span class="icon-bar"> </span>
+					</div><!-- /.navbar-collapse -->
+				</div><!-- /.container-fluid -->
+			</nav>
+			<!-- End of header Nav Bar -->
 <?php
 		if ($flag_fbar)
 		{
 ?>
-		<!-- Beginning of function bar -->
-		<nav id="functionBar" class="nav nav-inline">
+			<!-- Beginning of function bar -->
+			<nav id="functionBar" class="nav nav-inline">
 <?php
 			foreach($funcbar as $kx => $vx)
 			{
 				if (is_array($vx))
 				{
 ?>
-			<div class="btn-group" role="group" aria-label="...">
+				<div class="btn-group" role="group" aria-label="...">
 <?php
 					foreach($vx as $kxa => $vxa)
 					{
 ?>
-				<button type="button" id="<?php echo $vxa; ?>" class="btn btn-default navbar-btn"><?php echo $kxa; ?></button>
+					<button type="button" id="<?php echo $vxa; ?>" class="btn btn-default navbar-btn"><?php echo $kxa; ?></button>
 <?php
 					}
 ?>
-			</div>
+				</div>
 <?php
 				}
 				else
@@ -1951,11 +1982,82 @@ class html implements html_interface
 				}
 			}
 ?>
-		</nav>
-		<!-- End of function bar -->
+			</nav>
+			<!-- End of function bar -->
+<?php
+		}
+		if ($flag_fbar2)
+		{
+?>
+			<!-- Beginning of function bar -->
+			<nav id="functionBar" class="nav nav-inline">
+<?php
+			foreach($funcbar2 as $kx => $vx)
+			{
+				if (is_array($vx))
+				{
+?>
+				<div class="btn-group" role="group" aria-label="...">
+<?php
+					foreach($vx as $kxa => $vxa)
+					{
+?>
+					<button type="button" id="<?php echo $vxa; ?>" class="btn btn-default navbar-btn"><?php echo $kxa; ?></button>
+<?php
+					}
+?>
+				</div>
+<?php
+				}
+				else
+				{
+?>
+				<button type="button" id="<?php echo $vx; ?>" class="btn btn-default navbar-btn"><?php echo $kx; ?></button>
+<?php
+				}
+			}
+?>
+			</nav>
+			<!-- End of function bar -->
+<?php
+		}
+		if ($flag_fbar3)
+		{
+?>
+			<!-- Beginning of function bar 3 -->
+			<nav id="functionBar" class="nav nav-inline">
+<?php
+			foreach($funcbar3 as $kx => $vx)
+			{
+				if (is_array($vx))
+				{
+?>
+				<div class="btn-group" role="group" aria-label="...">
+<?php
+					foreach($vx as $kxa => $vxa)
+					{
+?>
+					<button type="button" id="<?php echo $vxa; ?>" class="btn btn-default navbar-btn"><?php echo $kxa; ?></button>
+<?php
+					}
+?>
+				</div>
+<?php
+				}
+				else
+				{
+?>
+				<button type="button" id="<?php echo $vx; ?>" class="btn btn-default navbar-btn"><?php echo $kx; ?></button>
+<?php
+				}
+			}
+?>
+			</nav>
+			<!-- End of function bar -->
 <?php
 		}
 ?>
+		</div>
 		<!-- Start of main content area -->
 		<div id="mainFrame">
 			<div style="color: red;" id="errorTarget"></div>

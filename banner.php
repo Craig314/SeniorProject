@@ -417,7 +417,6 @@ function bannerShowContinue($hidden)
 		else $hide = '';
 ?>
 		<div id="block_continue"<?php echo $hide; ?>>
-			<br>
 			<div class="width75">
 				<div class="text-center">
 					<h4 class="color-blue">
@@ -437,6 +436,7 @@ function bannerShowContinue($hidden)
 					</div>
 				</form>
 			</div>
+			<div class="vspace10"></div>
 		</div>
 <?php
 }
