@@ -107,6 +107,8 @@ function loadInitialContent()
 		exit(0);
 	}
 
+	$_SESSION['cwd'] = $CONFIGVAR['server_document_root']['value'];
+
 	if ($htmlInjectFile === false)
 	{
 		global $moduleFilename;
