@@ -333,6 +333,7 @@ function native_login()
 	$_SESSION['regenTimeLast'] = time() + $CONFIGVAR['session_regen_time']['value'];
 	$_SESSION['flagSys'] = $rxa_profile['bitmap_core'];
 	$_SESSION['flagApp'] = $rxa_profile['bitmap_app'];
+	$_SESSION['cwd'] = $CONFIGVAR['server_document_root']['value'];
 
 	// The user is now logged in.  Initiate forced redirect
 	// To configured banner page.
