@@ -68,6 +68,8 @@ $_SESSION['userId'] = $CONFIGVAR['account_id_none']['value'];
 $_SESSION['profileId'] = $CONFIGVAR['profile_id_none']['value'];
 $_SESSION['passChange'] = false;
 $_SESSION['portalType'] = -1;
+$_SESSION['flagSys'] = hex2bin('00000000000000000000000000000000');
+$_SESSION['flagApp'] = hex2bin('00000000000000000000000000000000');
 
 // Now we process requests.
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
@@ -333,7 +335,6 @@ function native_login()
 	$_SESSION['regenTimeLast'] = time() + $CONFIGVAR['session_regen_time']['value'];
 	$_SESSION['flagSys'] = $rxa_profile['bitmap_core'];
 	$_SESSION['flagApp'] = $rxa_profile['bitmap_app'];
-	$_SESSION['cwd'] = $CONFIGVAR['server_document_root']['value'];
 
 	// The user is now logged in.  Initiate forced redirect
 	// To configured banner page.

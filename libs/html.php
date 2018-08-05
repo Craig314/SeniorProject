@@ -1330,7 +1330,7 @@ class html implements html_interface
 		if (isset($data['titles']))
 		{
 ?>
-		<table class="table table-hover">
+		<table class="table table-hover table-condensed">
 			<thead> 
 				<tr>
 					<th class="text-center">Select</th>

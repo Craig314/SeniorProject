@@ -17,9 +17,7 @@ string to decode any special characters.
 
 
 function treeWalker(nodeArray) {
-	var nodeObject;
-	var nodeObjStart;
-	var params = "";
+	params = '';
 
 	// Searches the array for a valid ID or name.  The first one found
 	// is the one that is used.  If none are found, then it returns
@@ -32,11 +30,21 @@ function treeWalker(nodeArray) {
 			if (nameId == null) continue;
 			nodeObject = nameId[0];
 		}
-		if (nodeObject != null) break;
+		if (nodeObject != null) {
+			if (i > 0) {
+				param += '&' + treeWalkerMainFunction(nodeObject);
+			} else {
+				param = treeWalkerMainFunction(nodeObject);
+			}
+		}
 	}
-	if (nodeObject == null) return "";
-	nodeObjStart = nodeObject;
+	return params;
+}
 
+function treeWalkerMainFunction(nodeObject) {
+
+	// Set the start object to the given node object.
+	nodeObjStart = nodeObject;
 	// Now we walk to DOM tree and look for any and all supported
 	// field types.
 	while (nodeObject) {
@@ -59,49 +67,49 @@ function treeWalker(nodeArray) {
 		if (nodeObject == null) return(params);
 
 		// Look for any objects in the DOM with a tag name of INPUT.
-		if (nodeObject.nodeName.toLowerCase() === "input") {
+		if (nodeObject.nodeName.toLowerCase() === 'input') {
 			switch (nodeObject.type.toLowerCase()) {
 				// String input types
-				case "hidden":
+				case 'hidden':
 					// Token data is handled through AJAX.
 					if (nodeObject.id === 'token_data') return params;
 					else {
-						if (params.length > 0) params += "&";
-						params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
+						if (params.length > 0) params += '&';
+						params += nodeObject.name + '=' + encodeURIComponent(nodeObject.value);
 					}
 					break;
 
 				// Boolean input types
-				case "checkbox":
-				case "radio":
+				case 'checkbox':
+				case 'radio':
 					if (nodeObject.checked == true) {
-						if (params.length > 0) params += "&";
-						params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
+						if (params.length > 0) params += '&';
+						params += nodeObject.name + '=' + encodeURIComponent(nodeObject.value);
 					}
 					break;
 
 				// Input types we do nothing with.
-				case "button":
+				case 'button':
 					break;
 
 				// All other input types.
 				default:
-					if (params.length > 0) params += "&";
-					params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
+					if (params.length > 0) params += '&';
+					params += nodeObject.name + '=' + encodeURIComponent(nodeObject.value);
 					break;
 		}
 		}
 
 		// Look for any objects in the DOM with a tag name of TEXTAREA.
-		if (nodeObject.nodeName.toLowerCase() === "textarea") {
-			if (params.length > 0) params += "&";
-			params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
+		if (nodeObject.nodeName.toLowerCase() === 'textarea') {
+			if (params.length > 0) params += '&';
+			params += nodeObject.name + '=' + encodeURIComponent(nodeObject.value);
 		}
 
 		// Selected Lists
-		if (nodeObject.nodeName.toLowerCase() === "select") {
-			if (params.length > 0) params += "&";
-			params += nodeObject.name + "=" + encodeURIComponent(nodeObject.value);
+		if (nodeObject.nodeName.toLowerCase() === 'select') {
+			if (params.length > 0) params += '&';
+			params += nodeObject.name + '=' + encodeURIComponent(nodeObject.value);
 		}
 	}
 }

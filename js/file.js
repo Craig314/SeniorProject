@@ -45,12 +45,13 @@ $('#directoryHome').on('click', function() {
 
 // Button click handler for moving up one directory level.
 $('#directoryUp').on('click', function() {
-	ajaxServerCommand.sendCommand(1);
+	params = getParameters();
+	ajaxServerCommand.sendCommand(1, params);
 });
 
 // Button click handler for moving down one directory level.
 $('#directoryDown').on('click', function() {
-	params = getParameters()
+	params = getParameters();
 	ajaxServerCommand.sendCommand(2, params);
 });
 
@@ -72,20 +73,22 @@ $('#fileDownload').on('click', function() {
 
 // Button click handler for renaming a file.
 $('#fileRename').on('click', function() {
+	params = getParameters();
 	filename = getNewName(1);
 	if (filename != null && filename != '') {
 		conf = window.confirm('Are you sure that you want to rename the ' +
 			'selected file?\Doing so can have an adverse effect on ' +
 			'the application');
 		if (conf == true) {
-			ajaxServerCommand.sendCommand(12, filename);
+			filename = 'filename=' + filename;
+			ajaxServerCommand.sendCommand(12, filename, params);
 		}
 	}
 });
 
 // Button click handler for deleting a file.
 $('#fileDelete').on('click', function() {
-	params = getParameters()
+	params = getParameters();
 	conf = window.confirm('Are you sure that you want to remove the ' +
 		'selected file?\nDoing so can have an adverse effect on ' +
 		'the application.');
@@ -96,21 +99,23 @@ $('#fileDelete').on('click', function() {
 
 // Button click handler for creating a directory.
 $('#directoryCreate').on('click', function() {
+	params = getParameters();
 	dirname = getNewName(0);
 	if (dirname != null && dirname != '') {
-		ajaxServerCommand.sendCommand(20, dirname);
+		ajaxServerCommand.sendCommand(20, dirname, params);
 	}
 });
 
 // Button click handler for renaming a directory.
 $('#directoryRename').on('click', function() {
-	params = getParameters()
+	params = getParameters();
 	dirname = 'dirname=' + getNewName(0);
 	if (dirname != null && dirname != '') {
 		conf = window.confirm('Are you sure that you want to rename the ' +
 			'selected directory?\Doing so can have an adverse effect on ' +
 			'the application');
 		if (conf == true) {
+			dirname = 'dirname=' + dirname;
 			ajaxServerCommand.sendCommand(21, dirname, params);
 		}
 	}
@@ -118,7 +123,7 @@ $('#directoryRename').on('click', function() {
 
 // Button click handler for deleting a directory.
 $('#directoryDelete').on('click', function() {
-	params = getParameters()
+	params = getParameters();
 	conf = window.confirm('Are you sure that you want to remove the ' +
 		'selected directory?\nDoing so can have an adverse effect on ' +
 		'the application.');

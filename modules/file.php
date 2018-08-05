@@ -201,7 +201,6 @@ function loadAdditionalContent()
 	global $CONFIGVAR;
 
 	$path = $CONFIGVAR['server_document_root']['value'];
-	$_SESSION['cwd'] = $path;
 	buildDirectoryList($path);
 	exit(0);
 }
@@ -239,7 +238,9 @@ function commandProcessor($commandId)
 function moveDirectoryUp()
 {
 	// Take the last directory out of the string.
-	$currentPath = $_SESSION['cwd'];
+	$currentPath = getPostValue('hidden');
+	if (empty($currentPath))
+		handleError('Missing path data.');
 	$pathArray = explode('/', $currentPath);
 	unset($pathArray[count($pathArray) - 1]);
 	$newPath = implode('/', $pathArray);
@@ -252,7 +253,6 @@ function moveDirectoryUp()
 			'the server document root.');
 
 	// Show new listing
-	$_SESSION['cwd'] = $newPath;
 	buildDirectoryList($newPath);
 }
 
@@ -265,16 +265,12 @@ function moveDirectoryDown()
 			'to use this command.');
 
 	// Get current path
-	$currentPath = $_SESSION['cwd'];
-
-	// Check if the path ends in a slash.  If not, then add one.
-	$length = strlen($currentPath);
-	$pos = strrpos($currentPath, '/');
-	if ($pos === false) $currentPath .= '/';
-	else if ($pos != $length) $currentPath .= '/';
+	$currentPath = getPostValue('hidden');
+	if (empty($currentPath))
+		handleError('Missing path data.');
 
 	// Generate new path
-	$newPath = $currentPath . $select;
+	$newPath = $currentPath . '/' . $select;
 
 	// Check to make sure that the selected item is a directory.
 	if (!is_dir($newPath))
@@ -289,7 +285,6 @@ function moveDirectoryDown()
 			'server document root.');
 
 	// Show new listing
-	$_SESSION['cwd'] = $newPath;
 	buildDirectoryList($newPath);
 }
 
@@ -298,6 +293,12 @@ function fileUpload()
 {
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
+
+	// Retrieve the current path, if possible.
+	$currentPath = getPostValue('hidden');
+	if (empty($currentPath))
+		$currentPath = $CONFIGVAR['server_document_root']['value'];
 
 	// Parse out our multipart form marker.
 	$content = $_SERVER['CONTENT_TYPE'];
@@ -440,7 +441,7 @@ function fileUpload()
 		var_dump($fileLength);
 
 		// Now we copy the data from the temp file over to the new file.
-		$outputStream = fopen($_SESSION['cwd'] . '/' . $filename, 'w');
+		$outputStream = fopen($currentPath . '/' . $filename, 'w');
 		if ($outputStream === false)
 			handleError('Filesystem Error: Unable to open output stream for ' .
 				'writing<br>XX23012 FILE=' . $filename);
@@ -497,7 +498,9 @@ function fileDownload()
 
 	// Get some paths for later manipulation.
 	$docroot = $CONFIGVAR['server_document_root']['value'];
-	$userpath = $_SESSION['cwd'];
+	$userpath = getPostValue('hidden');
+	if (empty($userpath))
+		handleError('Missing path data.');
 
 	// Check to make sure that the filename is in fact a file and not
 	// a directory.
@@ -585,16 +588,24 @@ function convertMode($mode)
 function buildDirectoryList($path)
 {
 	// Check if the path ends in a slash.  If not, then add one.
-	$length = strlen($path);
-	$pos = strrpos($path, '/');
-	if ($pos === false) $path .= '/';
-	else if ($pos != $length) $path .= '/';
+	// $length = strlen($path);
+	// $pos = strrpos($path, '/');
+	// if ($pos === false) $path .= '/';
+	// else if ($pos != $length) $path .= '/';
+
+	$hidden = array(
+		'type' => html::TYPE_HIDE,
+		'fname'=> 'hiddenForm',
+		'name' => 'hidden',
+		'data' => $path,
+	);
 
 	// Check to make sure that we are allowed to go into the given
 	// directory.
 	$result = checkDirectory($path);
 	if ($result == false)
-		handleError('Filesystem Error: Target path is outside the server document root.');
+		handleError('Filesystem Error: Target path is outside the server ' .
+			'document root.');
 
 	// Setup
 	$fileList = array();
@@ -602,18 +613,19 @@ function buildDirectoryList($path)
 	// Get directory listing
 	$file = scandir($path);
 	if ($file === false)
-		handleError('Filesystem Error: Unable to get directory listing: ' . $path);
+		handleError('Filesystem Error: Unable to get directory listing: ' .
+			$path);
 	
 	// Process entries
 	foreach($file as $kx => $vx)
 	{
 		if ($vx == '.') continue;
 		if ($vx == '..') continue;
-		$stat = stat($path . $vx);
+		$stat = stat($path . '/' . $vx);
 		if ($stat == false) continue;
 		$temp = array(
 			'name' =>		$vx,
-			'type' =>		determineFileType($path . $vx),
+			'type' =>		determineFileType($path . '/' . $vx),
 			'size' =>		$stat['size'],
 			'blkcnt' =>		$stat['blocks'],
 			'ctime' =>		timedate::unix2canonical($stat['mtime']),
@@ -621,7 +633,7 @@ function buildDirectoryList($path)
 			'link' =>		$stat['nlink'],
 			'desc' =>
 				'Name: ' .			$vx . chr(13) .
-				'Type: ' .			determineFileType($path . $vx) . chr(13) .
+				'Type: ' .			determineFileType($path . '/' . $vx) . chr(13) .
 				'Size: ' .			$stat['size'] . chr(13) .
 				'Blocks: ' .		$stat['blocks'] . chr(13) .
 				'Mode: ' .			convertMode($stat['mode']) .
@@ -678,6 +690,7 @@ function buildDirectoryList($path)
 
 	// Generate rest of page.
 	$data = array(
+		$hidden,
 		array(
 			'type' => html::TYPE_HEADING,
 			'message1' => 'Path: ',
