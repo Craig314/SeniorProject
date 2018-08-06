@@ -11,34 +11,49 @@ File Finder JavaScript File
 var ident = [
 	'select_table',
 	'hiddenForm',
-]
+];
 
-var inputTag;
-
+// Returns all parameters from forms, hidden fields, etc...
+// where the array ident contains the form tag's name and/
+// or id of the forms to be checked.
 function getParameters() {
-	params = treeWalker(ident);
+	var params = treeWalker(ident);
 	return(params);
 }
 
+// Issues a prompt to the user for a new file/directory
+// name.
 function getNewName(type) {
+	var pname;
+	var params;
+	var tn;
+	var pm;
+
 	switch (type) {
 		case 0:
 			tn = ' directory ';
+			pm = 'dirname';
 			break;
 		case 1:
 			tn = ' file ';
+			pm = 'filename';
 			break;
 		default:
 			tn = ' ';
-			break;
 	}
-	name = prompt('Enter new' + tn + 'name.', '');
-	if (name == null || name == '') return null;
-	params = 'name=' + encodeURIComponent(name);
+	pname = window.prompt('Enter new' + tn + 'name.', '');
+	if (pname == null || pname == '') return null;
+	params = pm + '=' + encodeURIComponent(pname);
 	return params;
 }
 
+// Prompts the user to make sure they want to proceed when
+// performing a potentially dangerous action.
 function getConfirmation(type, method) {
+	var message;
+	var tn;
+	var md;
+
 	switch (type) {
 		case 0:
 			tn = ' directory';
@@ -48,7 +63,6 @@ function getConfirmation(type, method) {
 			break;
 		default:
 			tn = ' ';
-			break;
 	}
 	switch (method) {
 		case 0:
@@ -61,12 +75,19 @@ function getConfirmation(type, method) {
 			md = ' ';
 	}
 	message = 'Are you sure that you want to' + md;
-	message += 'the selected' + tn + '?\Doing so can';
+	message += 'the selected' + tn + '?\nDoing so can';
 	message += 'have an adverse effect on the application';
 	return window.confirm(message);
 }
 
+// When the user clicks anywhere in a row of a selection
+// list table, this will set the click status of the radio
+// button.
 function selectItem(item) {
+	var i;
+	var nodeList;
+	var nodeObject;
+	
 	nodeList = document.getElementsByName('select_item');
 	if (nodeList == null) return;
 	for (i = 0; i < nodeList.length; i++) {
@@ -86,96 +107,87 @@ $('#directoryHome').on('click', function() {
 
 // Button click handler for moving up one directory level.
 $('#directoryUp').on('click', function() {
+	var params;
+
 	params = getParameters();
 	ajaxServerCommand.sendCommand(1, params);
 });
 
 // Button click handler for moving down one directory level.
 $('#directoryDown').on('click', function() {
+	var params;
+
 	params = getParameters();
 	ajaxServerCommand.sendCommand(2, params);
 });
 
-// Button click handler for file upload.
-$('#fileUpload').on('click', function() {
-	fileField = document.getElementById('fileInputDiv');
-	if (fileField != null) {
-		state = fileField.hidden;
-		state = (state) ? false : true;
-		fileField.hidden = state;
-	}
-});
-
-// Button click handler for downloading a file.
-$('#fileDownload').on('click', function() {
-	params = getParameters()
-	ajaxServerCommand.sendCommand(11, params);
-});
-
-// Button click handler for renaming a file.
-$('#fileRename').on('click', function() {
-	params = getParameters();
-	filename = getNewName(1);
-	if (filename != null && filename != '' && filename != false) {
-		conf = getConfirmation(1, 0);
-		if (conf == true) {
-			filename = 'filename=' + filename;
-			ajaxServerCommand.sendCommand(12, filename, params);
-		}
-	}
-});
-
-// Button click handler for deleting a file.
-$('#fileDelete').on('click', function() {
-	params = getParameters();
-	conf = getConfirmation(1, 1);
-	if (conf == true) {
-		ajaxServerCommand.sendCommand(13, params);
-	}
-});
-
 // Button click handler for creating a directory.
 $('#directoryCreate').on('click', function() {
+	var params;
+	var dirname;
+
 	params = getParameters();
 	dirname = getNewName(0);
-	if (dirname != null && dirname != '' && dirname != false) {
-		ajaxServerCommand.sendCommand(20, dirname, params);
+	if (dirname != null) {
+		ajaxServerCommand.sendCommand(3, dirname, params);
 	}
 });
 
 // Button click handler for renaming a directory.
 $('#directoryRename').on('click', function() {
+	var params;
+	var dirname;
+	var conf;
+
 	params = getParameters();
-	dirname = 'dirname=' + getNewName(0);
-	if (dirname != null && dirname != '' && dirname != false) {
+	dirname = getNewName(0);
+	if (dirname != null) {
 		conf = getConfirmation(0, 0);
 		if (conf == true) {
-			dirname = 'dirname=' + dirname;
-			ajaxServerCommand.sendCommand(21, dirname, params);
+			ajaxServerCommand.sendCommand(4, dirname, params);
 		}
 	}
 });
 
 // Button click handler for deleting a directory.
 $('#directoryDelete').on('click', function() {
+	var params;
+	var conf;
+
 	params = getParameters();
 	conf = getConfirmation(0, 1);
 	if (conf == true) {
-		ajaxServerCommand.sendCommand(22, params);
+		ajaxServerCommand.sendCommand(5, params);
 	}
 });
 
-// Button click handler for pulling from the GitHub repository.
-// Note: Git must be setup and working on the system.
-$('#gitPull').on('click', function() {
+// Button click handler for file upload.
+$('#fileUpload').on('click', function() {
+	var fileField;
+	var state;
+	 
+	fileField = document.getElementById('fileInputDiv');
+ 	if (fileField != null) {
+		state = fileField.hidden;
+		state = (state) ? false : true;
+		fileField.hidden = state;
+	}
 });
 
-// File upload action
+// Button click handler for file upload action.
 function fileUpload() {
-	// Get our necessary IDs.
-	var fileButton = document.getElementById('fileSubmit');
-	fileSelect = document.getElementById('fileInput');
+	var fileButton;
+	var fileSelect;
+	var tokenObject;
+	var secToken;
+	var formData;
+	var fileList;
+	var file;
+	var i;
 
+	// Get our necessary IDs.
+	fileSelect = document.getElementById('fileInput');
+	fileButton = document.getElementById('fileSubmit');
 	// Get the security token.
 	tokenObject = document.getElementById('token_data');
 	if (tokenObject != null) {
@@ -198,8 +210,61 @@ function fileUpload() {
 	}
 }
 
+// Button click handler for downloading a file.
+$('#fileDownload').on('click', function() {
+	var params;
+
+	params = getParameters();
+	ajaxServerCommand.sendCommand(11, params);
+});
+
+// Button click handler for viewing a file.
+$('#fileView').on('click', function() {
+	var params;
+
+	params = getParameters();
+	ajaxServerCommand.sendCommand(12, params);
+});
+
+// Button click handler for renaming a file.
+$('#fileRename').on('click', function() {
+	var params;
+	var conf;
+	var filename;
+
+	params = getParameters();
+	filename = getNewName(1);
+	if (filename != null && filename != '' && filename != false) {
+		conf = getConfirmation(1, 0);
+		if (conf == true) {
+			filename = 'filename=' + filename;
+			ajaxServerCommand.sendCommand(13, filename, params);
+		}
+	}
+});
+
+// Button click handler for deleting a file.
+$('#fileDelete').on('click', function() {
+	var params;
+	var conf;
+
+	params = getParameters();
+	conf = getConfirmation(1, 1);
+	if (conf == true) {
+		ajaxServerCommand.sendCommand(14, params);
+	}
+});
+
+// Button click handler for pulling from the GitHub repository.
+// Note: Git must be setup and working on the system.
+$('#gitPull').on('click', function() {
+});
+
 // Opens a new window which initiates a download.
 function fileDownload(txt) {
+	var feats;
+	var popupWindow;
+	
 	feats = 'height=300';
 	feats += ',width=500';
 	feats += ',location=no';
@@ -207,7 +272,7 @@ function fileDownload(txt) {
 	feats += ',resizable=no';
 	feats += ',scrollbars=no';
 	feats += ',status=no';
-	feats += ',titlebar=no'
+	feats += ',titlebar=no';
 	feats += ',toolbar=no';
 	popupWindow = window.open(txt, '_blank', feats, false);
 	setTimeout(function () {popupWindow.close();}, 1000);
@@ -220,7 +285,6 @@ function customCmdProc(cmd, txt) {
 			fileDownload(txt);
 			break;
 		default:
-			alert("Unknown command " + cmdnum + " returned by server.");
-			break;
+			window.alert("Unknown command " + cmd + " returned by server.");
 	}
 }

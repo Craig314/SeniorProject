@@ -221,16 +221,34 @@ function commandProcessor($commandId)
 	switch ((int)$commandId)
 	{
 		case 1:
-			moveDirectoryUp();
+			directoryMoveUp();
 			break;
 		case 2:
-			moveDirectoryDown();
+			directoryMoveDown();
 			break;
-		case 11:
+		case 3:
+			directoryCreate();
+			break;
+		case 4:
+			directoryRename();
+			break;
+		case 5:
+			directoryDelete();
+			break;
+		case 10:
 			fileDownload();
 			break;
-		case 45:
+		case 11:
 			fileUpload();
+			break;
+		case 12:
+			fileView();
+			break;
+		case 13:
+			fileRename();
+			break;
+		case 14:
+			fileDelete();
 			break;
 		default:
 			// If we get here, then the command is undefined.
@@ -242,12 +260,26 @@ function commandProcessor($commandId)
 }
 
 // Moves up one directory
-function moveDirectoryUp()
+function directoryMoveUp()
 {
-	// Take the last directory out of the string.
+	global $herr;
+	global $vfystr;
+
+	// Get the current path.
 	$currentPath = getPostValue('hidden');
 	if (empty($currentPath))
-		handleError('Missing path data.');
+		$herr->puterrmsg('Missing path data.');
+
+	// Check to make sure that there are no invalid characters.
+	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory path.');
+
+	// Now dump any error messages to the user.
+	if ($herr->checkState())
+		handleError($herr->errorGetMessage());
+
+	// Take the last directory out of the string.
 	$pathArray = explode('/', $currentPath);
 	unset($pathArray[count($pathArray) - 1]);
 	$newPath = implode('/', $pathArray);
@@ -263,26 +295,42 @@ function moveDirectoryUp()
 	buildDirectoryList($newPath);
 }
 
-function moveDirectoryDown()
+// Moves down a directory
+function directoryMoveDown()
 {
-	// Check to make sure something was selected.
+	global $herr;
+	global $vfystr;
+
+	// Get the selected item.
 	$select = getPostValue('select_item');
 	if ($select == NULL)
-		handleError('You must select an item from the list in order ' .
+		$herr->puterrmsg('You must select an item from the list in order ' .
 			'to use this command.');
-
+	
 	// Get current path
 	$currentPath = getPostValue('hidden');
 	if (empty($currentPath))
-		handleError('Missing path data.');
+		$herr->puterrmsg('Missing path data.');
+
+	// Check to make sure that there are no invalid characters.
+	$result = $vfystr->strchk($select, '', '', verifyString::STR_FILENAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in file/directory name.');
+	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory path.');
 
 	// Generate new path
 	$newPath = $currentPath . '/' . $select;
 
 	// Check to make sure that the selected item is a directory.
 	if (!is_dir($newPath))
-		handleError('Filesystem Error: You must select a directory in order ' .
-			'to use this command.');
+		$herr->puterrmsg('Filesystem Error: You must select a directory ' .
+			'in order to use this command.');
+
+	// Now dump any error messages to the user.
+	if ($herr->checkState())
+		handleError($herr->errorGetMessage());
 
 	// Check to make sure that we are allowed to go into the given
 	// directory.
@@ -293,6 +341,169 @@ function moveDirectoryDown()
 
 	// Show new listing
 	buildDirectoryList($newPath);
+}
+
+// Creates a new directory.
+function directoryCreate()
+{
+	global $herr;
+	global $vfystr;
+
+	// Get the current path.
+	$currentPath = getPostValue('hidden');
+	if (empty($currentPath))
+		$herr->puterrmsg('Missing path data.');
+
+	// Get the directory name.
+	$dirName = getPostValue('dirname');
+	if (empty($dirName))
+		$herr->puterrmsg('Missing new directory name.');
+
+	// Check to make sure that there are no invalid characters.
+	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory path.');
+	$result = $vfystr->strchk($dirName, '', '', verifyString::STR_FILENAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory name.');
+
+	// Check to make sure that the current path is valid.
+	$result = checkDirectory($currentPath);
+	if ($result == false)
+		$herr->puterrmsg('Filesystem Error: You are not allowed to exit the ' .
+			'server document root.');
+	
+	// Now dump the error messages on the user, if needed.
+	if ($herr->checkState())
+		handleError($herr->errorGetMessage());
+	
+	// Everything is good, so create the directory and set the group.
+	$result = mkdir($currentPath . '/' . $dirName, 0775);
+	if ($result == false)
+		handleError('Filesystem Error: Make directory failed.');
+	$result = chgrp($currentPath . '/' . $dirName, 'www');
+	if ($result == false)
+		handleError('Filesystem Error: Unable to set directory GID.');
+	
+	// Refresh listing
+	buildDirectoryList($currentPath);
+}
+
+// Renames an existing directory.
+function directoryRename()
+{
+	global $herr;
+	global $vfystr;
+
+	// Get the selected item.
+	$select = getPostValue('select_item');
+	if ($select == NULL)
+		$herr->puterrmsg('You must select an item from the list in order ' .
+			'to use this command.');
+	
+	// Get the current path.
+	$currentPath = getPostValue('hidden');
+	if (empty($currentPath))
+		$herr->puterrmsg('Missing path data.');
+
+	// Get the directory name.
+	$dirName = getPostValue('dirname');
+	if (empty($dirName))
+		$herr->puterrmsg('Missing new directory name.');
+
+	// Check to make sure that there are no invalid characters.
+	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory path.');
+	$result = $vfystr->strchk($select, '', '', verifyString::STR_FILENAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in file/directory name.');
+	$result = $vfystr->strchk($dirName, '', '', verifyString::STR_FILENAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory name.');
+
+	// Check to make sure that the current path is valid.
+	$result = checkDirectory($currentPath);
+	if ($result == false)
+		$herr->puterrmsg('Filesystem Error: You are not allowed to exit the ' .
+			'server document root.');
+	
+	// Now dump the error messages on the user, if needed.
+	if ($herr->checkState())
+		handleError($herr->errorGetMessage());
+	
+	// Everything is good, so rename the directory
+	$result = rename($currentPath . '/' . $select, $currentPath . '/' . $dirName);
+	if ($result == false)
+		handleError('Filesystem Error: Rename directory failed.');
+	
+	// Refresh listing
+	buildDirectoryList($currentPath);
+}
+
+// Removes an existing directory.
+function directoryDelete()
+{
+	global $herr;
+	global $vfystr;
+
+	// Get the selected item.
+	$select = getPostValue('select_item');
+	if ($select == NULL)
+		$herr->puterrmsg('You must select an item from the list in order ' .
+			'to use this command.');
+	
+	// Get the current path.
+	$currentPath = getPostValue('hidden');
+	if (empty($currentPath))
+		$herr->puterrmsg('Missing path data.');
+
+	// Check to make sure that there are no invalid characters.
+	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory path.');
+	$result = $vfystr->strchk($select, '', '', verifyString::STR_FILENAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory name.');
+
+	// Check to make sure that the current path is valid.
+	$result = checkDirectory($currentPath);
+	if ($result == false)
+		$herr->puterrmsg('Filesystem Error: You are not allowed to exit the ' .
+			'server document root.');
+	
+	// Now dump the error messages on the user, if needed.
+	if ($herr->checkState())
+		handleError($herr->errorGetMessage());
+	
+	// Check to make sure that the directory is empty.
+	$rxa = scandir($currentPath . '/' . $select);
+	if (count($rxa) > 2)
+		handleError('Filesystem Error: Unable to remove directory ' .
+			'because it is not empty.');
+
+	// Everything is good, remove the directory.
+	$result = mkdir($currentPath . '/' . $dirName, 0775);
+	if ($result == false)
+		handleError('Filesystem Error: Remove directory failed.');
+	
+	// Refresh listing
+	buildDirectoryList($currentPath);
+}
+
+// Views a text file.
+function fileView()
+{
+}
+
+// Renames an existing file.
+function fileRename()
+{
+}
+
+// Removes a file.
+function fileDelete()
+{
 }
 
 // Uploads the file.

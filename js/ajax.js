@@ -99,8 +99,8 @@ var ajaxServerCommand = {
 	// be a key=value pair.
 	sendCommand: function(cmd) {
 		var param = "COMMAND=" + cmd;
-		var i;
 		var token = document.getElementById('token_data');
+		var i;
 		if (token != null) {
 			param += '&token=' + token.value;
 		}
@@ -127,18 +127,18 @@ var ajaxServerCommand = {
 
 	// Sends the return home command to the server.
 	returnHome: function() {
-		this.sendCommand(serverCommands['goHome']);
+		this.sendCommand(serverCommands.goHome);
 	},
 
 	// Logs out the user.
 	logoutUser: function() {
-		this.sendCommand(serverCommands['logout']);
+		this.sendCommand(serverCommands.logout);
 	},
 
 	// Sends the heartbeat command to the server.  This is sent periodically to
 	// prevent the session from timing out.
 	heartbeat: function() {
-		this.sendCommand(serverCommands['heartbeat']);
+		this.sendCommand(serverCommands.heartbeat);
 	},
 
 	// Takes a variable amount of parameters.  If specified, the
@@ -147,13 +147,18 @@ var ajaxServerCommand = {
 	// from main to something else.  The third parameter, if
 	// specified, changes the command that is sent.
 	loadAdditionalContent: function() {
-		cmd = serverCommands['loadContent'];
+		var cmd = serverCommands.loadContent;
 		if (arguments.length > 0) {
 			switch (arguments.length) {
 				case 3:
 					cmd = arguments[2];
+					serverLinkObject.setTargetMain(arguments[1]);
+					serverLinkObject.setUrlPath(arguments[0]);
+					break;
 				case 2:
 					serverLinkObject.setTargetMain(arguments[1]);
+					serverLinkObject.setUrlPath(arguments[0]);
+					break;
 				case 1:
 					serverLinkObject.setUrlPath(arguments[0]);
 					break;
@@ -177,7 +182,7 @@ var ajaxServerSend = {
 	// Additional arguments must be in key=value pairs for each one.  This
 	// will format all additional arguments for sending to the server.
 	post: function(linkObject) {
-		link = linkObject.getCommLink();
+		var link = linkObject.getCommLink();
 		link.open("POST", linkObject.getUrlPath());
 		link.setRequestHeader("Content-type",
 			"application/x-www-form-urlencoded");
@@ -208,7 +213,7 @@ var ajaxServerSend = {
 	filePost: function(linkObject, fileObject, alertObject, securityToken, command) {
 		fileObject.append('token_data', securityToken);
 		fileObject.append('COMMAND', command);
-		link = linkObject.getCommLink();
+		var link = linkObject.getCommLink();
 		link.open('POST', linkObject.getUrlPath());
 		link.onreadystatechange = function() {
 			if (link.responseText.length > 0) {
@@ -224,7 +229,7 @@ var ajaxServerSend = {
 	// This operates in async mode only which means that this happens in the
 	// background in a separate browser thread.
 	filePut: function(linkObject, fileObject, alertObject, securityToken, command) {
-		link = linkObject.getCommLink();
+		var link = linkObject.getCommLink();
 		link.open('PUT', linkObject.getUrlPath());
 		link.setRequestHeader('X-COMMAND', command);
 		link.setRequestHeader('X-TOKEN', securityToken);
@@ -251,23 +256,18 @@ var ajaxServerSend = {
 					case "CODE":	// Status Code
 						ajaxProcessData.parseCode(link.responseText);
 						return;
-						break;
 					case "CMD":		// Command with/without data
 						ajaxProcessData.parseCommand(link.responseText);
 						return;
-						break;
 					case "STAT":	// JSON formatted form field error data.
 						ajaxProcessData.parseStatus(link.responseText);
 						return;
-						break;
 					case "JSON":	// JSON formatted data
 						ajaxProcessData.parseJSON(link.responseText);
 						return;
-						break;
 					case "MULTI":	// Multiformat in JSON (uses loop)
 						ajaxProcessData.parseMultiformat(link.responseText);
 						return;
-						break;
 					default:
 						document.getElementById(dataObject.getTargetMain()).innerHTML = link.responseText;
 						writeError("");
@@ -279,7 +279,6 @@ var ajaxServerSend = {
 						if (typeof featureTooltip === 'function') {
 							featureTooltip();
 						}
-						break;
 				}
 
 				// Feature Activations
@@ -292,7 +291,7 @@ var ajaxServerSend = {
 			}
 		}
 	},
-}
+};
 
 // This class contains routines that process AJAX data from the server.  This
 // should only be called from ajaxServerSend::responseHandler.
@@ -333,9 +332,10 @@ var ajaxProcessData = ({
 				break;
 			default:
 				if (httpStatus[codenum] == "")
-					alert("Unknown code " + codenum + " returned by server.");
+					window.alert("Unknown code " + codenum +
+						" returned by server.");
 				else {
-					msg = str.slice(est);
+					var msg = str.slice(est);
 					if (msg.length > 0) msg = "<br>" + msg;
 					writeError(httpStatus[codenum] + msg);
 				}
@@ -351,6 +351,9 @@ var ajaxProcessData = ({
 		var est;
 		var entity;
 		var cmdnum;
+		var txt;
+		var result;
+
 		entity = str.indexOf("CMD");
 		if (entity != 0) return;
 		cst = str.indexOf(" ") + 1;
@@ -360,27 +363,27 @@ var ajaxProcessData = ({
 			else cmdnum = parseInt(str.slice(cst, est));
 		switch (cmdnum) {
 			case 950:   // OK, call clearForm (if available), display to responseTarget
-				var txt = str.slice(est + 1);
+				txt = str.slice(est + 1);
 				writeError("");
 				writeResponse(txt);
 				if (typeof clearForm === 'function') clearForm();
 				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 951:   // Ok, display to responseTarget
-				var txt = str.slice(est + 1);
+				txt = str.slice(est + 1);
 				writeError("");
 				writeResponse(txt);
 				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 952:   // Error, call clearForm (if available), display to errorTarget
-				var txt = str.slice(est + 1);
+				txt = str.slice(est + 1);
 				writeError(txt);
 				writeResponse("");
 				if (typeof clearForm === 'function') clearForm();
 				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 953:   // Error, display to errorTarget
-				var txt = str.slice(est + 1);
+				txt = str.slice(est + 1);
 				writeError(txt);
 				writeResponse("");
 				if (typeof resetErrorStatus === 'function') resetErrorStatus();
@@ -391,13 +394,13 @@ var ajaxProcessData = ({
 				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 955:   // Clear all messages, write HTML
-				var txt = str.slice(est + 1);
+				txt = str.slice(est + 1);
 				writeError("");
 				writeResponse("");
 				writeHTML(txt);
 				break;
 			case 956:	// Error, call clearForm, display to errorTarget, clear HTML
-				var txt = str.slice(est + 1);
+				txt = str.slice(est + 1);
 				writeError(txt);
 				writeResponse("");
 				writeHTML("");
@@ -407,11 +410,13 @@ var ajaxProcessData = ({
 				// If the command is none of the above, then we are dealing
 				// with a possible custom command, or an invalid command.
 				if (typeof customCmdProc === 'function') {
-					var txt = str.slice(est + 1);
-					var result = customCmdProc(cmdnum, txt);
-					if (result == false) alert("Unknown command " + cmdnum + " returned by server.");
+					txt = str.slice(est + 1);
+					result = customCmdProc(cmdnum, txt);
+					if (result == false) window.alert("Unknown command "
+						+ cmdnum + " returned by server.");
 				}
-				else alert("Unknown command " + cmdnum + " returned by server.");
+				else window.alert("Unknown command " + cmdnum +
+					" returned by server.");
 				break;
 		}
 	},
@@ -427,6 +432,8 @@ var ajaxProcessData = ({
 		var fieldArray;
 		var statusArray;
 		var message;
+		var mark;
+
 		entity = str.indexOf("STAT");
 		if (entity != 0) return;
 		cst = str.indexOf(" ");
@@ -437,7 +444,7 @@ var ajaxProcessData = ({
 		mark = str.indexOf(String.fromCharCode(29));
 		text1 = str.slice(cst + 1, mark);
 		try {
-			var statusArray = JSON.parse(text1);
+			statusArray = JSON.parse(text1);
 		}
 		catch (error) {
 			writeError(error.message);
@@ -447,7 +454,7 @@ var ajaxProcessData = ({
 		{
 			text2 = str.slice(mark + 1);
 			try {
-				var fieldArray = JSON.parse(text2);
+				fieldArray = JSON.parse(text2);
 			}
 			catch (error) {
 				writeError(error.message);
@@ -504,6 +511,10 @@ var ajaxProcessData = ({
 		var est;
 		var entity;
 		var jfnum;
+		var jfunc;
+		var txt;
+		var obj;
+
 		entity = str.indexOf("JSON");
 		if (entity != 0) return;
 		cst = str.indexOf(" ") + 1;
@@ -517,7 +528,7 @@ var ajaxProcessData = ({
 		jfunc = 'objectJsonPost' + jfnum.toString();
 		if (typeof window[jfunc] == typeof parseJSON) {
 			try {
-				var obj = JSON.parse(txt);
+				obj = JSON.parse(txt);
 			}
 			catch (error) {
 				writeError(error.message);
@@ -533,18 +544,23 @@ var ajaxProcessData = ({
 	// or unknown types are ignored.
 	parseMultiformat: function(str) {
 		var cst;
-		var est;
 		var entity;
 		var i;
+		var txt;
+		var string;
+		var space;
+		var objArray;
+
 		entity = str.indexOf("MULTI");
 		if (entity != 0) return;
-		cst = str.indexOf(" ")
+		cst = str.indexOf(" ");
 		if (cst < 0) {
 			writeError("JSON data format error from server.");
 			return;
-		} txt = str.slice(0, cst);
+		}
+		txt = str.slice(0, cst);
 		try {
-			var objArray = JSON.parse(txt);
+			objArray = JSON.parse(txt);
 		}
 		catch (error) {
 			writeError(error.message);
@@ -557,19 +573,15 @@ var ajaxProcessData = ({
 				case "CODE":	// Status Code
 					this.parseCode(objArray[i]);
 					return;
-					break;
 				case "CMD":		// Command with/without data
 					this.parseCommand(objArray[i]);
 					return;
-					break;
 				case 'STAT':	// JSON formatted error data
 					this.parseStatus(objArray[i]);
 					return;
-					break;
 				case "JSON":	// JSON formatted data
 					this.parseJSON(objArray[i]);
 					return;
-					break;
 				default:
 					// Invalid data is ignored
 					break;
@@ -579,30 +591,38 @@ var ajaxProcessData = ({
 
 	// Sets the status of a text field to Ok.
 	setStatusTextOk: function(id) {
-		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon glyphicon-ok form-control-feedback');
-		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group has-success has-feedback');
+		document.getElementById('dcmGL-' + id).setAttribute('class',
+			'glyphicon glyphicon-ok form-control-feedback');
+		document.getElementById('dcmST-' + id).setAttribute('class',
+			'form-group has-success has-feedback');
 		if (arguments.length > 1)
 			document.getElementById('dcmMS-' + id).innerHTML = arguments[1];
 	},
 	
 	// Sets the status of a text field to Warning.
 	setStatusTextWarn: function(id, message) {
-		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon glyphicon-check form-control-feedback');
-		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group has-warning has-feedback');
+		document.getElementById('dcmGL-' + id).setAttribute('class',
+			'glyphicon glyphicon-check form-control-feedback');
+		document.getElementById('dcmST-' + id).setAttribute('class',
+			'form-group has-warning has-feedback');
 		document.getElementById('dcmMS-' + id).innerHTML = message;
 	},
 	
 	// Sets the status of a text field to Error.
 	setStatusTextError: function(id, message) {
-		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon glyphicon-remove form-control-feedback');
-		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group has-error has-feedback');
+		document.getElementById('dcmGL-' + id).setAttribute('class',
+			'glyphicon glyphicon-remove form-control-feedback');
+		document.getElementById('dcmST-' + id).setAttribute('class',
+			'form-group has-error has-feedback');
 		document.getElementById('dcmMS-' + id).innerHTML = message;
 	},
 	
 	// Sets the status of a text field to Default.
 	setStatusTextDefault: function(id) {
-		document.getElementById('dcmGL-' + id).setAttribute('class', 'glyphicon form-control-feedback');
-		document.getElementById('dcmST-' + id).setAttribute('class', 'form-group');
+		document.getElementById('dcmGL-' + id).setAttribute('class',
+			'glyphicon form-control-feedback');
+		document.getElementById('dcmST-' + id).setAttribute('class',
+			'form-group');
 		if (arguments.length > 1)
 			document.getElementById('dcmMS-' + id).innerHTML = arguments[1];
 	},

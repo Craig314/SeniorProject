@@ -11,12 +11,12 @@ User Editor JavaScript File
 var ident = [
 	'select_table',
 	'hiddenForm',
-]
+];
 
 // Don't change this.
 var data = [
 	'dataForm',
-]
+];
 
 // List of field names/IDs (except radio buttons)
 var fields = [
@@ -36,11 +36,11 @@ var fields = [
 	'hphone',
 	'cphone',
 	'wphone',
-]
+];
 
 // List of radio button names.
 var radios = [
-]
+];
 
 
 // List of hidden divs controlled by drop down list.
@@ -51,5 +51,5 @@ var hiddenList = [
 	'nativeLogin',
 	'oauthLogin',
 	'openidLogin',
-]
+];
 var hiddenSelect = 'method';

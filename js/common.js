@@ -7,14 +7,22 @@ Common Core JavaScript File
 
 */
 
-// Returns the parameters of the forms whose IDs are in the
-// ident array.
+// Returns all parameters from forms, hidden fields, etc...
+// where the array ident contains the form tag's name and/
+// or id of the forms to be checked.
 function getParameters() {
+	var params;
+
 	params = treeWalker(ident);
 	return(params);
 }
 
+// Same as getParameters above, but also checks the forms
+// that are identified by the data array.
 function getFormData() {
+	var id;
+	var params;
+
 	id = treeWalker(ident);
 	params = treeWalker(data);
 	if (id != '' && params != '') return(id + '&' + params);
@@ -23,7 +31,13 @@ function getFormData() {
 	return '';
 }
 
+// Prompts the user to make sure they want to proceed when
+// performing a potentially dangerous action.
 function selectItem(item) {
+	var nodeList;
+	var nodeObject;
+	var i;
+
 	nodeList = document.getElementsByName('select_item');
 	if (nodeList == null) return;
 	for (i = 0; i < nodeList.length; i++) {
@@ -43,24 +57,32 @@ $('#listDataItems').on('click', function () {
 
 // Button click handler for View.
 $('#viewDataItem').on('click', function() {
+	var params;
+
 	params = getParameters();
 	ajaxServerCommand.sendCommand(1, params);
 });
 
 // Button click handler for Edit.
 $('#updateDataItem').on('click', function() {
+	var params;
+
 	params = getParameters();
 	ajaxServerCommand.sendCommand(2, params);
 });
 
 // Button click handler for Add.
 $('#insertDataItem').on('click', function() {
+	var params;
+
 	params = getParameters();
 	ajaxServerCommand.sendCommand(3, params);
 });
 
 // Button click handler for Delete.
 $('#deleteDataItem').on('click', function() {
+	var params;
+
 	params = getParameters();
 	ajaxServerCommand.sendCommand(4, params);
 
@@ -68,18 +90,24 @@ $('#deleteDataItem').on('click', function() {
 
 // Button click handler for submit edit.
 function submitUpdate() {
+	var params;
+
 	params = getFormData();
 	ajaxServerCommand.sendCommand(12, params);
 }
 
 // Button click hander for submit add.
 function submitInsert() {
+	var params;
+
 	params = getFormData();
 	ajaxServerCommand.sendCommand(13, params);
 }
 
 // Button click handler for submit delete.
 function submitDelete() {
+	var params;
+
 	params = getFormData();
 	ajaxServerCommand.sendCommand(14, params);
 }
@@ -87,6 +115,12 @@ function submitDelete() {
 // This is called when the reset button is pressed on the
 // form.  This resets all fields to their default values.
 function clearForm() {
+	var i;
+	var j;
+	var nodeObject;
+	var optionList;
+	var nodeList;
+
 	// Non-Radio fields.
 	for (i = 0; i < fields.length; i++) {
 		nodeObject = document.getElementById(fields[i]);
@@ -145,28 +179,31 @@ function clearForm() {
 
 // Resets the error status of all fields.
 function resetErrorStatus() {
+	var nodeObject;
+	var i;
+
 	for (i = 0; i < fields.length; i++) {
-	nodeObject = document.getElementById(fields[i]);
-	if (nodeObject == null) continue;
-	switch (nodeObject.nodeName.toLowerCase()) {
-		case 'input':
-			switch (nodeObject.type.toLowerCase()) {
-				// These types are ignored.
-				case 'checkbox':
-				case 'radio':
-				case 'button':
-					break;
-				default:
-					ajaxProcessData.setStatusTextDefault(fields[i], '');
-					break;
-			}
-			break;
-		case 'textarea':
-			ajaxProcessData.setStatusTextDefault(fields[i], '');
-			break;
-		case 'select':
-			ajaxProcessData.setStatusTextDefault(fields[i], '');
-			break;
+		nodeObject = document.getElementById(fields[i]);
+		if (nodeObject == null) continue;
+		switch (nodeObject.nodeName.toLowerCase()) {
+			case 'input':
+				switch (nodeObject.type.toLowerCase()) {
+					// These types are ignored.
+					case 'checkbox':
+					case 'radio':
+					case 'button':
+						break;
+					default:
+						ajaxProcessData.setStatusTextDefault(fields[i], '');
+				}
+				break;
+			case 'textarea':
+				ajaxProcessData.setStatusTextDefault(fields[i], '');
+				break;
+			case 'select':
+				ajaxProcessData.setStatusTextDefault(fields[i], '');
+				break;
+			default:
 		}
 	}
 }
@@ -178,6 +215,13 @@ function resetErrorStatus() {
 // If the action of an option is repeated, then repeat that
 // option in hiddenList.
 function setHidden() {
+	var selectObject;
+	var optionList;
+	var loopterm;
+	var repeat;
+	var targetId;
+	var i;
+
 	selectObject = document.getElementById(hiddenSelect);
 	optionList = selectObject.children;
 	if (optionList != null) {

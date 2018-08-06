@@ -11,6 +11,8 @@ JavaScript file for portal.php
 // Sends the load module command to the server.
 function loadModule(module)
 {
-	var param = "MODULE=" + module;
+	var param;
+
+	param = "MODULE=" + module;
 	ajaxServerCommand.sendCommand(5, param);
 }

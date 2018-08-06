@@ -36,16 +36,17 @@ interface verifyStringInterface
 	const STR_DATE			= 14;	// Date
 	const STR_DATEUNIX		= 15;	// Unix Date Timestamp
 	const STR_FILENAME		= 16;	// Filename
-	const STR_URI			= 17;	// Uniform Resource Identifier
-	const STR_URL			= 18;	// Uniform Resource Location
-	const STR_TIMEDISP		= 19;	// Time Displacement
-	const STR_ALPHASPEC		= 20;	// Alpha Spec'd (a-z_ only)
-	const STR_DESC			= 21;	// Descriptions
+	const STR_PATHNAME		= 17;	// Pathname
+	const STR_URI			= 18;	// Uniform Resource Identifier
+	const STR_URL			= 19;	// Uniform Resource Location
+	const STR_TIMEDISP		= 20;	// Time Displacement
+	const STR_ALPHASPEC		= 21;	// Alpha Spec'd (a-z_ only)
+	const STR_DESC			= 22;	// Descriptions
 
 	// Start custom checks at 100
 
 	public function errstat();
-	public function strchk($data, $field, $id, $type, $blank = true, $max = -1, $min = 0);
+	public function strchk($data, $field, $id, $type, $blank = true, $max = 0, $min = 0);
 }
 
 
@@ -166,6 +167,9 @@ class verifyString implements verifyStringInterface
 			case self::STR_FILENAME:
 				$result = $this->checkCharFilename($data, $field, $id);
 				break;
+			case self::STR_PATHNAME:
+				$result = $this->checkCharPathname($data, $field, $id);
+				break;
 			case self::STR_URI:
 				$result = $this->checkCharURI($data, $field, $id);
 				break;
@@ -196,7 +200,7 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		if ($len == 0) return;
+		if ($len == 0) return true;
 		if (strlen($data) > $len)
 		{
 			$herr->errorPutMessage($this->etype,
@@ -212,7 +216,7 @@ class verifyString implements verifyStringInterface
 	{
 		global $herr;
 
-		if ($len == 0) return;
+		if ($len == 0) return true;
 		if (strlen($data) < $len)
 		{
 			$herr->errorPutMessage($this->etype,
@@ -656,6 +660,31 @@ class verifyString implements verifyStringInterface
 			$herr->errorPutMessage($this->etype,
 				'Invalid characters detected.<br>Only letters, numbers, ._-' .
 				' are allowed.', $this->estate, $field, $id);
+			return false;
+		}
+		return true;
+	}
+
+	// Validates pathnames
+	private function checkCharPathname($data, $field, $id)
+	{
+		global $herr;
+
+		$regex = '/^[A-Za-z0-9\/\.\_\-]+$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
+		{
+			$herr->errorPutMessage($this->etype,
+				'Invalid characters detected.<br>Only letters, numbers, ._-/' .
+				' are allowed.', $this->estate, $field, $id);
+			return false;
+		}
+		$result = strpos($data, '..');
+		if ($result !== false)
+		{
+			$herr->errorPutMessage($this->etype,
+				'The .. directory construct is not allowed in path names.',
+				$this->estate, $field, $id);
 			return false;
 		}
 		return true;

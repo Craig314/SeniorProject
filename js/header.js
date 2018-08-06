@@ -62,6 +62,10 @@ $(window).resize(function()
 // Adjusts the content height so it will scroll down the window
 // without the header scrolling.
 function windowResize() {
+	var heightWindow;
+	var heightHeader;
+	var heightContent;
+
 	heightWindow = $(window).height();
 	heightHeader = $('div#navigationBarHeader').height();
 	heightContent = heightWindow - heightHeader;

@@ -24,19 +24,25 @@ function resetFormNative() {
 
 // Submits the Native form to the server for processing.
 function submitFormNative() {
+	var username;
+	var password;
+	var data1;
+	var data2;
+	var data3;
+
 	username = document.getElementById('native_username').value;
 	password = document.getElementById('native_password').value;
 	if (typeof btoa === 'function') {
-		$data1 = 'native_username=' + encodeURIComponent(btoa(username));
-		$data2 = 'native_password=' + encodeURIComponent(btoa(password));
-		$data3 = 'base64=1';
+		data1 = 'native_username=' + encodeURIComponent(btoa(username));
+		data2 = 'native_password=' + encodeURIComponent(btoa(password));
+		data3 = 'base64=1';
 	} else {
 		// For browsers that do not have a btoa function.
-		$data1 = 'native_username=' + encodeURIComponent(username);
-		$data2 = 'native_password=' + encodeURIComponent(password);
-		$data3 = 'base64=0';
+		data1 = 'native_username=' + encodeURIComponent(username);
+		data2 = 'native_password=' + encodeURIComponent(password);
+		data3 = 'base64=0';
 	}
-	ajaxServerCommand.sendCommand(1, $data1, $data2, $data3);
+	ajaxServerCommand.sendCommand(1, data1, data2, data3);
 }
 
 
@@ -84,6 +90,8 @@ function returnChooser() {
 // **** Other
 
 function clearForm() {
+	var reset;
+
 	reset = document.getElementById('native_username');
 	if (reset != null) reset.value = "";
 	reset = document.getElementById('native_password');
