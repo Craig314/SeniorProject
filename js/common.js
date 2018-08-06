@@ -7,6 +7,8 @@ Common Core JavaScript File
 
 */
 
+// Returns the parameters of the forms whose IDs are in the
+// ident array.
 function getParameters() {
 	params = treeWalker(ident);
 	return(params);
@@ -19,6 +21,19 @@ function getFormData() {
 	if (id != '') return(id);
 	if (params != '') return(params);
 	return '';
+}
+
+function selectItem(item) {
+	nodeList = document.getElementsByName('select_item');
+	if (nodeList == null) return;
+	for (i = 0; i < nodeList.length; i++) {
+		nodeObject = nodeList[i];
+		if (nodeObject.value == item) {
+			nodeObject.checked = true;
+		} else {
+			nodeObject.checked = false;
+		}
+	}
 }
 
 // Button click handler for List.
@@ -69,6 +84,8 @@ function submitDelete() {
 	ajaxServerCommand.sendCommand(14, params);
 }
 
+// This is called when the reset button is pressed on the
+// form.  This resets all fields to their default values.
 function clearForm() {
 	// Non-Radio fields.
 	for (i = 0; i < fields.length; i++) {

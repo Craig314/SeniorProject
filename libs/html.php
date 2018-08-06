@@ -1372,8 +1372,9 @@ class html implements html_interface
 					else $tooltip = '';
 				}
 				else $tooltip = '';
+				$keydata = $kxr[0];
 ?>
-				<tr<?php echo $tooltip; ?>>
+				<tr<?php echo $tooltip; ?> onclick="selectItem('<?php echo $keydata; ?>');">
 <?php
 				// Column
 				$count = 0;

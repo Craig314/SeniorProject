@@ -38,6 +38,47 @@ function getNewName(type) {
 	return params;
 }
 
+function getConfirmation(type, method) {
+	switch (type) {
+		case 0:
+			tn = ' directory';
+			break;
+		case 1:
+			tn = ' file';
+			break;
+		default:
+			tn = ' ';
+			break;
+	}
+	switch (method) {
+		case 0:
+			md = ' rename ';
+			break;
+		case 1:
+			md = ' delete ';
+			break;
+		default:
+			md = ' ';
+	}
+	message = 'Are you sure that you want to' + md;
+	message += 'the selected' + tn + '?\Doing so can';
+	message += 'have an adverse effect on the application';
+	return window.confirm(message);
+}
+
+function selectItem(item) {
+	nodeList = document.getElementsByName('select_item');
+	if (nodeList == null) return;
+	for (i = 0; i < nodeList.length; i++) {
+		nodeObject = nodeList[i];
+		if (nodeObject.value == item) {
+			nodeObject.checked = true;
+		} else {
+			nodeObject.checked = false;
+		}
+	}
+}
+
 // Button click handler for moving to the home directory.
 $('#directoryHome').on('click', function() {
 	ajaxServerCommand.sendCommand(-1);
@@ -75,10 +116,8 @@ $('#fileDownload').on('click', function() {
 $('#fileRename').on('click', function() {
 	params = getParameters();
 	filename = getNewName(1);
-	if (filename != null && filename != '') {
-		conf = window.confirm('Are you sure that you want to rename the ' +
-			'selected file?\Doing so can have an adverse effect on ' +
-			'the application');
+	if (filename != null && filename != '' && filename != false) {
+		conf = getConfirmation(1, 0);
 		if (conf == true) {
 			filename = 'filename=' + filename;
 			ajaxServerCommand.sendCommand(12, filename, params);
@@ -89,9 +128,7 @@ $('#fileRename').on('click', function() {
 // Button click handler for deleting a file.
 $('#fileDelete').on('click', function() {
 	params = getParameters();
-	conf = window.confirm('Are you sure that you want to remove the ' +
-		'selected file?\nDoing so can have an adverse effect on ' +
-		'the application.');
+	conf = getConfirmation(1, 1);
 	if (conf == true) {
 		ajaxServerCommand.sendCommand(13, params);
 	}
@@ -101,7 +138,7 @@ $('#fileDelete').on('click', function() {
 $('#directoryCreate').on('click', function() {
 	params = getParameters();
 	dirname = getNewName(0);
-	if (dirname != null && dirname != '') {
+	if (dirname != null && dirname != '' && dirname != false) {
 		ajaxServerCommand.sendCommand(20, dirname, params);
 	}
 });
@@ -110,10 +147,8 @@ $('#directoryCreate').on('click', function() {
 $('#directoryRename').on('click', function() {
 	params = getParameters();
 	dirname = 'dirname=' + getNewName(0);
-	if (dirname != null && dirname != '') {
-		conf = window.confirm('Are you sure that you want to rename the ' +
-			'selected directory?\Doing so can have an adverse effect on ' +
-			'the application');
+	if (dirname != null && dirname != '' && dirname != false) {
+		conf = getConfirmation(0, 0);
 		if (conf == true) {
 			dirname = 'dirname=' + dirname;
 			ajaxServerCommand.sendCommand(21, dirname, params);
@@ -124,9 +159,7 @@ $('#directoryRename').on('click', function() {
 // Button click handler for deleting a directory.
 $('#directoryDelete').on('click', function() {
 	params = getParameters();
-	conf = window.confirm('Are you sure that you want to remove the ' +
-		'selected directory?\nDoing so can have an adverse effect on ' +
-		'the application.');
+	conf = getConfirmation(0, 1);
 	if (conf == true) {
 		ajaxServerCommand.sendCommand(22, params);
 	}
@@ -181,10 +214,8 @@ function fileDownload(txt) {
 }
 
 // Custom command processor
-function customCmdProc(cmd, txt)
-{
-	switch (cmd)
-	{
+function customCmdProc(cmd, txt) {
+	switch (cmd) {
 		case 46:
 			fileDownload(txt);
 			break;
