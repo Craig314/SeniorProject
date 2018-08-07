@@ -52,5 +52,19 @@ function printErrorContinue($message)
 	echo $message . "\n";
 }
 
+// Returns a value indicating the type of OS that the script is
+// running on.
+// 0 - Other (Usually Unix)
+// 1 - Mac OSX
+// 2 - Windows
+// Will add more values if needed (ie. Netware)
+function identOS()
+{
+	$os = PHP_OS;
+
+	if (stripos($os, 'darwin') !== false) return 1;
+	if (stripos($os, 'win') !== false) return 2;
+	return 0;
+}
 
 ?>

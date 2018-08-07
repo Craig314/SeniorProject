@@ -373,9 +373,12 @@ function directoryCreate()
 	$result = mkdir($currentPath . '/' . $dirName, 0775);
 	if ($result == false)
 		handleError('Filesystem Error: Make directory failed.');
-	$result = chgrp($currentPath . '/' . $dirName, 'www');
-	if ($result == false)
-		handleError('Filesystem Error: Unable to set directory GID.');
+	if (identOS() == 0)
+	{
+		$result = chgrp($currentPath . '/' . $dirName, 'www');
+		if ($result == false)
+			handleError('Filesystem Error: Unable to set directory GID.');
+	}
 	
 	// Refresh listing
 	buildDirectoryList($currentPath);
@@ -476,7 +479,7 @@ function directoryDelete()
 			'because it is not empty.');
 
 	// Everything is good, remove the directory.
-	$result = rmdir($currentPath . '/' . $dirName);
+	$result = rmdir($currentPath . '/' . $select);
 	if ($result == false)
 		handleError('Filesystem Error: Remove directory failed.');
 	
@@ -908,7 +911,7 @@ function buildDirectoryList($path)
 			'document root.');
 
 	// Setup
-	$fileList = array();
+	$filelist = array();
 	
 	// Get directory listing
 	$file = scandir($path);
@@ -969,23 +972,27 @@ function buildDirectoryList($path)
 		'tdata' => array(),
 		'tooltip' => array(),
 	);
-	foreach ($filelist as $kx => $vx)
+
+	if (count($filelist) > 0)
 	{
-		$tdata = array(
-			// These are the values that show up under the columns above.
-			// The *FIRST* value is the value that is sent when a row
-			// is selected.  AKA Key Field.
-			$vx['name'],
-			$vx['name'],
-			$vx['type'],
-			$vx['size'],
-			$vx['blkcnt'],
-			$vx['ctime'],
-			$vx['mode'],
-			$vx['link'],
-		);
-		array_push($list['tdata'], $tdata);
-		array_push($list['tooltip'], $vx['desc']);
+		foreach ($filelist as $kx => $vx)
+		{
+			$tdata = array(
+				// These are the values that show up under the columns above.
+				// The *FIRST* value is the value that is sent when a row
+				// is selected.  AKA Key Field.
+				$vx['name'],
+				$vx['name'],
+				$vx['type'],
+				$vx['size'],
+				$vx['blkcnt'],
+				$vx['ctime'],
+				$vx['mode'],
+				$vx['link'],
+			);
+			array_push($list['tdata'], $tdata);
+			array_push($list['tooltip'], $vx['desc']);
+		}
 	}
 
 	// Generate rest of page.
