@@ -648,12 +648,6 @@ function fileDetail()
 		handleError('Filesystem Error: You are not allowed to exit the ' .
 			'server document root.');
 	
-	// Check to make sure that the filename is in fact a file and not
-	// a directory.
-	if (!is_file($realPath. '/' . $select))
-		handleError('Filesystem Error: This command works with files only.<br>' .
-			'It does not work with directories.');
-	
 	$filename = $realPath . '/' . $select;
 	if ($currentPath == '/')
 		$filepath = $currentPath . $select;
