@@ -75,7 +75,7 @@ function getConfirmation(type, method) {
 			md = ' ';
 	}
 	message = 'Are you sure that you want to' + md;
-	message += 'the selected' + tn + '?\nDoing so can';
+	message += 'the selected' + tn + '?\nDoing so can ';
 	message += 'have an adverse effect on the application';
 	return window.confirm(message);
 }
@@ -182,12 +182,14 @@ function fileUpload() {
 	var secToken;
 	var formData;
 	var fileList;
+	var path;
 	var file;
 	var i;
 
 	// Get our necessary IDs.
 	fileSelect = document.getElementById('fileInput');
 	fileButton = document.getElementById('fileSubmit');
+	path = document.getElementById('hidden');
 	// Get the security token.
 	tokenObject = document.getElementById('token_data');
 	if (tokenObject != null) {
@@ -206,7 +208,7 @@ function fileUpload() {
 			file = fileList[i];
 			formData.append('uploadFiles', file, file.name);
 		}
-		ajaxServerSend.filePut(serverLinkObject, formData, fileButton, secToken, 10);
+		ajaxServerSend.filePut(serverLinkObject, path, formData, fileButton, secToken, 10);
 	}
 }
 
@@ -226,6 +228,14 @@ $('#fileView').on('click', function() {
 	ajaxServerCommand.sendCommand(12, params);
 });
 
+// Button click handler for file details.
+$('#fileDetail').on('click', function() {
+	var params;
+
+	params = getParameters();
+	ajaxServerCommand.sendCommand(15, params);
+});
+
 // Button click handler for renaming a file.
 $('#fileRename').on('click', function() {
 	var params;
@@ -234,10 +244,9 @@ $('#fileRename').on('click', function() {
 
 	params = getParameters();
 	filename = getNewName(1);
-	if (filename != null && filename != '' && filename != false) {
+	if (filename != null) {
 		conf = getConfirmation(1, 0);
 		if (conf == true) {
-			filename = 'filename=' + filename;
 			ajaxServerCommand.sendCommand(13, filename, params);
 		}
 	}
@@ -278,11 +287,24 @@ function fileDownload(txt) {
 	setTimeout(function () {popupWindow.close();}, 1000);
 }
 
+function fileView(txt) {
+	var feats;
+
+	feats = '';
+	window.open(txt, '_blank', feats);
+}
+
 // Custom command processor
 function customCmdProc(cmd, txt) {
 	switch (cmd) {
 		case 46:
 			fileDownload(txt);
+			break;
+		case 47:
+			fileView(txt);
+			break;
+		case 48:
+			window.alert(txt);
 			break;
 		default:
 			window.alert("Unknown command " + cmd + " returned by server.");

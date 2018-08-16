@@ -68,6 +68,8 @@ $htmlInjectFile = false;
 // If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
 require_once BASEDIR . 'timedate.php';
+require_once BASEDIR . 'utility.php';
+require_once BASEDIR . 'mime.php';
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -76,6 +78,8 @@ function loadInitialContent()
 {
 	global $htmlInjectFile;
 	global $CONFIGVAR;
+	global $vfystr;
+	global $herr;
 
 	// Additonal
 	// This is probably the only time that we pass parameters with
@@ -83,27 +87,58 @@ function loadInitialContent()
 	// request for it.
 	if (count($_GET) > 0)
 	{
-		if (isset($_GET['download']))
+		// Set the activity mode.
+		$mode = NULL;
+		if (isset($_GET['download'])) $mode = 'download';
+		if (isset($_GET['view'])) $mode = 'view';
+
+		// Process.
+		switch($mode)
 		{
-			$file = $_GET['download'];
-			$filename = $CONFIGVAR['server_document_root']['value'] . $file;
+			case 'download':
+				$file = $_GET['download'];
+				$filename = $CONFIGVAR['server_document_root']['value'] . $file;
+				$result = $vfystr->strchk($filename, '', '', verifyString::STR_PATHNAME);
+				if ($result == false)
+					handleError($herr->errorGetMessage());
 
-			// XXX: Add validation
+				// Send the file
+				if (file_exists($filename)) {
+					header('Content-Description: File Transfer');
+					header('Content-Type: application/octet-stream');
+					header('Content-Disposition: attachment; filename=' . basename($filename));
+					header('Expires: 0');
+					header('Cache-Control: must-revalidate');
+					header('Pragma: public');
+					header('Content-Length: ' . filesize($filename));
+					readfile($filename);
+				}
+				else http_response_code(404);
+				break;
+			case 'view':
+				$file = $_GET['view'];
+				$filename = $CONFIGVAR['server_document_root']['value'] . $file;
+				$result = $vfystr->strchk($filename, '', '', verifyString::STR_PATHNAME);
+				if ($result == false)
+					handleError($herr->errorGetMessage());
+				
+				if (file_exists($filename)) {
+					$ctype = mimeTypes::determineMime($filename);
+					header('Content-Type: ' . $ctype);
+					header('Content-Disposition: inline');
+					header('Expires: 0');
+					header('Cache-Control: must-revalidate');
+					header('Pragma: public');
+					header('Content-Length: ' . filesize($filename));
+					readfile($filename);
+				}
+				else http_response_code(404);
+				break;
+			default:
+				http_response_code(400);
+				exit(1);
 
-			// Send the file
-			if (file_exists($filename)) {
-				header('Content-Description: File Transfer');
-				header('Content-Type: application/octet-stream');
-				header('Content-Disposition: attachment; filename=' . basename($filename));
-				header('Expires: 0');
-				header('Cache-Control: must-revalidate');
-				header('Pragma: public');
-				header('Content-Length: ' . filesize($filename));
-				readfile($filename);
-			}
-			else http_response_code(404);
 		}
-		else http_response_code(400);
 		exit(0);
 	}
 
@@ -137,26 +172,31 @@ function loadInitialContent()
 		// use nested associtive arrays to group buttons together.
 		// $funcBar = array();
 		$funcBar = array(
+			'FILE' => 'noAction',
 			array(
-				'File UP' => 'fileUpload',
-				'File DN' => 'fileDownload',
+				'Upload' => 'fileUpload',
+				'Download' => 'fileDownload',
 			),
-			'View File' => 'fileView',
 			array(
-				'mv File' => 'fileRename',
-				'rm File' => 'fileDelete',
+				'View' => 'fileView',
+				'Detail' => 'fileDetail',
+			),
+			array(
+				'Rename' => 'fileRename',
+				'Delete' => 'fileDelete',
 			),
 		);
 		$funcBar2 = array(
+			'DIR' => 'noAction',
 			array(
-				'Home Dir' => 'directoryHome',
-				'UP Dir' => 'directoryUp',
-				'DN Dir' => 'directoryDown',
+				'Home' => 'directoryHome',
+				'UP' => 'directoryUp',
+				'DN' => 'directoryDown',
 			),
 			array(
-				'MkDir' => 'directoryCreate',
-				'MvDir' => 'directoryRename',
-				'RmDir' => 'directoryDelete',
+				'Create' => 'directoryCreate',
+				'Rename' => 'directoryRename',
+				'Delete' => 'directoryDelete',
 			),
 		);
 
@@ -205,9 +245,7 @@ function loadInitialContent()
 // modhead.php.
 function loadAdditionalContent()
 {
-	global $CONFIGVAR;
-
-	$path = $CONFIGVAR['server_document_root']['value'];
+	$path = '/';
 	buildDirectoryList($path);
 	exit(0);
 }
@@ -236,10 +274,10 @@ function commandProcessor($commandId)
 			directoryDelete();
 			break;
 		case 10:
-			fileDownload();
+			fileUpload();
 			break;
 		case 11:
-			fileUpload();
+			fileDownload();
 			break;
 		case 12:
 			fileView();
@@ -249,6 +287,9 @@ function commandProcessor($commandId)
 			break;
 		case 14:
 			fileDelete();
+			break;
+		case 15:
+			fileDetail();
 			break;
 		default:
 			// If we get here, then the command is undefined.
@@ -296,6 +337,11 @@ function directoryMoveDown()
 {
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
+
+
+	// Set the base path.
+	$basePath = $CONFIGVAR['server_document_root']['value'];
 
 	// Get current path
 	$currentPath = getPostValue('hidden');
@@ -319,10 +365,13 @@ function directoryMoveDown()
 		handleError($herr->errorGetMessage());
 
 	// Generate new path
-	$newPath = $currentPath . '/' . $select;
+	if ($currentPath == '/')
+		$newPath = '/' . $select;
+	else
+		$newPath = $currentPath . '/' . $select;
 
 	// Check to make sure that the selected item is a directory.
-	if (!is_dir($newPath))
+	if (!is_dir($basePath . $newPath))
 		handleError('Filesystem Error: You must select a directory ' .
 			'in order to use this command.');
 
@@ -342,11 +391,16 @@ function directoryCreate()
 {
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
 
 	// Get the current path.
 	$currentPath = getPostValue('hidden');
 	if (empty($currentPath))
 		handleError('Missing path data.');
+	if ($currentPath == '/')
+		$realPath = $CONFIGVAR['server_document_root']['value'];
+	else
+		$realPath = $CONFIGVAR['server_document_root']['value'] . $currentPath;
 
 	// Get the directory name.
 	$dirName = getPostValue('dirname');
@@ -364,18 +418,18 @@ function directoryCreate()
 		handleError($herr->errorGetMessage());
 
 	// Check to make sure that the current path is valid.
-	$result = checkDirectory($currentPath);
+	$result = checkDirectory($realPath);
 	if ($result == false)
 		handleError('Filesystem Error: You are not allowed to exit the ' .
 			'server document root.');
 	
 	// Everything is good, so create the directory and set the group.
-	$result = mkdir($currentPath . '/' . $dirName, 0775);
+	$result = mkdir($realPath . '/' . $dirName, 0775);
 	if ($result == false)
 		handleError('Filesystem Error: Make directory failed.');
 	if (identOS() == 0)
 	{
-		$result = chgrp($currentPath . '/' . $dirName, 'www');
+		$result = chgrp($realPath . '/' . $dirName, 'www');
 		if ($result == false)
 			handleError('Filesystem Error: Unable to set directory GID.');
 	}
@@ -389,11 +443,16 @@ function directoryRename()
 {
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
 
 	// Get the current path.
 	$currentPath = getPostValue('hidden');
 	if (empty($currentPath))
 		handleError('Missing path data.');
+	if ($currentPath == '/')
+		$realPath = $CONFIGVAR['server_document_root']['value'];
+	else
+		$realPath = $CONFIGVAR['server_document_root']['value'] . $currentPath;
 
 	// Get the selected item.
 	$select = getPostValue('select_item');
@@ -405,6 +464,7 @@ function directoryRename()
 	$dirName = getPostValue('dirname');
 	if (empty($dirName))
 		handleError('Missing new directory name.');
+	$dirName = $CONFIGVAR['server_document_root']['value'] . $dirName;
 
 	// Check to make sure that there are no invalid characters.
 	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
@@ -412,21 +472,21 @@ function directoryRename()
 		$herr->puterrmsg('Invalid characters in directory path.');
 	$result = $vfystr->strchk($select, '', '', verifyString::STR_FILENAME);
 	if ($result == false)
-		$herr->puterrmsg('Invalid characters in file/directory name.');
-	$result = $vfystr->strchk($dirName, '', '', verifyString::STR_FILENAME);
+		$herr->puterrmsg('Invalid characters in old directory name.');
+	$result = $vfystr->strchk($dirName, '', '', verifyString::STR_PATHNAME);
 	if ($result == false)
-		$herr->puterrmsg('Invalid characters in directory name.');
+		$herr->puterrmsg('Invalid characters in new directory name.');
 	if ($herr->checkState())
 		handleError($herr->errorGetMessage());
 
 	// Check to make sure that the current path is valid.
-	$result = checkDirectory($currentPath);
+	$result = checkDirectory($realPath);
 	if ($result == false)
 		handleError('Filesystem Error: You are not allowed to exit the ' .
 			'server document root.');
 	
 	// Everything is good, so rename the directory
-	$result = rename($currentPath . '/' . $select, $currentPath . '/' . $dirName);
+	$result = rename($realPath . '/' . $select, $realPath . '/' . $dirName);
 	if ($result == false)
 		handleError('Filesystem Error: Rename directory failed.');
 	
@@ -439,11 +499,16 @@ function directoryDelete()
 {
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
 
 	// Get the current path.
 	$currentPath = getPostValue('hidden');
 	if (empty($currentPath))
 		handleError('Missing path data.');
+	if ($currentPath == '/')
+		$realPath = $CONFIGVAR['server_document_root']['value'];
+	else
+		$realPath = $CONFIGVAR['server_document_root']['value'] . $currentPath;
 
 	// Get the selected item.
 	$select = getPostValue('select_item');
@@ -462,24 +527,24 @@ function directoryDelete()
 		handleError($herr->errorGetMessage());
 
 	// Check to make sure that the current path is valid.
-	$result = checkDirectory($currentPath);
+	$result = checkDirectory($realPath);
 	if ($result == false)
 		handleError('Filesystem Error: You are not allowed to exit the ' .
 			'server document root.');
 	
 	// check to make sure that the selected item is a directory.
-	if (!is_dir($currentPath . '/' . $select))
+	if (!is_dir($realPath . '/' . $select))
 		handleError('Filesystem Error: This command can only be used with ' .
 			'directories.');
 	
 	// Check to make sure that the directory is empty.
-	$rxa = scandir($currentPath . '/' . $select);
+	$rxa = scandir($realPath . '/' . $select);
 	if (count($rxa) > 2)
 		handleError('Filesystem Error: Unable to remove directory ' .
 			'because it is not empty.');
 
 	// Everything is good, remove the directory.
-	$result = rmdir($currentPath . '/' . $select);
+	$result = rmdir($realPath . '/' . $select);
 	if ($result == false)
 		handleError('Filesystem Error: Remove directory failed.');
 	
@@ -490,6 +555,148 @@ function directoryDelete()
 // Views a text file.
 function fileView()
 {
+	global $CONFIGVAR;
+	global $baseUrl;
+	global $moduleFilename;
+	global $ajax;
+	global $vfystr;
+	global $herr;
+
+	// Get the current path.
+	$currentPath = getPostValue('hidden');
+	if (empty($currentPath))
+		handleError('Missing path data.');
+	if ($currentPath == '/')
+		$realPath = $CONFIGVAR['server_document_root']['value'];
+	else
+		$realPath = $CONFIGVAR['server_document_root']['value'] . $currentPath;
+
+	// Get the selected item.
+	$select = getPostValue('select_item');
+	if ($select == NULL)
+		handleError('You must select an item from the list in order ' .
+			'to use this command.');
+	
+	// Check to make sure that there are no invalid characters.
+	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory path.');
+	$result = $vfystr->strchk($select, '', '', verifyString::STR_FILENAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory name.');
+	if ($herr->checkState())
+		handleError($herr->errorGetMessage());
+
+	// Check to make sure that the current path is valid.
+	$result = checkDirectory($realPath);
+	if ($result == false)
+		handleError('Filesystem Error: You are not allowed to exit the ' .
+			'server document root.');
+	
+	// Check to make sure that the filename is in fact a file and not
+	// a directory.
+	if (!is_file($realPath. '/' . $select))
+		handleError('Filesystem Error: This command works with files only.<br>' .
+			'It does not work with directories.');
+	
+	// Now build the URL
+	$url = $baseUrl . '/modules/' . $moduleFilename . '?view=' . $currentPath
+		. '/' . $select;
+
+	// Initiate the download
+	$ajax->sendCommand(47, $url);
+}
+
+// Provides details of the given file.
+function fileDetail()
+{
+	global $CONFIGVAR;
+	global $baseUrl;
+	global $moduleFilename;
+	global $ajax;
+	global $vfystr;
+	global $herr;
+
+	// Get the current path.
+	$currentPath = getPostValue('hidden');
+	if (empty($currentPath))
+		handleError('Missing path data.');
+	if ($currentPath == '/')
+		$realPath = $CONFIGVAR['server_document_root']['value'];
+	else
+		$realPath = $CONFIGVAR['server_document_root']['value'] . $currentPath;
+
+	// Get the selected item.
+	$select = getPostValue('select_item');
+	if ($select == NULL)
+		handleError('You must select an item from the list in order ' .
+			'to use this command.');
+	
+	// Check to make sure that there are no invalid characters.
+	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory path.');
+	$result = $vfystr->strchk($select, '', '', verifyString::STR_FILENAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory name.');
+	if ($herr->checkState())
+		handleError($herr->errorGetMessage());
+
+	// Check to make sure that the current path is valid.
+	$result = checkDirectory($realPath);
+	if ($result == false)
+		handleError('Filesystem Error: You are not allowed to exit the ' .
+			'server document root.');
+	
+	// Check to make sure that the filename is in fact a file and not
+	// a directory.
+	if (!is_file($realPath. '/' . $select))
+		handleError('Filesystem Error: This command works with files only.<br>' .
+			'It does not work with directories.');
+	
+	$filename = $realPath . '/' . $select;
+	if ($currentPath == '/')
+		$filepath = $currentPath . $select;
+	else
+		$filepath = $currentPath . '/' . $select;
+	$filestat = stat($filename);
+	if ($filestat === false)
+		handleError('Filesystem Error: Unable to get file status.');
+	$finfo = finfo_open(FILEINFO_MIME);
+	if (is_resource($finfo) == true)
+	{
+		$mtype = finfo_file($finfo, $filename, FILEINFO_MIME_TYPE);
+		$mencode = finfo_file($finfo, $filename, FILEINFO_MIME_ENCODING);
+	}
+	else
+	{
+		$mtype = mimeTypes::determineMime($filename);
+		$mencode = 'unknown';
+	}
+	
+	// Now build the information text.
+	$fileinfo = 'Name: ' . $select . chr(13);
+	$fileinfo .= 'Path: ' . $currentPath . chr(13);
+	$fileinfo .= 'Type: ' . determineFileType($filepath) . chr(13);
+	$fileinfo .= 'MIME Type: ' . $mtype . chr(13);
+	$fileinfo .= 'MIME Encoding: ' . $mencode . chr(13);
+	$fileinfo .= 'Size: ' . $filestat['size'] . chr(13);
+	$fileinfo .= 'Blocks: ' . $filestat['blocks'] . chr(13);
+	$fileinfo .= 'Mode: ' . convertMode($filestat['mode']) . ' (' . $filestat['mode']
+		. ')' . chr(13);
+	$fileinfo .= 'UserID: ' . $filestat['uid'] . chr(13);
+	$fileinfo .= 'GroupID: ' . $filestat['gid'] . chr(13);
+	$fileinfo .= 'Link Count: ' . $filestat['nlink'] . chr(13);
+	$fileinfo .= 'Access Time: ' . timedate::unix2canonical($filestat['atime']) . chr(13);
+	$fileinfo .= 'Modify Time: ' . timedate::unix2canonical($filestat['mtime']) . chr(13);
+	$fileinfo .= 'iNode  Time: ' . timedate::unix2canonical($filestat['ctime']) . chr(13);
+	$fileinfo .= 'Device No: ' . $filestat['dev'] . chr(13);
+	$fileinfo .= 'Device Type: ' . $filestat['rdev'] . chr(13);
+	$fileinfo .= 'iNode No: ' . $filestat['ino'] . chr(13);
+	$fileinfo .= 'Block Size: ' . $filestat['blksize'] . chr(13);
+
+	// Initiate the download
+	$ajax->sendCommand(48, $fileinfo);
 }
 
 // Renames an existing file.
@@ -497,11 +704,16 @@ function fileRename()
 {
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
 
 	// Get the current path.
 	$currentPath = getPostValue('hidden');
 	if (empty($currentPath))
 		handleError('Missing path data.');
+	if ($currentPath == '/')
+		$realPath = $CONFIGVAR['server_document_root']['value'];
+	else
+		$realPath = $CONFIGVAR['server_document_root']['value'] . $currentPath;
 
 	// Get the selected item.
 	$select = getPostValue('select_item');
@@ -514,27 +726,29 @@ function fileRename()
 	if (empty($fileName))
 		handleError('Missing new filename.');
 
+	var_dump($_POST);
+
 	// Check to make sure that there are no invalid characters.
 	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
 	if ($result == false)
 		$herr->puterrmsg('Invalid characters in directory path.');
 	$result = $vfystr->strchk($select, '', '', verifyString::STR_FILENAME);
 	if ($result == false)
-		$herr->puterrmsg('Invalid characters in filename.');
-	$result = $vfystr->strchk($fileName, '', '', verifyString::STR_FILENAME);
+		$herr->puterrmsg('Invalid characters in old filename.');
+	$result = $vfystr->strchk($fileName, '', '', verifyString::STR_PATHNAME);
 	if ($result == false)
 		$herr->puterrmsg('Invalid characters in new filename.');
 	if ($herr->checkState())
 		handleError($herr->errorGetMessage());
 
 	// Check to make sure that the current path is valid.
-	$result = checkDirectory($currentPath);
+	$result = checkDirectory($realPath);
 	if ($result == false)
 		handleError('Filesystem Error: You are not allowed to exit the ' .
 			'server document root.');
 	
 	// Everything is good, so rename the file.
-	$result = rename($currentPath . '/' . $select, $currentPath . '/' . $fileName);
+	$result = rename($realPath . '/' . $select, $realPath . '/' . $fileName);
 	if ($result == false)
 		handleError('Filesystem Error: Rename file failed.');
 	
@@ -547,11 +761,16 @@ function fileDelete()
 {
 	global $herr;
 	global $vfystr;
+	global $CONFIGVAR;
 
 	// Get the current path.
 	$currentPath = getPostValue('hidden');
 	if (empty($currentPath))
 		handleError('Missing path data.');
+	if ($currentPath == '/')
+		$realPath = $CONFIGVAR['server_document_root']['value'];
+	else
+		$realPath = $CONFIGVAR['server_document_root']['value'] . $currentPath;
 
 	// Get the selected item.
 	$select = getPostValue('select_item');
@@ -570,18 +789,18 @@ function fileDelete()
 		handleError($herr->errorGetMessage());
 
 	// Check to make sure that the current path is valid.
-	$result = checkDirectory($currentPath);
+	$result = checkDirectory($realPath);
 	if ($result == false)
 		handleError('Filesystem Error: You are not allowed to exit the ' .
 			'server document root.');
 	
 	// check to make sure that the selected item is a file.
-	if (!is_file($currentPath . '/' . $select))
+	if (!is_file($realPath . '/' . $select))
 		handleError('Filesystem Error: This command can only be used with ' .
 			'files.');
 	
 	// Everything is good, remove the file.
-	$result = unlink($currentPath . '/' . $select);
+	$result = unlink($realPath . '/' . $select);
 	if ($result == false)
 		handleError('Filesystem Error: Remove file failed.');
 	
@@ -596,6 +815,9 @@ function fileUpload()
 	global $vfystr;
 	global $CONFIGVAR;
 
+	// Sets the time limit.  Needed on Windows only.
+	if (identOS() == 2) set_time_limit(14400);
+
 	// Check the request method.  This function only works with the
 	// PUT method.
 	if ($_SERVER['REQUEST_METHOD'] != 'PUT')
@@ -605,7 +827,15 @@ function fileUpload()
 	// Retrieve the current path, if possible.
 	$currentPath = getPostValue('hidden');
 	if (empty($currentPath))
-		$currentPath = $CONFIGVAR['server_document_root']['value'];
+	{
+		$currentPath = $_SERVER['HTTP_X_PATH'];
+		if (empty($currentPath))
+			handleError('Missing path data.');
+	}
+	if ($currentPath == '/')
+		$realPath = $CONFIGVAR['server_document_root']['value'];
+	else
+		$realPath = $CONFIGVAR['server_document_root']['value'] . $currentPath;
 
 	// Parse out our multipart form marker.
 	$content = $_SERVER['CONTENT_TYPE'];
@@ -732,8 +962,11 @@ function fileUpload()
 			$filename = $fxa[1];
 			$result = $vfystr->strchk($filename, '', '', verifyString::STR_FILENAME);
 			if (!$result)
-				handleError('Processing Error: Multi-Part form header is ' .
+			{
+				$herr->puterrmsg('Processing Error: Multi-Part form header is ' .
 					'malformed.<br>XX23010 OFFSET=' . $filepos);
+				handleError($herr->errorGetMessage());
+			}
 			break;
 		}
 
@@ -745,10 +978,9 @@ function fileUpload()
 		if ($fileLength < 0)
 			handlerError('Processing Error: File length is negative!<br>' .
 			'XX23011 FILE=' . $filename);
-		var_dump($fileLength);
 
 		// Now we copy the data from the temp file over to the new file.
-		$outputStream = fopen($currentPath . '/' . $filename, 'w');
+		$outputStream = fopen($realPath . '/' . $filename, 'w');
 		if ($outputStream === false)
 			handleError('Filesystem Error: Unable to open output stream for ' .
 				'writing<br>XX23012 FILE=' . $filename);
@@ -781,6 +1013,10 @@ function fileUpload()
 
 	// Close the temp file.
 	fclose($tempFile);
+
+	// Refresh listing
+	buildDirectoryList($currentPath);
+
 }
 
 // Generates a URL for file download.
@@ -796,41 +1032,48 @@ function fileDownload()
 	global $moduleFilename;
 	global $ajax;
 
-	$select = getPostValue('select_item');
-	if ($select === NULL)
-		handleError('You must select an item from the list in order to use ' .
-			'this command.');
-	
-	// XXX: Need to add some verification of the filename string.
-
-	// Get some paths for later manipulation.
-	$docroot = $CONFIGVAR['server_document_root']['value'];
-	$userpath = getPostValue('hidden');
-	if (empty($userpath))
+	// Get the current path.
+	$currentPath = getPostValue('hidden');
+	if (empty($currentPath))
 		handleError('Missing path data.');
+	if ($currentPath == '/')
+		$realPath = $CONFIGVAR['server_document_root']['value'];
+	else
+		$realPath = $CONFIGVAR['server_document_root']['value'] . $currentPath;
 
+	// Get the selected item.
+	$select = getPostValue('select_item');
+	if ($select == NULL)
+		handleError('You must select an item from the list in order ' .
+			'to use this command.');
+	
+	// Check to make sure that there are no invalid characters.
+	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory path.');
+	$result = $vfystr->strchk($select, '', '', verifyString::STR_FILENAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory name.');
+	if ($herr->checkState())
+		handleError($herr->errorGetMessage());
+
+	// Check to make sure that the current path is valid.
+	$result = checkDirectory($realPath);
+	if ($result == false)
+		handleError('Filesystem Error: You are not allowed to exit the ' .
+			'server document root.');
+	
 	// Check to make sure that the filename is in fact a file and not
 	// a directory.
-	if (!is_file($userpath . '/' . $select))
+	if (!is_file($realPath. '/' . $select))
 		handleError('Filesystem Error: This command works with files only.<br>' .
 			'It does not work with directories.');
 	
-	// Remove the document root component of the current working
-	// directory.
-	$position = strpos($userpath, $docroot);
-	$rootlen = strlen($docroot);
-	$pathlen = strlen($userpath);
-	if ($rootlen == $pathlen) $pathfile = '/' . $select;
-	else
-	{
-		$path = substr($userpath, $rootlen + $position);
-		$pathfile = $path . '/' . $select;
-	}
-
 	// Now build the URL
-	$url = $baseUrl . '/modules/' . $moduleFilename . '?download=' . $pathfile;
+	$url = $baseUrl . '/modules/' . $moduleFilename . '?download=' .
+		$currentPath . '/' . $select;
 
-	// Initiate the download
+	// Initiate the download.
 	$ajax->sendCommand(46, $url);
 }
 
@@ -849,15 +1092,7 @@ function getPostValue(...$list)
 // root directory.  Returns false if it is, true if not.
 function checkDirectory($path)
 {
-	global $CONFIGVAR;
-
-	$baseDir = $CONFIGVAR['server_document_root']['value'];
-	$baseLen = strlen($baseDir);
-	
-	// Now run a few checks
-	if ($baseLen > strlen($path)) return false;
-	$str = substr($path, 0, $baseLen);
-	if (strcmp($baseDir, $str) != 0) return false;
+	// Run a few checks
 	if (strpos($path, '..', 0) != false) return false;
 
 	return true;
@@ -868,10 +1103,14 @@ function checkDirectory($path)
 // cannot be determined.
 function determineFileType($file)
 {
-	if (is_dir($file)) return 'Directory';
-	if (is_link($file)) return 'Symlink';
-	if (is_executable($file)) return 'Program';
-	if (is_file($file)) return 'File';
+	global $CONFIGVAR;
+
+	$basePath = $CONFIGVAR['server_document_root']['value'];
+	$realname = $basePath . $file;
+	if (is_dir($realname)) return 'Directory';
+	if (is_link($realname)) return 'Symlink';
+	if (is_executable($realname)) return 'Program';
+	if (is_file($realname)) return 'File';
 	return 'Unknown';
 }
 
@@ -894,6 +1133,10 @@ function convertMode($mode)
 // Builds a file listing selection table of the given path.
 function buildDirectoryList($path)
 {
+	global $CONFIGVAR;
+
+	// Set default path if path variable is empty.
+	if (empty($path)) $path = '/';
 
 	// Set the current path as hidden data.
 	$hidden = array(
@@ -903,9 +1146,13 @@ function buildDirectoryList($path)
 		'data' => $path,
 	);
 
+	// Set the real path.
+	$realpath = $CONFIGVAR['server_document_root']['value'] . $path;
+
+
 	// Check to make sure that we are allowed to go into the given
 	// directory.
-	$result = checkDirectory($path);
+	$result = checkDirectory($realpath);
 	if ($result == false)
 		handleError('Filesystem Error: Target path is outside the server ' .
 			'document root.');
@@ -914,7 +1161,7 @@ function buildDirectoryList($path)
 	$filelist = array();
 	
 	// Get directory listing
-	$file = scandir($path);
+	$file = scandir($realpath);
 	if ($file === false)
 		handleError('Filesystem Error: Unable to get directory listing: ' .
 			$path);
@@ -924,33 +1171,24 @@ function buildDirectoryList($path)
 	{
 		if ($vx == '.') continue;
 		if ($vx == '..') continue;
-		$stat = stat($path . '/' . $vx);
+		$stat = stat($realpath . '/' . $vx);
 		if ($stat == false) continue;
 		$temp = array(
 			'name' =>		$vx,
 			'type' =>		determineFileType($path . '/' . $vx),
 			'size' =>		$stat['size'],
-			'blkcnt' =>		$stat['blocks'],
 			'ctime' =>		timedate::unix2canonical($stat['mtime']),
 			'mode' =>		convertMode($stat['mode']),
-			'link' =>		$stat['nlink'],
 			'desc' =>
 				'Name: ' .			$vx . chr(13) .
 				'Type: ' .			determineFileType($path . '/' . $vx) . chr(13) .
 				'Size: ' .			$stat['size'] . chr(13) .
-				'Blocks: ' .		$stat['blocks'] . chr(13) .
 				'Mode: ' .			convertMode($stat['mode']) .
-					'(' . $stat['mode'] . ')' . chr(13) .
+					'  (' . $stat['mode'] . ')' . chr(13) .
 				'UID: ' . 			$stat['uid'] . chr(13) .
 				'GID: ' . 			$stat['gid'] . chr(13) .
-				'Links: ' .			$stat['nlink'] . chr(13) .
 				'Access Time: ' .	timedate::unix2canonical($stat['atime']) . chr(13) .
-				'Modify Time: ' .	timedate::unix2canonical($stat['mtime']) . chr(13) .
-				'iNode  Time: ' .	timedate::unix2canonical($stat['ctime']) . chr(13) .
-				'Dev #: ' .			$stat['dev'] . chr(13) .
-				'Dev Type: ' .		$stat['rdev'] . chr(13) .
-				'iNode #: ' .		$stat['ino'] . chr(13) .
-				'Blk Size: ' .		$stat['blksize'],
+				'Modify Time: ' .	timedate::unix2canonical($stat['mtime']) . chr(13),
 		);
 		$filelist[$vx] = $temp;
 	}
@@ -964,10 +1202,8 @@ function buildDirectoryList($path)
 			'Name',
 			'Type',
 			'Size',
-			'Blocks',
 			'Changed',
 			'Mode',
-			'Link',
 		),
 		'tdata' => array(),
 		'tooltip' => array(),
@@ -985,10 +1221,8 @@ function buildDirectoryList($path)
 				$vx['name'],
 				$vx['type'],
 				$vx['size'],
-				$vx['blkcnt'],
 				$vx['ctime'],
 				$vx['mode'],
-				$vx['link'],
 			);
 			array_push($list['tdata'], $tdata);
 			array_push($list['tooltip'], $vx['desc']);
@@ -1001,7 +1235,7 @@ function buildDirectoryList($path)
 		array(
 			'type' => html::TYPE_HEADING,
 			'message1' => 'Path: ',
-			'message2' => $path,	// Delete if not needed.
+			'message2' => $path,
 			'warning' => 'Deleting files can have an adverse impact on the applicaiton.',
 		),
 		array('type' => html::TYPE_TOPB1),

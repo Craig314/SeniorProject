@@ -85,6 +85,24 @@ function handleErrorClear($message)
 	exit(1);
 }
 
+// Sends an error message to the client.  Does not clear forms.
+function handleErrorCont($message)
+{
+	global $ajax;
+
+	$ajax->sendCommand(ajaxClass::CMD_ERRDISP, $message);
+	exit(1);
+}
+
+// Sends an error message to the client.  Does clear forms.
+function handleErrorClearCont($message)
+{
+	global $ajax;
+
+	$ajax->sendCommand(ajaxClass::CMD_ERRCLRDISP, $message);
+	exit(1);
+}
+
 // Sends a successful response message.
 function sendResponse($message)
 {
@@ -344,6 +362,7 @@ function httpMethod_POST()
 function httpMethod_PUT()
 {
 	global $ajax;
+	global $httpMethod_PUT_ENABLE;
 
 	// Make sure that this method is enabled in the module.  If it is,
 	// then we know that the module is expecting it.
