@@ -240,7 +240,7 @@ function loadAdditionalContent()
 	);
 
 	// Render
-	html::pageAutoGenerate($data);
+	echo html::pageAutoGenerate($data);
 
 	exit(0);
 }
@@ -590,7 +590,7 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	html::pageAutoGenerate($data);
+	echo html::pageAutoGenerate($data);
 }
 
 // Generates a generic field array from the different fields.

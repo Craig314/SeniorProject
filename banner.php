@@ -332,7 +332,7 @@ function bannerShowHeader($title, $subtitle, $message, $token)
 <?php
 	if ($token != false)
 	{
-		html::insertToken($token);
+		echo html::insertToken($token);
 	}
 ?>
 		<br><br>

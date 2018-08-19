@@ -240,7 +240,7 @@ function loadAdditionalContent()
 	);
 
 	// Render
-	html::pageAutoGenerate($data);
+	echo html::pageAutoGenerate($data);
 
 	exit(0);
 }
@@ -589,8 +589,10 @@ function formPage($mode, $rxa)
 		array('type' => html::TYPE_VTAB10),
 	);
 
+	var_dump($data);
+
 	// Render
-	html::pageAutoGenerate($data);
+	echo html::pageAutoGenerate($data);
 }
 
 // Generates a generic field array from the different fields.

@@ -275,7 +275,7 @@ function showHeader($title, $message, $user, $token)
 <?php
 	if ($token != false)
 	{
-		html::insertToken($token);
+		echo html::insertToken($token);
 	}
 ?>
 		<br><br>

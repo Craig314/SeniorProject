@@ -4,10 +4,7 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application Portal Grid View
-
-Because the HTML for this module is highly specialized, it is one of the
-few files that actually has HTML in the rendering code.
+PHP Web Application Module Template
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -23,11 +20,12 @@ the features/abilities they represent are being used:
 */
 
 
+
 // These variables must be set for every module.
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = 'gridportal.php';
+$moduleFilename = 'linkportal.php';
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
@@ -36,7 +34,7 @@ $moduleTitle = 'Portal';
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 1;
+$moduleId = 2;
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
@@ -55,15 +53,13 @@ $modulePermissions = array();
 
 
 
-
-
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
 $htmlInjectFile = false;
 
-// Order matter here.  The modhead library needs to be loaded first.
-// If additional libraries are needed, then load them afterwards.
+// Order matters here.  The modhead library needs to be loaded last.
+// If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
 require_once BASEDIR . 'modhead.php';
 
@@ -102,36 +98,38 @@ function loadInitialContent()
 		// use nested associtive arrays to group buttons together.
 		// $funcBar = array();
 
-		// jsFiles is an associtive array which contains additional
+		// jsfiles is an associtive array which contains additional
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
-			'/js/portal.js'
+			'/js/portal.js',
 		);
-	
-		// cssFiles is an associtive array which contains additional
+
+		// cssfiles is an associtive array which contains additional
 		// cascading style sheets that should be included in the head
 		// section of the HTML page.
+		// $cssFiles = array();
 		$cssFiles = array(
-			'/css/portal.css'
+			'/css/portal.css',
 		);
 
 		// The final option, htmlFlags, is an array that holds the names
 		// of supported options.  Currently, those options are checkbox,
 		// datepick, and tooltip.
-		// $htmlFiles = array(
+		// $htmlFlags= array(
 		// 	'checkbox',
 		// 	'datepick',
 		// 	'tooltip',
 		// );
-		$htmlFiles = array(
-		 	'tooltip',
+		$htmlFlags = array(
+			'tooltip',
+			'type2',
 		);
-	
+
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
-	    '', '', '', $jsFiles, $cssFiles, $htmlFiles); 
+			$left, '', '', $jsFiles, $cssFiles, $htmlFlags);
 	}
 	else
 	{
@@ -186,6 +184,7 @@ function loadAdditionalContent()
 	// Now we run the module list and check permissions and
 	// active status on each one. 
 	$access = false;
+	$navContent = '';
 	foreach($rxm as $kxa => $vxa)
 	{
 		// Check if the module is active.
@@ -207,8 +206,8 @@ function loadAdditionalContent()
 		// The vendor account always has access.
 		if ($vendor != 0)
 		{
-			writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
 			$access = true;
+			$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
 			continue;
 		}
 
@@ -220,16 +219,16 @@ function loadAdditionalContent()
 		// account.
 		if ($admin != 0)
 		{
-			writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
 			$access = true;
+			$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
 			continue;
 		}
 
 		// Modules with allusers set can be accessed by anyone.
 		if ($vxa['allusers'] != 0)
 		{
-			writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
 			$access = true;
+			$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
 			continue;
 		}
 
@@ -242,24 +241,29 @@ function loadAdditionalContent()
 			{
 				if ($modId == $vxb['moduleid'] && $profId == $vxb['profileid'])
 				{
-					writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
 					$access = true;
+					$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
 					break;
 				}
 			}
 		}
 	}
-
-	// If $access is still false, then we print an error.
-	if (!$access) handleError('You do not have access to any modules.');
-
-	exit(0);
+	
+	// Build the multi-send command.
+	$data = array(
+		0 => 'CMD 957 ' . $navContent,
+		1 => 'CMD 959 ' . '<b>Select an item to the left.</b>',
+	);
+	$sendData = json_encode($data);
+	echo 'MULTI ' . $sendData;
 }
 
 // Called when the initial command processor doesn't have the
 // command number. This call comes from modhead.php.
 function commandProcessor($commandId)
 {
+	global $ajax;
+
 	switch ((int)$commandId)
 	{
 		case 5:
@@ -279,14 +283,8 @@ function commandProcessor($commandId)
 function writeModuleIcon($url, $id, $iname, $dname, $desc)
 {
 	$tooltip = 'data-toggle="tooltip" data-html="true" title="' . $desc . '"';
-?>
-	<div class="icon" onclick="loadModule(<?php echo $id; ?>)" <?php echo $tooltip; ?>>
-		<div class="iconimg">
-			<img src="<?php echo $url. "/images/icon128/" . $iname; ?>">
-		</div>
-		<div class="icontxt iconfont"><?php echo $dname; ?></div>
-	</div>
-<?php
+	$content = "	<div class=\"linkicon iconfont\" onclick=\"loadModule($id)\" $tooltip>$dname</div>";
+	return $content;
 }
 
 // Loads the selected module.

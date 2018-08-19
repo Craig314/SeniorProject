@@ -412,7 +412,7 @@ function content()
 	);
 
 	// Render
-	html::pageAutoGenerate($data);
+	echo html::pageAutoGenerate($data);
 }
 
 ?>

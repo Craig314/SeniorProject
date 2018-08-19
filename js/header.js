@@ -69,5 +69,12 @@ function windowResize() {
 	heightWindow = $(window).height();
 	heightHeader = $('div#navigationBarHeader').height();
 	heightContent = heightWindow - heightHeader;
-	$(".main-wrapper-div").height(heightContent);
+	testObject = document.getElementById('link-nav');
+	if (testObject == null) {
+		$(".main-wrapper-div").height(heightContent);
+	} else {
+		// $(".link-nav-div").height(heightContent);
+		// $(".link-main-div").height(heightContent);
+		// $(".link-stat-div").height(heightContent);
+	}
 }

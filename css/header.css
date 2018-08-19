@@ -17,11 +17,17 @@ button:focus {
 	overflow-x: hidden;
 }
 
-/* body {
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-	overflow-y: scroll;
+.link-main-div {
+	overflow-y: auto;
+	overflow-x: hidden;
 }
- */
 
+.link-nav-div {
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.link-status-div {
+	overflow-y: auto;
+	overflow-x: hidden;
+}

@@ -231,7 +231,7 @@ function loadAdditionalContent()
 	);
 
 	// Render
-	html::pageAutoGenerate($data);
+	echo html::pageAutoGenerate($data);
 
 	exit(0);
 }
@@ -695,8 +695,6 @@ function formPage($mode, $rxa)
 			if ($vx == '.') continue;
 			if ($vx == '..') continue;
 			if ($vx == 'template.php') continue;
-			if ($vx == $CONFIGVAR['html_gridportal_page']['value']) continue;
-			if ($vx == $CONFIGVAR['html_linkportal_page']['value']) continue;
 			$filelist[$vx] = $vx;
 		}
 		unset($file);
@@ -815,7 +813,7 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	html::pageAutoGenerate($data);
+	echo html::pageAutoGenerate($data);
 }
 
 // Generates a generic field array from the different fields.

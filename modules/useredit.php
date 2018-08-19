@@ -324,7 +324,7 @@ function loadAdditionalContent()
 	);
 
 	// Render
-	html::pageAutoGenerate($data);
+	echo html::pageAutoGenerate($data);
 
 	exit(0);
 }
@@ -1671,7 +1671,7 @@ function formPage($mode, $rxa)
 	// Custom field rendering code
 	// Identity (This is passed in $rxa)
 	$userid = generateField(html::TYPE_TEXT, 'userid', 'User ID', 3, $rxa['userid'],
-		'The numeric user id which uniqly identifies the user.', $default, $key);
+		'The numeric user id which uniquely identifies the user.', $default, $key);
 	$uname = generateField(html::TYPE_TEXT, 'username', 'User Name', 6,
 		$rxa['username'], 'The name the user logs in with.', $default, $disable);
 	$profid = array(
@@ -1966,7 +1966,7 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	html::pageAutoGenerate($data);
+	echo html::pageAutoGenerate($data);
 }
 
 // Generates a generic field array from the different fields.

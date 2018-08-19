@@ -160,23 +160,21 @@ class html implements html_interface
 		{
 			if (strcasecmp($default, $vx) != 0 && strcasecmp($default, $kx) != 0)
 			{
-?>
-						<option value="<?php echo $vx; ?>"><?php echo $kx; ?></option>
-<?php
+				$html = "
+						<option value=\"$vx\">$kx</option>";
 			}
 			else
 			{
-?>
-						<option value="<?php echo $vx; ?>" selected="selected"><?php echo $kx; ?></option>
-<?php
+				$html = "
+						<option value=\"$vx\" selected=\"selected\">$kx</option>";
 			}
 		}
 		else
 		{
-?>
-						<option value="<?php echo $vx; ?>"><?php echo $kx; ?></option>
-<?php
+				$html = "
+						<option value=\"$vx\">$kx</option>";
 		}
+		return $html;
 	}
 
 	// Helper: Name and ID fields
@@ -489,19 +487,19 @@ class html implements html_interface
 		$printout = $name . $value . $default . $event . $tooltip . $disabled;
 
 		// Render
-?>
-		<div class="row">
-			<div <?php echo $dcmST; ?> class="form-group<?php echo $stx; ?>">
-				<label <?php echo $lclass . $forx ?>><?php echo $label; ?></label>
-				<div<?php echo $fclass; ?>>
-					<span<?php echo $icons; ?>><i<?php echo $icond; ?>></i></span>
-					<input type="<?php echo $type; ?>" class="form-control"<?php echo $printout;?>>
-					<span <?php echo $dcmGL; ?> class="glyphicon<?php echo $gix; ?> form-control-feedback"></span>
-					<span <?php echo $dcmMS; ?>></span>
+		$html = "
+		<div class=\"row\">
+			<div $dcmST class=\"form-group $stx\">
+				<label $lclass $forx>$label</label>
+				<div $fclass>
+					<span $icons><i $icond></i></span>
+					<input type=\"$type\" class=\"form-control\" $printout>
+					<span $dcmGL class=\"glyphicon $gix form-control-feedback\"></span>
+					<span $dcmMS></span>
 				</div>
 			</div>
-		</div>
-<?php
+		</div>";
+		return $html;
 	}
 
 
@@ -620,13 +618,13 @@ class html implements html_interface
 	// Inserts a security token in the page.
 	static public function insertToken($token)
 	{
-?>
+		$html = "
 	<div>
-		<form id="token_form">
-			<input type="hidden" name="token_data" id="token_data" value="<?php echo $token; ?>">
+		<form id=\"token_form\">
+			<input type=\"hidden\" name=\"token_data\" id=\"token_data\" value=\"$token\">
 		</form>
-	</div>
-<?php
+	</div>";
+		return $html;
 	}
 
 	// Incorporates a hidden form with a hidden field to pass
@@ -642,25 +640,25 @@ class html implements html_interface
 			else $name = '';
 		if (isset($data['data'])) $value = $data['data'];
 			else $value = '';
-?>
+		$html = "
 	<div>
-		<form <?php echo $fname; ?>>
-			<input type="hidden" <?php echo $name; ?> value="<?php echo $value; ?>">
+		<form $fname>
+			<input type=\"hidden\" $name value=\"$value\">
 		</form>
-	</div>
-<?php
+	</div>";
+		return $html;
 	}
 	
 	// Inserts a text field
 	static public function insertFieldText($data)
 	{
-		self::insertFieldTextCommon('text', $data);
+		return self::insertFieldTextCommon('text', $data);
 	}
 
 	// Inserts a password field
 	static public function insertFieldPassword($data)
 	{
-		self::insertFieldTextCommon('password', $data);
+		return self::insertFieldTextCommon('password', $data);
 	}
 
 	// Inserts a file picker field
@@ -681,24 +679,24 @@ class html implements html_interface
 			else $bname = '';
 		if (!empty($data['action'])) $action = ' onclick="' . $data['action'] . '"';
 			else $action = '';
-?>
-		<form <?php echo $fname; ?>>
-			<div class="row">
-				<div class="form-group">
-					<label <?php echo $lclass; ?>><?php echo $label; ?></label>
-					<div<?php echo $fclass; ?>>
-						<input type="file" <?php echo $name; ?> class="form-control" multiple>
+		$html = "
+		<form $fname>
+			<div class=\"row\">
+				<div class=\"form-group\">
+					<label $lclass> $label</label>
+					<div $fclass>
+						<input type=\"file\" $name class=\"form-control\" multiple>
 					</div>
 				</div>
 			</div>
 		</form>
-		<div class="row">
-			<div class="form-group">
-				<span <?php echo $lclass; ?>></span>
-				<button <?php echo $bname . $action; ?> class="btn btn-default">Upload</button>
+		<div class=\"row\">
+			<div class=\"form-group\">
+				<span $lclass></span>
+				<button $bname . $action class=\"btn btn-default\">Upload</button>
 			</div>
-		</div>
-<?php
+		</div>";
+		return $html;
 	}
 
 	// Inserts a mutli-line text box.
@@ -748,19 +746,19 @@ class html implements html_interface
 		$printout = $name . $default . $event . $tooltip . $disabled;
 
 		// Render
-?>
-		<div class="row">
-			<div <?php echo $dcmST; ?>class="form-group<?php echo $stx; ?>">
-				<label <?php echo $lclass . $forx ?>><?php echo $label; ?></label>
-				<div<?php echo $fclass; ?>>
-					<span<?php echo $icons; ?>><i<?php echo $icond; ?>></i></span>
-					<textarea rows="<?php echo $rows; ?>" class="form-control"<?php echo $printout;?>><?php echo $value; ?></textarea>
-					<span <?php echo $dcmGL; ?> class="glyphicon<?php echo $gix; ?> form-control-feedback"></span>
-					<span <?php echo $dcmMS; ?>></span>
+		$html = "
+		<div class=\"row\">
+			<div $dcmST class=\"form-group $stx\">
+				<label $lclass $forx>$label</label>
+				<div $fclass>
+					<span $icons><i $icond></i></span>
+					<textarea rows=\"$rows\" class=\"form-control\" $printout>$value</textarea>
+					<span $dcmGL class=\"glyphicon$gix form-control-feedback\"></span>
+					<span $dcmMS></span>
 				</div>
 			</div>
-		</div>
-<?php
+		</div>";
+		return $html;
 	}
 
 	// Uses the following parameters:
@@ -823,121 +821,104 @@ class html implements html_interface
 		switch ($side)
 		{
 			case 0:		// Dual Mode: Left
-?>
-		<div class="row">
-			<div class="form-group">
-				<span<?php echo $padding; ?>></span>
-				<label <?php echo $lclass_r . $forx; ?>><?php echo $label; ?></label>
-				<div<?php echo $fclass; ?>>
-<?php
+				$html = "		<div class=\"row\">
+			<div class=\"form-group\">
+				<span $padding></span>
+				<label $lclass_r $forx>$label</label>
+				<div $fclass>";
 				if ($toggle != 0)
 				{
-?>
-					<label class="switch">
-<?php
+					$html .= "
+					<label class=\"switch\">";
 				}
-?>
-					<input type="checkbox" value="true" class="form-control"<?php echo $printout;?>>
-<?php
+				$html .= "
+					<input type=\"checkbox\" value=\"true\" class=\"form-control\" $printout>";
 				if ($toggle == 1)
 				{
-?>
-					<span class="slider round">
-					</label>
-<?php
+					$html .= "
+					<span class=\"slider round\">
+					</label>";
 				}
 				if ($toggle == 2)
 				{
-?>
-					<span class="slider">
-					</label>
-<?php
+					$html .= "
+					<span class=\"slider\">
+					</label>";
 				}
-?>
-				</div>
-<?php
+				$html .= "
+				</div>";
 				break;
 			case 1:		// Dual Mode: Right
-?>
-				<div<?php echo $fclass; ?>>
-<?php
+				$html = "
+				<div $fclass>";
 				if ($toggle != 0)
 				{
-?>
-					<label class="switch">
-<?php
+					$html .= "
+					<label class=\"switch\">";
 				}
-?>
-					<input type="checkbox" value="true" class="form-control"<?php echo $printout;?>>
-<?php
+				$html .= "
+					<input type=\"checkbox\" value=\"true\" class=\"form-control\" $printout>";
 				if ($toggle == 1)
 				{
-?>
-					<span class="slider round">
-					</label>
-<?php
+					$html .= "
+					<span class=\"slider round\">
+					</label>";
 				}
 				if ($toggle == 2)
 				{
-?>
-					<span class="slider">
-					</label>
-<?php
+					$html .= "
+					<span class=\"slider\">
+					</label>";
 				}
-?>
+					$html .= "
 				</div>
-				<label <?php echo $lclass_l . $forx; ?>><?php echo $label; ?></label>
-				<span<?php echo $padding; ?>></span>
+				<label $lclass_l $forx>$label</label>
+				<span $padding></span>
 			</div>
-		</div>
-<?php
+		</div>";
 				break;
 			case 2:		// Single Mode
-?>
-		<div class="row">
-			<div class="form-group">
-				<label <?php echo $lclass . $forx; ?>><?php echo $label; ?></label>
-				<div<?php echo $fclass; ?>>
-<?php
+				$html = "
+		<div class=\"row\">
+			<div class=\"form-group\">
+				<label $lclass $forx>$label</label>
+				<div $fclass>";
 				if ($toggle != 0)
 				{
-?>
-					<label class="switch">
-<?php
+					$html .= "
+					<label class=\"switch\">";
 				}
-?>
-					<input type="checkbox" value="true" class="form-control"<?php echo $printout;?>>
-<?php
+					$html .= "
+					<input type=\"checkbox\" value=\"true\" class=\"form-control\" $printout>";
 				if ($toggle == 1)
 				{
-?>
-					<span class="slider round">
-					</label>
-<?php
+					$html .= "
+					<span class=\"slider round\">
+					</label>";
 				}
 				if ($toggle == 2)
 				{
-?>
-					<span class="slider">
-					</label>
-<?php
+					$html .= "
+					<span class=\"slider\">
+					</label>";
 				}
-?>
+				$html .= "
 				</div>
 			</div>
-		</div>
-<?php
+		</div>";
 				break;
 		}
+		return $html;
 	}
 
 	// Inserts a group of radio buttons.
 	static public function insertRadioButtons($data)
 	{
 		$disabled = NULL;
+		$html = '';
 
 		// Parameters
-		helperDisabled($data, $disabled);
+		self::helperDisabled($data, $disabled);
 		if (isset($data['name'])) $name = 'name="' . $data['name'] .'"';
 			else $name = '';
 		if (!empty($data['default'])) $value = $data['default'];
@@ -947,34 +928,37 @@ class html implements html_interface
 			$index = 0;
 			foreach($data['data'] as $kx => $vx)
 			{
-				if (is_array($data['tooltip']))
+				if (!empty($data['tooltip']))
 				{
-					if (!empty($data['tooltip'][$index]))
+					if (is_array($data['tooltip']))
 					{
-						$ttText = $data['tooltip'][$index];
-						$tooltip = ' data-toggle="tooltip" data-html="true" title="' . $ttText . '"'; 
+						if (!empty($data['tooltip'][$index]))
+						{
+							$ttText = $data['tooltip'][$index];
+							$tooltip = ' data-toggle="tooltip" data-html="true" title="' . $ttText . '"'; 
+						}
 					}
+					else $tooltip = '';
 				}
 				else $tooltip = '';
 				if ($vx == $value)
 				{
-?>
-		<div class="radio"<?php echo $tooltip; ?>>
-			<label><input type="radio" <?php echo $name; echo $disabled; ?> value="<?php echo $vx; ?>" checked><?php echo $kx; ?></label>
-		</div>
-<?php
+					$html .= "
+		<div class=\"radio\" $tooltip>
+			<label><input type=\"radio\" $name $disabled value=\"$vx\" checked>$kx</label>
+		</div>";
 				}
 				else
 				{
-?>
-		<div class="radio"<?php echo $tooltip; ?>>
-			<label><input type="radio" <?php echo $name; ?> value="<?php echo $vx; ?>"><?php echo $kx; ?></label>
-		</div>
-<?php
+					$html .= "
+		<div class=\"radio\" $tooltip>
+			<label><input type=\"radio\" $name value=\"$vx\">$kx</label>
+		</div>";
 				}
 				$index++;
 			}
 		}
+		return $html;
 	}
 
 	// Inserts a drop down list control.
@@ -1037,20 +1021,17 @@ class html implements html_interface
 		$printout = $name . $tooltip . $event . $disabled;
 
 		// Render
-
-?>
-		<div class="row">
-			<div <?php echo $dcmST; ?> class="form-group<?php echo $stx; ?>">
-				<label <?php echo $lclass . $forx ?>><?php echo $label; ?></label>
-				<div<?php echo $fclass; ?>>
-					<span<?php echo $icons; ?>><i<?php echo $icond; ?>></i></span>
-					<select class="form-control"<?php echo $printout; ?>>
-<?php
+		$html = "
+		<div class=\"row\">
+			<div $dcmST class=\"form-group$stx\">
+				<label $lclass $forx>$label</label>
+				<div $fclass>
+					<span $icons><i $icond></i></span>
+					<select class=\"form-control\" $printout>";
 		if ($blank == true)
 		{
-?>
-						<option value="----">----</option>
-<?php
+			$html .= "
+						<option value=\"----\">----</option>";
 		}
 		if (!empty($data['optlist']))
 		{
@@ -1058,31 +1039,29 @@ class html implements html_interface
 			{
 				if (is_array($vx))
 				{
-?>
-						<optgroup label="<?php echo $kx; ?>">
-<?php
+					$html .= "
+						<optgroup label=\"$kx\">";
 					foreach($vx as $kxa => $vxa)
 					{
-						self::insertFieldSelectHelper($kxa, $vxa, $default);
+						$html .= self::insertFieldSelectHelper($kxa, $vxa, $default);
 					}
-?>
-						</optgroup>
-<?php
+					$html .= "
+						</optgroup>";
 				}
 				else
 				{
-					self::insertFieldSelectHelper($kx, $vx, $default);
+					$html .= self::insertFieldSelectHelper($kx, $vx, $default);
 				}
 			}
 		}
-?>
+		$html .= "
 					</select>
-					<span <?php echo $dcmGL; ?> class="glyphicon<?php echo $gix; ?> form-control-feedback"></span>
-					<span <?php echo $dcmMS; ?>></span>
+					<span $dcmGL class=\"glyphicon$gix form-control-feedback\"></span>
+					<span $dcmMS></span>
 				</div>
 			</div>
-		</div>
-<?php
+		</div>";
+		return $html;
 	}
 
 	// Inserts a static bulleted list.
@@ -1093,21 +1072,23 @@ class html implements html_interface
 		if (!is_array($data)) return;
 
 		// Render
-		echo $indent . "\t<ul>\n";
+		$html = $indent . "\t<ul>\n";
 		foreach($data as $vx)
 		{
 			if (is_array($vx)) self::insertList($vx, $indent . "\t");
 			else
 			{
-				echo $indent . "\t\t<li>" . $vx . "</li>\n";
+				$html .= $indent . "\t\t<li>" . $vx . "</li>\n";
 			}
 		}
-		echo $indent . "\t</ul>\n";
+		$html .= $indent . "\t</ul>\n";
+		return $html;
 	}
 
-	// Inserts one or more button controls.
+	// Inserts multiple button controls.
 	static public function insertButtons($data)
 	{
+		$html = '';
 		// Button width
 		// Horizontal spacing is 1
 		if (!empty($data['width']))
@@ -1160,10 +1141,9 @@ class html implements html_interface
 
 		if ($direction == 1)
 		{
-?>
-		<div class="button">
-			<div class="form-group">
-<?php
+			$html .= "
+		<div class=\"button\">
+			<div class=\"form-group\">";
 		}
 		foreach($data['button_data'] as $btn => $btndat)
 		{
@@ -1196,36 +1176,29 @@ class html implements html_interface
 			switch($direction)
 			{
 				case 0:	// Vertical
-?>
-		<div class="row">
-			<div class="button">
-				<div class="form-group">
-<?php
+					$html .= "
+		<div class=\"row\">
+			<div class=\"button\">
+				<div class=\"form-group\">";
 					if ($space)
 					{
-?>
-					<span class="col-xs-1"></span>
-<?php
+						$html .= "
+					<span class=\"col-xs-1\"></span>";
 					}
-?>
-					<input type="button" <?php echo $printout; ?>>
+					$html .= "
+					<input type=\"button\" $printout>
 				</div>
 			</div>
-		</div>
-<?php
+		</div>";
 					break;
 				case 1: // Horizontal
-?>
-<?php
 					if ($space)
 					{
-?>
-				<span class="col-xs-1"></span>
-<?php
+						$html .= "
+				<span class=\"col-xs-1\"></span>";
 					}
-?>
-				<input type="button" <?php echo $printout; ?>>
-<?php
+					$html .= "
+				<input type=\"button\" $printout>";
 					break;
 				default:	// Unknown
 					break;
@@ -1233,16 +1206,18 @@ class html implements html_interface
 		}
 		if ($direction == 1)
 		{
-?>
+			$html .= "
 			</div>
-		</div>
-<?php
+		</div>";
 		}
+		return $html;
 	}
 
 	// Inserts action buttons
 	static public function insertActionButtons($data)
 	{
+		$html = '';
+
 		if (isset($data['dispname']))
 			$dispname = $data['dispname'];
 		else
@@ -1256,76 +1231,74 @@ class html implements html_interface
 			switch($data['btnset'])
 			{
 				case self::BTNTYP_VIEW:
-?>
-		<div class="row">
-			<div class="button">
-				<div class="form-group">
-					<span class="col-xs-4"></span>
-					<input type="button" class="btn btn-success col-xs-4" name="initialview" value="Go Back" onclick="ajaxServerCommand.sendCommand(-1)">
-					<span class="col-xs-4"></span>
+					$html = "
+		<div class=\"row\">
+			<div class=\"button\">
+				<div class=\"form-group\">
+					<span class=\"col-xs-4\"></span>
+					<input type=\"button\" class=\"btn btn-success col-xs-4\" name=\"initialview\" value=\"Go Back\" onclick=\"ajaxServerCommand.sendCommand(-1)\">
+					<span class=\"col-xs-4\"></span>
 				</div>
 			</div>
-		</div>
-<?php
+		</div>";
 
 					break;
 				case self::BTNTYP_UPDATE:
-?>
-			<div class="row">
-				<div class="button">
-					<div class="form-group">
-						<span class="col-xs-1"></span>
-						<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Submit Changes" onclick="<?php echo $action; ?>">
-						<span class="col-xs-1"></span>
-						<input type="button" class="btn btn-info col-xs-3" name="Reset" value="Reset" onclick="clearForm()">
-						<span class="col-xs-1"></span>
-						<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="ajaxServerCommand.sendCommand(-1)">
+					$html = "
+			<div class=\"row\">
+				<div class=\"button\">
+					<div class=\"form-group\">
+						<span class=\"col-xs-1\"></span>
+						<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Submit Changes\" onclick=\"$action\">
+						<span class=\"col-xs-1\"></span>
+						<input type=\"button\" class=\"btn btn-info col-xs-3\" name=\"Reset\" value=\"Reset\" onclick=\"clearForm()\">
+						<span class=\"col-xs-1\"></span>
+						<input type=\"button\" class=\"btn btn-success col-xs-3\" name=\"initialview\" value=\"Go Back\" onclick=\"ajaxServerCommand.sendCommand(-1)\">
 					</div>
 				</div>
-			</div>
-<?php
+			</div>";
 					break;
 				case self::BTNTYP_INSERT:
-?>
-		<div class="row">
-			<div class="button">
-				<div class="form-group">
-					<span class="col-xs-1"></span>
-					<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Insert<?php echo ' ' . $dispname; ?>" onclick="<?php echo $action; ?>">
-					<span class="col-xs-1"></span>
-					<input type="button" class="btn btn-info col-xs-3" name="Reset" value="Reset" onclick="clearForm()">
-					<span class="col-xs-1"></span>
-					<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="ajaxServerCommand.sendCommand(-1)">
+					$html = "
+		<div class=\"row\">
+			<div class=\"button\">
+				<div class=\"form-group\">
+					<span class=\"col-xs-1\"></span>
+					<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Insert<?php echo ' ' . $dispname; ?>\" onclick=\"<?php echo $action; ?>\">
+					<span class=\"col-xs-1\"></span>
+					<input type=\"button\" class=\"btn btn-info col-xs-3\" name=\"Reset\" value=\"Reset\" onclick=\"clearForm()\">
+					<span class=\"col-xs-1\"></span>
+					<input type=\"button\" class=\"btn btn-success col-xs-3\" name=\"initialview\" value=\"Go Back\" onclick=\"ajaxServerCommand.sendCommand(-1)\">
 				</div>
 			</div>
-		</div>
-<?php
+		</div>";
 					break;
 				case self::BTNTYP_DELETE:
-?>
-			<div class="row">
-				<div class="button">
-					<div class="form-group">
-						<span class="col-xs-2"></span>
-						<input type="button" class="btn btn-danger col-xs-3" name="Submit" value="Delete<?php echo ' ' . $dispname; ?>" onclick="<?php echo $action; ?>">
-						<span class="col-xs-2"></span>
-						<input type="button" class="btn btn-success col-xs-3" name="initialview" value="Go Back" onclick="ajaxServerCommand.sendCommand(-1)">
-						<span class="col-xs-2"></span>
+					$html = "
+			<div class=\"row\">
+				<div class=\"button\">
+					<div class=\"form-group\">
+						<span class=\"col-xs-2\"></span>
+						<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Delete<?php echo ' ' . $dispname; ?>\" onclick=\"<?php echo $action; ?>\">
+						<span class=\"col-xs-2\"></span>
+						<input type=\"button\" class=\"btn btn-success col-xs-3\" name=\"initialview\" value=\"Go Back\" onclick=\"ajaxServerCommand.sendCommand(-1)\">
+						<span class=\"col-xs-2\"></span>
 					</div>
 				</div>
-			</div>
-<?php
+			</div>";
 					break;
 				default:
 					break;
 			}
 		}
+		return $html;
 	}
 
 	// Inserts a selection table with radio buttons and field names.
 	static public function insertSelectionTable($data)
 	{
 		$tooltip = NULL;
+		$html = '';
 
 		// Parameters
 		if (isset($data['name'])) $name = 'name="' . $data['name'] .'"';
@@ -1334,80 +1307,78 @@ class html implements html_interface
 		// Title Row
 		if (isset($data['titles']))
 		{
-?>
-		<table class="table table-hover table-condensed">
+			$html .= "
+		<table class=\"table table-hover table-condensed\">
 			<thead> 
 				<tr>
-					<th class="text-center">Select</th>
-<?php
+					<th class=\"text-center\">Select</th>";
 			foreach($data['titles'] as $kx)
 			{
-?>
-					<th class="text-center"><?php echo $kx; ?></th>
-<?php
+				$html .= "
+					<th class=\"text-center\">$kx</th>";
 			}
-?>
+			$html .= "
 				</tr>
-			</thead>
-<?php
+			</thead>";
 		}
 
 		// Table Data
 		if (isset($data['tdata']))
 		{
-?>
-			<tbody>
-<?php
+			$html .= "
+			<tbody>";
+
 			// Row
 			$index = 0;
 			foreach($data['tdata'] as $kxr)
 			{
-				if (is_array($data['tooltip']))
+				if (!empty($data['tooltip']))
 				{
-					if (!empty($data['tooltip'][$index]))
+					if (is_array($data['tooltip']))
 					{
-						$ttText = $data['tooltip'][$index];
-						$tooltip = ' data-toggle="tooltip" data-html="true" title="' . $ttText . '"'; 
+						if (!empty($data['tooltip'][$index]))
+						{
+							$ttText = $data['tooltip'][$index];
+							$tooltip = ' data-toggle="tooltip" data-html="true" title="' . $ttText . '"'; 
+						}
+						else $tooltip = '';
 					}
 					else $tooltip = '';
 				}
 				else $tooltip = '';
 				$keydata = $kxr[0];
-?>
-				<tr<?php echo $tooltip; ?> onclick="selectItem('<?php echo $keydata; ?>');">
-<?php
+				$html .= "
+				<tr $tooltip onclick=\"selectItem('$keydata');\">";
+
 				// Column
 				$count = 0;
 				foreach($kxr as $kxc)
 				{
 					if ($count == 0)
 					{
-?>
-					<td class="text-center">
-						<div class="radio">
-							<label><input type="radio" <?php echo $name; ?> value="<?php echo $kxc; ?>"></label>
+						$html .= "
+					<td class=\"text-centeri\">
+						<div class=\"radio\">
+							<label><input type=\"radio\" $name value=\"$kxc\"></label>
 						</div>
-					</td>
-<?php
+					</td>";
 					}
 					else
 					{
-?>
-					<td class="text-center"><?php echo $kxc; ?></td>
-<?php
+						$html .= "
+					<td class=\"text-center\">$kxc</td>";
 					}
 					$count++;
 				}
-?>
-				</tr>
-<?php
+				$html .= "
+				</tr>";
 				$index++;
 			}
-?>
+			$html .= "
 			</tbody>
-		</table>
-<?php
+		</table>";
 		}
+		return $html;
 	}
 
 	// Inserts the heading banner
@@ -1425,19 +1396,19 @@ class html implements html_interface
 			$warn = $data['warning'];
 		else
 			$warn = '';
-		
+
+		$html = '';
 		if (!empty($msg1) || !empty($msg2))
 		{
-?>
-		<h1 class="text-center"><?php echo $msg1; ?><span class="color-blue"><?php echo $msg2; ?></span></h1>
-<?php
+			$html .= "
+		<h1 class=\"text-center\">$msg1<span class=\"color-blue\">$msg2</span></h1>";
 		}
 		if (!empty($warn))
 		{
-?>
-		<h4 class="text-center color-red">WARNING<br><?php echo $warn; ?></h4>
-<?php
+			$html .= "
+		<h4 class=\"text-center color-red\">WARNING<br>$warn</h4>";
 		}
+		return $html;
 	}
 
 	// Generates a list of checkboxes.
@@ -1475,6 +1446,7 @@ class html implements html_interface
 		// Loop
 		$loopterm = ($count & 0x00000001) ? $count - 1 : $count;
 		$count = 0;
+		$html = '';
 		foreach ($data['list'] as $kx => $vx)
 		{
 			$dxa = array(
@@ -1491,9 +1463,10 @@ class html implements html_interface
 				$dxa['sidemode'] = true;
 				$dxa['side'] = ($count & 0x00000001) ? 1 : 0;
 			}
-			self::insertFieldCheckbox($dxa);
+			$html .= self::insertFieldCheckbox($dxa);
 			$count++;
 		}
+		return $html;
 	}
 
 	// Inserts a image type.
@@ -1519,16 +1492,16 @@ class html implements html_interface
 		if (!empty($data['height'])) $height = ' height="' . $data['height'] . '"';
 			else $height = '';
 		$printout = $name . $source . $altxt . $width . $height;
-	?>
-		<div class="row">
-			<div class="form-group">
-				<label <?php echo $lclass; ?>></label>
+		$html = "
+		<div class=\"row\">
+			<div class=\"form-group\">
+				<label $lclass></label>
 				<div>
-					<img <?php echo $printout; ?>>
+					<img $printout>
 				</div>
 			</div>
-		</div>
-	<?php
+		</div>";
+		return $html;
 	}
 
 	// Opens a form element.
@@ -1550,17 +1523,17 @@ class html implements html_interface
 		// CSS Class
 		if (!empty($data['class'])) $class = ' class="' . $data['class'] . ' form-horizontal"';
 			else $class = ' class="form-horizontal"';
-?>
-	<form<?php echo $name . $method . $action . $class; ?>>
-<?php
+		$html = "
+	<form $name $method $action $class>";
+		return $html;
 	}
 
 	// Closes a form tag
 	static public function closeForm()
 	{
-?>
-	</form>
-<?php
+		$html = "
+	</form>";
+		return $html;
 	}
 	
 	// Opens a field set within a form
@@ -1577,23 +1550,22 @@ class html implements html_interface
 			else $disabled = '';
 		}
 		else $disabled = '';
-?>
-	<fieldset<?php echo $disabled; ?>>
-<?php
+		$html = "
+	<fieldset $disabled>";
 		if (!empty($name))
 		{
-?>
-		<legend><?php echo $name; ?></legend>
-<?php
+			$html = "
+		<legend>$name</legend>";
 		}
+		return $html;
 	}
 
 	// Closes a fieldset tag	
 	static public function closeFieldset()
 	{
-?>
-	</fieldset>
-<?php
+		$html = "
+	</fieldset>";
+		return $html;
 	}
 
 	// Generates a hidden block
@@ -1615,97 +1587,97 @@ class html implements html_interface
 		else $hidden = '';
 
 		$printout = $name . $disable . $hidden;
-?>
-	<div <?php echo $printout; ?>>
-<?php
+		$html = "
+	<div $printout>";
+		return $html;
 	}
 
 	// Closes a hidden block
 	static public function closeHiddenBlock()
 	{
-?>
-	</div>
-<?php
+		$html = "
+	</div>";
+		return $html;
 	}
 
 	// Renders a top border type 1
 	static public function border1top()
 	{
-?>
-<div class="image-border-top">
-	<img src="<?php echo self::$base_url; ?>/images/border1a.gif" alt="border1a">
-</div>
-<?php
+		$html = "
+<div class=\"image-border-top\">
+	<img src=\"" . self::$base_url . "/images/border1a.gif\" alt=\"border1a\">
+</div>";
+		return $html;
 	}
 
 	// Renders a top border type 1
 	static public function border2top()
 	{
-?>
-<div class="image-border-top">
-	<img src="<?php echo self::$base_url; ?>/images/border2a.gif" alt="border2a">
-</div>
-<?php
+		$html = "
+<div class=\"image-border-top\">
+	<img src=\"" . self::$base_url . "/images/border2a.gif\" alt=\"border2a\">
+</div>";
+		return $html;
 	}
 	
 	// Renders a bottom border type 1
 	static public function border1bottom()
 	{
-?>
-<div class="image-border-bottom">
-	<img src="<?php echo self::$base_url; ?>/images/border1b.gif" alt="border1b">
-</div>
-<?php
+		$html = "
+<div class=\"image-border-bottom\">
+	<img src=\"" . self::$base_url . "/images/border1b.gif\" alt=\"border1b\">
+</div>";
+		return $html;
 	}
 	
 	// Renders a bottom border type 1
 	static public function border2bottom()
 	{
-?>
-<div class="image-border-bottom">
-	<img src="<?php echo self::$base_url; ?>/images/border2b.gif" alt="border2b">
-</div>
-<?php
+		$html = "
+<div class=\"image-border-bottom\">
+	<img src=\"" . self::$base_url . "/images/border2b.gif\" alt=\"border2b\">
+</div>";
+		return $html;
 	}
 
 	// Create an area that is 50% the width of the browser window.
 	static public function width50open()
 	{
-?>
-<div class="width50">
-<?php
+		$html = "
+<div class=\"width50\">";
+		return $html;
 	}
 	
 	// Create an area that is 75% the width of the browser window.
 	static public function width75open()
 	{
-?>
-<div class="width75">
-<?php
+		$html = "
+<div class=\"width75\">";
+		return $html;
 	}
 
 	// Closes a previously opened width area.
 	static public function widthClose()
 	{
-?>
-</div>
-<?php
+		$html = "
+</div>";
+		return $html;
 	}
 
 	// Inserts a 5% vertical tab
 	static public function verticalTab5()
 	{
-?>
-<div class="vspace5"></div>
-<?php
+		$html = "
+<div class=\"vspace5\"></div>";
+		return $html;
 	}
 	
 	// Inserts a 10% vertical tab
 	static public function verticalTab10()
 	{
-?>
-<div class="vspace10"></div>
-<?php
+		$html = "
+<div class=\"vspace10\"></div>";
+		return $html;
 	}
 	
 	// Generates an HTML page according to input data.
@@ -1714,6 +1686,9 @@ class html implements html_interface
 	{
 		// Check Input
 		if (!is_array($data)) return;
+
+		// Set the HTML collection variable.
+		$htmlCollection = '';
 
 		// Loop through each element of the array, calling the
 		// different component generation methods.
@@ -1726,99 +1701,100 @@ class html implements html_interface
 				switch ($type)
 				{
 					case self::TYPE_HIDE:
-						self::insertFieldHidden($vx);
+						$htmlCollection .= self::insertFieldHidden($vx);
 						break;
 					case self::TYPE_TEXT:
-						self::insertFieldText($vx);
+						$htmlCollection .= self::insertFieldText($vx);
 						break;
 					case self::TYPE_PASS:
-						self::insertFieldPassword($vx);
+						$htmlCollection .= self::insertFieldPassword($vx);
 						break;
 					case self::TYPE_FILE:
-						self::insertFieldFile($vx);
+						$htmlCollection .= self::insertFieldFile($vx);
 						break;
 					case self::TYPE_AREA:
-						self::insertFieldTextArea($vx);
+						$htmlCollection .= self::insertFieldTextArea($vx);
 						break;
 					case self::TYPE_CHECK:
-						self::insertFieldCheckbox($vx);
+						$htmlCollection .= self::insertFieldCheckbox($vx);
 						break;
 					case self::TYPE_RADIO:
-						self::insertRadioButtons($vx);
+						$htmlCollection .= self::insertRadioButtons($vx);
 						break;
 					case self::TYPE_PULLDN:
-						self::insertFieldDropList($vx);
+						$htmlCollection .= self::insertFieldDropList($vx);
 						break;
 					case self::TYPE_BLIST:
-						self::insertList($vx['data']);
+						$htmlCollection .= self::insertList($vx['data']);
 						break;
 					case self::TYPE_BUTTON:
-						self::insertButtons($vx);
+						$htmlCollection .= self::insertButtons($vx);
 						break;
 					case self::TYPE_RADTABLE:
-						self::insertSelectionTable($vx);
+						$htmlCollection .= self::insertSelectionTable($vx);
 						break;
 					case self::TYPE_ACTBTN:
-						self::insertActionButtons($vx);
+						$htmlCollection .= self::insertActionButtons($vx);
 						break;
 					case self::TYPE_HEADING:
-						self::insertHeadingBanner($vx);
+						$htmlCollection .= self::insertHeadingBanner($vx);
 						break;
 					case self::TYPE_CHECKLIST:
-						self::insertCheckList($vx);
+						$htmlCollection .= self::insertCheckList($vx);
 						break;
 					case self::TYPE_IMAGE:
-						self::insertImage($vx);
+						$htmlCollection .= self::insertImage($vx);
 						break;
 					case self::TYPE_FORMOPEN:
-						self::openForm($vx);
+						$htmlCollection .= self::openForm($vx);
 						break;
 					case self::TYPE_FORMCLOSE:
-						self::closeForm();
+						$htmlCollection .= self::closeForm();
 						break;
 					case self::TYPE_FSETOPEN:
-						self::openFieldset($vx);
+						$htmlCollection .= self::openFieldset($vx);
 						break;
 					case self::TYPE_FSETCLOSE:
-						self::closeFieldset();
+						$htmlCollection .= self::closeFieldset();
 						break;
 					case self::TYPE_HIDEOPEN:
-						self::openHiddenBlock($vx);
+						$htmlCollection .= self::openHiddenBlock($vx);
 						break;
 					case self::TYPE_HIDECLOSE:
-						self::closeHiddenBlock();
+						$htmlCollection .= self::closeHiddenBlock();
 						break;
 					case self::TYPE_TOPB1:
-						self::border1top();
+						$htmlCollection .= self::border1top();
 						break;
 					case self::TYPE_TOPB2:
-						self::border2top();
+						$htmlCollection .= self::border2top();
 						break;
 					case self::TYPE_BOTB1:
-						self::border1bottom();
+						$htmlCollection .= self::border1bottom();
 						break;
 					case self::TYPE_BOTB2:
-						self::border2bottom();
+						$htmlCollection .= self::border2bottom();
 						break;
 					case self::TYPE_WD50OPEN:
-						self::width50open();
+						$htmlCollection .= self::width50open();
 						break;
 					case self::TYPE_WD75OPEN:
-						self::width75open();
+						$htmlCollection .= self::width75open();
 						break;
 					case self::TYPE_WDCLOSE:
-						self::widthClose();
+						$htmlCollection .= self::widthClose();
 						break;
 					case self::TYPE_VTAB5:
-						self::verticalTab5();
+						$htmlCollection .= self::verticalTab5();
 						break;
 					case self::TYPE_VTAB10:
-						self::verticalTab10();
+						$htmlCollection .= self::verticalTab10();
 						break;
 					default:
 				}
 			}
 		}
+		return $htmlCollection;
 	}
 
 	// Writes the initial page to the output stream.  This page is the standard
@@ -1849,9 +1825,10 @@ class html implements html_interface
 		// Used to activate features
 		if (is_array($html_flags))
 		{
-			if (!empty($html_flags['checkbox'])) $flag_checkbox = true; else $flag_checkbox = false;
-			if (!empty($html_flags['datepick'])) $flag_datepick = true; else $flag_datepick = false;
-			if (!empty($html_flags['tooltip'])) $flag_tooltip = true; else $flag_tooltip = false;
+			$flag_checkbox = in_array('checkbox', $html_flags);
+			$flag_datepick = in_array('datepick', $html_flags);
+			$flag_tooltip = in_array('tooltip', $html_flags);
+			$flag_type2 = in_array('type2', $html_flags);
 		}
 		else
 		{
@@ -2063,14 +2040,31 @@ class html implements html_interface
 		<div id="mainFrame">
 			<div style="color: red;" id="errorTarget"></div>
 			<div style="color: blue;" id="responseTarget"></div>
+<?php
+	if ($flag_type2)
+	{
+?>
+			<div class="row row-list">
+				<div id="link-nav" class="col-xs-2 link-nav-div"></div>
+				<div id="main" class="col-xs-8 link-main-div"></div>
+				<div id="link-stat" class="col-xs-2 link-status-div"></div>
+			</div>
+<?php
+	}
+	else
+	{
+?>
 			<div id="main" class="main-wrapper-div"></div>
+<?php
+	}
+?>
 		</div>
 		<!-- End of main content area -->
 <?php
 		$token = $session->getToken();
 		if ($token != false)
 		{
-			self::insertToken($token);
+			echo self::insertToken($token);
 		}
 ?>
 		<!-- Install Timer -->

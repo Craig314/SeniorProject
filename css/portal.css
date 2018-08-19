@@ -11,13 +11,13 @@ Cascading Style Sheet for Application Portal
 .iconimg {
     width: 128px;
     height: 128px;
-  }
+}
 
 .icontxt {
     width: 128px;
     height: 24px;
     text-align: center;
-  }
+}
 
 .icon {
     cursor: pointer;
@@ -28,9 +28,15 @@ Cascading Style Sheet for Application Portal
     margin: 10px 20px;
     padding: 2px;
     /* border: 1px solid lightgrey; */
-  }
+}
 
 .iconfont {
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 12pt;
-  }
+}
+
+.linkicon {
+	cursor: pointer;
+	margin: 10px 5px;
+	padding: 2px;
+}

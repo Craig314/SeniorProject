@@ -354,6 +354,8 @@ var ajaxProcessData = ({
 		var entity;
 		var cmdnum;
 		var txt;
+		var etxt;
+		var newObject;
 		var result;
 
 		entity = str.indexOf("CMD");
@@ -407,6 +409,34 @@ var ajaxProcessData = ({
 				writeResponse("");
 				writeHTML("");
 				if (typeof clearForm === 'function') clearForm();
+				break;
+			case 957:	// Write HTML to link-nav panel, or prepend to main panel.
+				txt = str.slice(est + 1);
+				newObject = document.getElementById('link-nav');
+				if (newObject != null) {
+					newObject.innerHTML = txt;
+				} else {
+					newObject = document.getElementById('main');
+					etxt = txt + newObject.innerHTML;
+					newObject.innerHTML = etxt;
+				}
+				break;
+			case 958:	// Write HTML to link-stat panel, or append to main panel.
+				txt = str.slice(est + 1);
+				newObject = document.getElementById('link-stat');
+				if (newObject != null) {
+					newObject.innerHTML = txt;
+				} else {
+					newObject = document.getElementById('main');
+					etxt = newObject.innerHTML + txt;
+					newObject.innerHTML = etxt;
+				}
+				break;
+			case 959:	// Append HTML to main panel.
+				txt = str.slice(est + 1);
+				newObject = document.getElementById('main');
+				etxt = newObject.innerHTML + txt;
+				newObject.innerHTML = etxt;
 				break;
 			default:
 				// If the command is none of the above, then we are dealing
@@ -560,7 +590,7 @@ var ajaxProcessData = ({
 			writeError("JSON data format error from server.");
 			return;
 		}
-		txt = str.slice(0, cst);
+		txt = str.slice(cst + 1);
 		try {
 			objArray = JSON.parse(txt);
 		}
@@ -574,18 +604,18 @@ var ajaxProcessData = ({
 			switch(string) {
 				case "CODE":	// Status Code
 					this.parseCode(objArray[i]);
-					return;
+					break;
 				case "CMD":		// Command with/without data
 					this.parseCommand(objArray[i]);
-					return;
+					break;
 				case 'STAT':	// JSON formatted error data
 					this.parseStatus(objArray[i]);
-					return;
+					break;
 				case "JSON":	// JSON formatted data
 					this.parseJSON(objArray[i]);
-					return;
+					break;
 				default:
-					// Invalid data is ignored
+					writeHTML(objArray[i]);
 					break;
 			}
 		}

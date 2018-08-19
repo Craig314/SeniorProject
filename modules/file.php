@@ -210,7 +210,11 @@ function loadInitialContent()
 		// cssfiles is an associtive array which contains additional
 		// cascading style sheets that should be included in the head
 		// section of the HTML page.
-		// $cssFiles = array();
+		$cssFiles = array(
+			'/css/tooltip-linebreak.css',
+			'/css/tooltip-left.css',
+			'/css/tooltip-mono.css',
+		);
 
 		// The final option, htmlFlags, is an array that holds the names
 		// of supported options.  Currently, those options are checkbox,
@@ -227,7 +231,7 @@ function loadInitialContent()
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
-			$left, '', $funcBar, $jsFiles, '', $htmlFlags, $funcBar2);
+			$left, '', $funcBar, $jsFiles, $cssFiles, $htmlFlags, $funcBar2);
 	}
 	else
 	{
@@ -1174,7 +1178,7 @@ function buildDirectoryList($path)
 			'ctime' =>		timedate::unix2canonical($stat['mtime']),
 			'mode' =>		convertMode($stat['mode']),
 			'desc' =>
-				'Name: ' .			$vx . chr(13) .
+				'Name: ' .			$vx . '<br>' .
 				'Type: ' .			determineFileType($path . '/' . $vx) . chr(13) .
 				'Size: ' .			$stat['size'] . chr(13) .
 				'Mode: ' .			convertMode($stat['mode']) .
@@ -1266,7 +1270,7 @@ function buildDirectoryList($path)
 	);
 
 	// Render
-	html::pageAutoGenerate($data);
+	echo html::pageAutoGenerate($data);
 }
 
 ?>

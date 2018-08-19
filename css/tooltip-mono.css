@@ -1,0 +1,14 @@
+/*
+
+SEA-CORE International Ltd.
+SEA-CORE Development Group
+
+Cascading Style Sheet for Monospace Tooltips
+
+
+*/
+
+
+.tooltip-inner {
+	font-family: "Lucida Console", Monaco, monospace;
+}
