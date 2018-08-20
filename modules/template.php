@@ -128,18 +128,20 @@ function loadInitialContent()
 
 		// The final option, htmlFlags, is an array that holds the names
 		// of supported options.  Currently, those options are checkbox,
-		// datepick, and tooltip.
+		// datepick, tooltip, and type2.
 		// $htmlFlags= array(
 		// 	'checkbox',
 		// 	'datepick',
 		// 	'tooltip',
+		//	'type2',
 		// );
 		$htmlFlags = array(
 			'tooltip',
 		);
 
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
-		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
+		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags,
+		//	$funcbar2, $funcbar3);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
 			$left, '', $funcBar, $jsFiles, '', $htmlFlags);
 	}
@@ -175,6 +177,9 @@ function loadAdditionalContent()
 	$list = array(
 		'type' => html::TYPE_RADTABLE,
 		'name' => 'select_item',
+		'clickset' => true,
+		'condense' => true,
+		'hover' => true,
 		'titles' => array(
 			// Add column titles here
 			'',

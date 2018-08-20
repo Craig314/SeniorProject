@@ -12,9 +12,9 @@ html::checkRequestPort(true);
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
 {
 	// Initial Call
-	$title = 'Template Page';
+	$title = 'Test Page';
 	$url = html::getBaseURL();
-	$fname = 'index.php';
+	$fname = 'test.php';
 	$left = array(
 		'Home' => 'returnHome',
 	);
@@ -37,7 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
 		'tooltip' => true,
 	);
 	$jsfiles = array(
-		'/js/index.js',
+		'/js/common.js',
+		'/js/test.js',
 	);
 
 	html::loadTemplatePage($title, $url, $fname, $left, '', $fbar, $jsfiles, '', $flags);
@@ -60,8 +61,10 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 			case -4:
 				$ajax->sendCode(200, 'Go Home Ok');
 				break;
+			case 20:
+				var_dump($_SERVER, $_POST);
+				break;
 			default:
-
 		}
 	}
 }
@@ -114,26 +117,26 @@ function content()
 				array(
 					'name' => 'btn01',
 					'dispname' => 'Set Default',
-					'type' => 'default',
-					'onclick' => 'setStatusDefault()',
+					'class' => html::BTNCLR_WHITE,
+					'action' => 'setStatusDefault()',
 				),
 				array(
 					'name' => 'btn02',
 					'dispname' => 'Set Ok',
-					'type' => 'success',
-					'onclick' => 'setStatusOk()',
+					'class' => html::BTNCLR_GREEN,
+					'action' => 'setStatusOk()',
 				),
 				array(
 					'name' => 'btn03',
 					'dispname' => 'Set Warning',
-					'type' => 'warning',
-					'onclick' => 'setStatusWarn()',
+					'class' => html::BTNCLR_YELLOW,
+					'action' => 'setStatusWarn()',
 				),
 				array(
 					'name' => 'btn04',
 					'dispname' => 'Set Error',
-					'type' => 'danger',
-					'onclick' => 'setStatusError()',
+					'class' => html::BTNCLR_RED,
+					'action' => 'setStatusError()',
 				),
 			),
 		),
@@ -203,80 +206,92 @@ function content()
 				array(
 					'name' => 'btn11',
 					'dispname' => 'Default',
-					'type' => 'default',
+					'class' => html::BTNCLR_WHITE,
 					'onclick' => '',
 				),
 				array(
 					'name' => 'btn12',
 					'dispname' => 'Primary',
-					'type' => 'primary',
+					'class' => html::BTNCLR_BLUE,
 					'onclick' => '',
 				),
 				array(
 					'name' => 'btn13',
 					'dispname' => 'Success',
-					'type' => 'success',
+					'class' => html::BTNCLR_GREEN,
 					'onclick' => '',
 				),
 				array(
 					'name' => 'btn14',
 					'dispname' => 'Info',
-					'type' => 'info',
+					'class' => html::BTNCLR_LTBLUE,
 					'onclick' => '',
 				),
 				array(
 					'name' => 'btn15',
 					'dispname' => 'Warning',
-					'type' => 'warning',
+					'class' => html::BTNCLR_YELLOW,
 					'onclick' => '',
 				),
 				array(
 					'name' => 'btn16',
 					'dispname' => 'Danger',
-					'type' => 'danger',
+					'class' => html::BTNCLR_RED,
 					'onclick' => '',
 				),
 			),
 		),
 		array(		// Buttons
 			'type' => html::TYPE_BUTTON,
-			'width' => 1,
+			'width' => 4,
 			'direction' => 0,
 			'button_data' => array(
 				array(
+					'name' => 'btn20',
+					'dispname' => 'None',
+					'class' => html::BTNCLR_GREY,
+					'onclick' => '',
+				),
+				array(
 					'name' => 'btn21',
 					'dispname' => 'Default',
-					'type' => 'default',
+					'class' => html::BTNCLR_WHITE,
 					'onclick' => '',
 				),
 				array(
 					'name' => 'btn22',
 					'dispname' => 'Primary',
-					'type' => 'primary',
+					'class' => html::BTNCLR_BLUE,
 					'onclick' => '',
 				),
 				array(
 					'name' => 'btn23',
 					'dispname' => 'Success',
-					'type' => 'success',
+					'class' => html::BTNCLR_GREEN,
 					'onclick' => '',
 				),
 				array(
 					'name' => 'btn24',
 					'dispname' => 'Info',
-					'type' => 'info',
+					'class' => html::BTNCLR_LTBLUE,
 					'onclick' => '',
 				),
 				array(
 					'name' => 'btn25',
 					'dispname' => 'Warning',
-					'type' => 'warning',
+					'class' => html::BTNCLR_YELLOW,
 					'onclick' => '',
 				),
 				array(
 					'name' => 'btn26',
 					'dispname' => 'Danger',
-					'type' => 'danger',
+					'class' => html::BTNCLR_RED,
+					'onclick' => '',
+				),
+				array(
+					'name' => 'btn27',
+					'dispname' => 'Link',
+					'class' => html::BTNCLR_LINK,
 					'onclick' => '',
 				),
 			),
@@ -294,7 +309,7 @@ function content()
 			'default' => true,
 			'name' => 'cb1',
 			'lsize' => 3,
-			'fsize' => 2,
+			'fsize' => 3,
 		),
 		array('type' => html::TYPE_CHECK,
 			// Left Checkbox
@@ -351,6 +366,9 @@ function content()
 		),
 		array('type' => html::TYPE_RADTABLE,
 			'name' => 'RadioSelectionTable',
+			'hover' => true,
+			'condense' => true,
+			'clickset' => true,
 			'titles' => array(
 				'Data 1',
 				'Data 2',
@@ -393,7 +411,56 @@ function content()
 
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Block 6: Radio Buttons',
+			'name' => 'Block 6: Checkbox Selection Table',
+		),
+		array('type' => html::TYPE_RADTABLE,
+			'name' => 'CheckSelectionTable',
+			'hover' => true,
+			'condense' => true,
+			'chkbox' => true,
+			'clickset' => true,
+			'titles' => array(
+				'Data 1',
+				'Data 2',
+				'Data 3',
+				'Data 4'
+			),
+			'tdata' => array(
+				array(
+					'one',
+					'1.1',
+					'1.2',
+					'1.3',
+					'1.4',
+				),
+				array(
+					'two',
+					'2.1',
+					'2.2',
+					'2.3',
+					'2.4',
+				),
+				array(
+					'three',
+					'3.1',
+					'3.2',
+					'3.3',
+					'3.4',
+				),
+				array(
+					'four',
+					'4.1',
+					'4.2',
+					'4.3',
+					'4.4',
+				),
+			),
+		),
+		array('type' => html::TYPE_FSETCLOSE),
+
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Block 7: Radio Buttons',
 		),
 		array(
 			'type' => html::TYPE_RADIO,
@@ -406,6 +473,15 @@ function content()
 			),
 		),
 		array('type' => html::TYPE_FSETCLOSE),
+		array(
+			'type' => html::TYPE_SBUTTON,
+			'width' => 4,
+			'offset' => 4,
+			'name' => 'submit',
+			'dispname' => 'Submit',
+			'class' => html::BTNCLR_BLUE,
+			'action' => 'testSubmit()',
+		),
 		array('type' => html::TYPE_FORMCLOSE),
 		array('type' => html::TYPE_WDCLOSE),
 		array('type' => html::TYPE_BOTB2)

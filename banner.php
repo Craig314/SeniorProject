@@ -342,7 +342,7 @@ function bannerShowHeader($title, $subtitle, $message, $token)
 			<h4 class="color-inherit"><?php echo $message; ?></h4>
 		</div>
 		<div class="image-border-top">
-			<img src="<?php echo $baseUrl; ?>/images/border2a.gif" />
+			<img src="<?php echo $baseUrl; ?>/images/border/border2a.gif" />
 		</div>
 		<br>
 		<div class="color-black" id="main"></div>
@@ -358,7 +358,7 @@ function bannerShowFooter()
 	global $baseUrl;
 ?>
 		<div class="image-border-bottom">
-			<img src="<?php echo $baseUrl; ?>/images/border2b.gif" />
+			<img src="<?php echo $baseUrl; ?>/images/border/border2b.gif" />
 		</div>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/APIs/JQuery/BaseJQuery/jquery-3.1.0.min.js"></script>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>

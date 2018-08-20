@@ -370,11 +370,11 @@ function loginShowHeader()
 	<body>
 		<div class="vspace10"></div>
 		<div class="image-banner-center">
-			<img src="<?php echo $baseUrl; ?>/images/seacore_logo_trademark_large.png" />
+			<img src="<?php echo $baseUrl; ?>/images/branding/trademark_large.png" />
 		</div>
 		<div class="vspace5"></div>
 		<div class="image-border-top">
-			<img src="<?php echo $baseUrl; ?>/images/border2a.gif" />
+			<img src="<?php echo $baseUrl; ?>/images/border/border2a.gif" />
 		</div>
 		<div class="vspace5"></div>
 		<div class="width75">
@@ -575,7 +575,7 @@ function loginShowFooter()
 ?>
 		<div class="vspace5"></div>
 		<div class="image-border-bottom">
-			<img src="<?php echo $baseUrl; ?>/images/border2b.gif" />
+			<img src="<?php echo $baseUrl; ?>/images/border/border2b.gif" />
 		</div>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/APIs/JQuery/BaseJQuery/jquery-3.1.0.min.js"></script>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>

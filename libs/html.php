@@ -24,14 +24,24 @@ interface html_interface
 	// Some misculanious constants.
 	const CHECKFLAG_NAME = 'chkbox_';
 
+	// Button Color Constants
+	const BTNCLR_GREY		= 0;
+	const BTNCLR_WHITE		= 1;
+	const BTNCLR_BLUE		= 2;
+	const BTNCLR_GREEN		= 3;
+	const BTNCLR_LTBLUE		= 4;
+	const BTNCLR_YELLOW		= 5;
+	const BTNCLR_RED		= 6;
+	const BTNCLR_LINK		= 7; // White button with blue underlined text
+
 	// Field error status.  These constants must match values in both
 	// error.php and ajax.js
-	const STAT_NONE = 0;
-	const STAT_DEFAULT = 0;
-	const STAT_OK = 1;
-	const STAT_WARN = 2;
-	const STAT_ERROR = 3;
-	const STAT_GENERAL = 4;
+	const STAT_NONE			= 0;
+	const STAT_DEFAULT		= 0;
+	const STAT_OK			= 1;
+	const STAT_WARN			= 2;
+	const STAT_ERROR		= 3;
+	const STAT_GENERAL		= 4;
 
 	// Predefined button set types for insertActionButtons.
 	const BTNTYP_VIEW		= 0;
@@ -50,11 +60,12 @@ interface html_interface
 	const TYPE_PULLDN		= 7;	// Pulldown selection menu/list
 	const TYPE_BLIST		= 8;	// Standard nested list
 	const TYPE_BUTTON		= 9;	// Button group
-	const TYPE_ACTBTN		= 10;	// Action button set
-	const TYPE_RADTABLE		= 11;	// Radio button item selection table
-	const TYPE_HEADING		= 12;	// Banner headings
-	const TYPE_CHECKLIST	= 13;	// Checkbox Lists
-	const TYPE_IMAGE		= 14;	// Image File
+	const TYPE_SBUTTON		= 10;	// Single button
+	const TYPE_ACTBTN		= 11;	// Action button set
+	const TYPE_RADTABLE		= 12;	// Radio button item selection table
+	const TYPE_HEADING		= 13;	// Banner headings
+	const TYPE_CHECKLIST	= 14;	// Checkbox Lists
+	const TYPE_IMAGE		= 15;	// Image File
 	const TYPE_FORMOPEN		= 20;	// Open form with name
 	const TYPE_FORMCLOSE	= 21;	// Close form
 	const TYPE_FSETOPEN		= 22;	// Open field set with title
@@ -92,6 +103,7 @@ interface html_interface
 	static public function insertFieldDropList($data);
 	static public function insertList($data, $indent = "");
 	static public function insertButtons($data);
+	static public function insertButtonSingle($data);
 	static public function insertActionButtons($data);
 	static public function insertSelectionTable($data);
 	static public function insertHeadingBanner($data);
@@ -139,6 +151,16 @@ class html implements html_interface
 	static private $base_url = NULL;
 	static private $base_url2 = NULL;
 	static private $networkPort = 0;
+	static private $buttonClass = array(
+		0 => '',
+		1 => 'btn-default',
+		2 => 'btn-primary',
+		3 => 'btn-success',
+		4 => 'btn-info',
+		5 => 'btn-warning',
+		6 => 'btn-danger',
+		7 => 'btn-link',
+	);
 
 
 	/* ******** CONSTRUCTOR METHOD ******** */
@@ -693,7 +715,7 @@ class html implements html_interface
 		<div class=\"row\">
 			<div class=\"form-group\">
 				<span $lclass></span>
-				<button $bname . $action class=\"btn btn-default\">Upload</button>
+				<button $bname $action class=\"btn btn-default\">Upload</button>
 			</div>
 		</div>";
 		return $html;
@@ -791,9 +813,11 @@ class html implements html_interface
 		$tooltip = NULL;
 		$side = NULL;
 		$toggle = NULL;
+		$event = NULL;
 
 		// Parameters
 		self::helperNameId($data, $name, $forx);
+		self::helperOnEvent($data, $event);
 		self::helperDisabled($data, $disabled);
 		self::helperDefault($data, self::DEFTYPE_CHECKBOX, $default);
 		self::helperLabel($data, $label);
@@ -815,7 +839,7 @@ class html implements html_interface
 		else $padding = '';
 
 		// Combine
-		$printout = $name . $default . $tooltip . $disabled;
+		$printout = $name . $default . $tooltip . $disabled . $event;
 
 		// Render
 		switch ($side)
@@ -1160,14 +1184,15 @@ class html implements html_interface
 				$btnvalue = '';
 
 			// Button Type
-			if (!empty($btndat['type']))
-				$btnclass = ' class="btn btn-' . $btndat['type'] . ' col-xs-' . $width . $size . '"';
+			if (!empty($btndat['class']))
+				$btnclass = ' class="btn ' . self::$buttonClass[$btndat['class']]
+					. ' col-xs-' . $width . $size . '"';
 			else
 				$btnclass = ' class="btn col-xs-' . $width . $size . '"';
 
 			// Button Click Action
-			if (!empty($btndat['onclick']))
-				$btnclick = ' onclick="' . $btndat['onclick'] . '"';
+			if (!empty($btndat['action']))
+				$btnclick = ' onclick="' . $btndat['action'] . '"';
 			else
 				$btnclick = '';
 
@@ -1210,6 +1235,89 @@ class html implements html_interface
 			</div>
 		</div>";
 		}
+		return $html;
+	}
+
+	// Inserts a single button control.
+	static public function insertButtonSingle($data)
+	{
+		$html = '';
+		// Button width
+		// Horizontal spacing is 1
+		if (!empty($data['width']))
+			$width = $data['width'];
+		else
+			$width = 3;
+		
+		// Button Size
+		if (isset($data['size']))
+		{
+			switch($data['size'])
+			{
+				case 0:
+					$size = ' btn-xs';
+					break;
+				case 1:
+					$size = ' btn-sm';
+					break;
+				case 2:
+					$size = ' btn-md';
+					break;
+				case 3:
+					$size = ' btn-lg';
+					break;
+				default:
+					$size = '';
+					break;
+			}
+		}
+		else $size = '';
+
+		// Position Offset
+		if (isset($data['offset']))
+			$offset = $data['offset'];
+		else
+			$offset = '';
+
+		// Button Name
+		if (!empty($data['name']))
+			$btnname = ' name="' . $data['name'] . '"';
+		else
+			$btnname = '';
+		
+		// Button Display Name
+		if (!empty($data['dispname']))
+			$btnvalue = ' value="' . $data['dispname'] . '"';
+		else
+			$btnvalue = '';
+
+		// Button Type
+		if (!empty($data['class']))
+			$btnclass = ' class="btn ' . self::$buttonClass[$data['class']]
+				. ' col-xs-' . $width . $size . '"';
+		else
+			$btnclass = ' class="btn col-xs-' . $width . $size . '"';
+
+		// Button Click Action
+		if (!empty($data['action']))
+			$btnclick = ' onclick="' . $data['action'] . '"';
+		else
+			$btnclick = '';
+
+		// Render
+		$printout = $btnclass . $btnname . $btnvalue . $btnclick;
+		$html .= "
+		<div class=\"button\">
+			<div class=\"form-group\">";
+		if (!empty($offset))
+		{
+			$html .= "
+				<span class=\"col-xs-$offset\"></span>";
+		}
+		$html .= "
+				<input type=\"button\" $printout>
+			</div>
+		</div>";
 		return $html;
 	}
 
@@ -1264,7 +1372,7 @@ class html implements html_interface
 			<div class=\"button\">
 				<div class=\"form-group\">
 					<span class=\"col-xs-1\"></span>
-					<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Insert<?php echo ' ' . $dispname; ?>\" onclick=\"<?php echo $action; ?>\">
+					<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Insert<?php echo ' ' . $dispname; ?>\" onclick=\"$action\">
 					<span class=\"col-xs-1\"></span>
 					<input type=\"button\" class=\"btn btn-info col-xs-3\" name=\"Reset\" value=\"Reset\" onclick=\"clearForm()\">
 					<span class=\"col-xs-1\"></span>
@@ -1279,7 +1387,7 @@ class html implements html_interface
 				<div class=\"button\">
 					<div class=\"form-group\">
 						<span class=\"col-xs-2\"></span>
-						<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Delete<?php echo ' ' . $dispname; ?>\" onclick=\"<?php echo $action; ?>\">
+						<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Delete<?php echo ' ' . $dispname; ?>\" onclick=\"$action\">
 						<span class=\"col-xs-2\"></span>
 						<input type=\"button\" class=\"btn btn-success col-xs-3\" name=\"initialview\" value=\"Go Back\" onclick=\"ajaxServerCommand.sendCommand(-1)\">
 						<span class=\"col-xs-2\"></span>
@@ -1299,16 +1407,34 @@ class html implements html_interface
 	{
 		$tooltip = NULL;
 		$html = '';
+		$bsFeatures = '';
 
 		// Parameters
-		if (isset($data['name'])) $name = 'name="' . $data['name'] .'"';
-			else $name = '';
+		if (isset($data['chkbox'])) $checkmode = true;
+			else $checkmode = false;
+		if (isset($data['name']))
+		{
+			$tableName = $data['name'];
+			if (!$checkmode)
+				$name = 'name="' . $data['name'] . '"';
+		}
+		else $name = '';
+		if (isset($data['clickset'])) $clickset = true;
+			else $clickset = false;
+		if (isset($data['stripe'])) $bsFeatures .= ' table-striped';
+		if (isset($data['condense'])) $bsFeatures .= ' table-condensed';
+		if (isset($data['hover'])) $bsFeatures .= ' table-hover';
+		if (isset($data['border'])) $bsFeatures .= ' table-bordered';
+
+		// Setup
+		if ($checkmode) $clickCall= 'selectItemCheck';
+			else $clickCall= 'selectItemRadio';
 
 		// Title Row
 		if (isset($data['titles']))
 		{
 			$html .= "
-		<table class=\"table table-hover table-condensed\">
+		<table class=\"table $bsFeatures\">
 			<thead> 
 				<tr>
 					<th class=\"text-center\">Select</th>";
@@ -1339,7 +1465,8 @@ class html implements html_interface
 						if (!empty($data['tooltip'][$index]))
 						{
 							$ttText = $data['tooltip'][$index];
-							$tooltip = ' data-toggle="tooltip" data-html="true" title="' . $ttText . '"'; 
+							$tooltip = ' data-toggle="tooltip" data-html="true" title="'
+								. $ttText . '"'; 
 						}
 						else $tooltip = '';
 					}
@@ -1347,8 +1474,32 @@ class html implements html_interface
 				}
 				else $tooltip = '';
 				$keydata = $kxr[0];
-				$html .= "
-				<tr $tooltip onclick=\"selectItem('$keydata');\">";
+				if ($checkmode)
+				{
+					$name = 'id="' . $data['name'] . '_' . $keydata . '"';
+					if ($clickset)
+					{
+						$checkKey = $tableName . '_' . $keydata;
+						$checkBox = "onclick=\"selectItemCheck('$checkKey');\"";
+						$html .= "
+				<tr $tooltip onclick=\"selectItemCheck('$checkKey');\">";
+					}
+					else
+						$html .= "
+						<tr $tooltip>";
+				}
+				else
+				{
+					$name = 'name="' . $data['name'] . '"';
+					if ($clickset)
+					{
+						$html .= "
+				<tr $tooltip onclick=\"selectItemRadio('$tableName', '$keydata');\">";
+					}
+					else
+						$html .= "
+						<tr $tooltip>";
+				}
 
 				// Column
 				$count = 0;
@@ -1357,10 +1508,22 @@ class html implements html_interface
 					if ($count == 0)
 					{
 						$html .= "
-					<td class=\"text-centeri\">
+					<td class=\"text-center\">";
+						if ($checkmode)
+						{
+							$html .= "
+						<div class=\"checkbox\">
+							<label><input type=\"checkbox\" $name value=\"true\" $checkBox></label>
+						</div>";
+						}
+						else
+						{
+							$html .= "
 						<div class=\"radio\">
 							<label><input type=\"radio\" $name value=\"$kxc\"></label>
-						</div>
+						</div>";
+						}
+						$html .= "
 					</td>";
 					}
 					else
@@ -1417,7 +1580,7 @@ class html implements html_interface
 	// flag - flag number
 	// label - display label
 	// tooltip - popup description
-	// - indicates if the item is checked or not
+	// default - indicates if the item is checked or not
 	static public function insertCheckList($data)
 	{
 		$lsize = NULL;
@@ -1449,14 +1612,34 @@ class html implements html_interface
 		$html = '';
 		foreach ($data['list'] as $kx => $vx)
 		{
+			if (empty($vx['event']) || empty($vx['action']))
+			{
+				$event = '';
+				$action = '';
+			}
+			else
+			{
+				$event = $vx['event'];
+				$action = $vx['action'];
+			}
+			if ($default == false)
+				$vxdef = false;
+			else
+				$vxdef = $vx['default'];
+			if (empty($vx['tooltip']))
+				$vxtt = false;
+			else
+				$vxtt = $vx['tooltip'];
 			$dxa = array(
 				'name' => self::CHECKFLAG_NAME . $vx['flag'],
 				'label' => $vx['label'],
 				'lsize' => $lsize,
 				'fsize' => $fsize,
-				'default' => ($default) ? $vx['default'] : false,
+				'default' => $vxdef,
 				'disable' => $disable,
-				'tooltip' => $vx['tooltip'],
+				'tooltip' => $vxtt,
+				'event' => $event,
+				'action' => $action,
 			);
 			if ($count < $loopterm)
 			{
@@ -1479,8 +1662,10 @@ class html implements html_interface
 	static public function insertImage($data)
 	{
 		$lclass = NULL;
+		$event = NULL;
 		
 		self::helperLabelSizeText($data, $lclass);
+		self::helperOnEvent($data, $event);
 		if (!empty($data['name'])) $name = 'id="' . $data['name'] . '"';
 			else $name = '';
 		if (!empty($data['src'])) $source = ' src="' . $data['src'] . '"';
@@ -1491,7 +1676,7 @@ class html implements html_interface
 			else $width = '';
 		if (!empty($data['height'])) $height = ' height="' . $data['height'] . '"';
 			else $height = '';
-		$printout = $name . $source . $altxt . $width . $height;
+		$printout = $name . $source . $altxt . $width . $height . $event;
 		$html = "
 		<div class=\"row\">
 			<div class=\"form-group\">
@@ -1554,7 +1739,7 @@ class html implements html_interface
 	<fieldset $disabled>";
 		if (!empty($name))
 		{
-			$html = "
+			$html .= "
 		<legend>$name</legend>";
 		}
 		return $html;
@@ -1605,7 +1790,7 @@ class html implements html_interface
 	{
 		$html = "
 <div class=\"image-border-top\">
-	<img src=\"" . self::$base_url . "/images/border1a.gif\" alt=\"border1a\">
+	<img src=\"" . self::$base_url . "/images/border/border1a.gif\" alt=\"border1a\">
 </div>";
 		return $html;
 	}
@@ -1615,7 +1800,7 @@ class html implements html_interface
 	{
 		$html = "
 <div class=\"image-border-top\">
-	<img src=\"" . self::$base_url . "/images/border2a.gif\" alt=\"border2a\">
+	<img src=\"" . self::$base_url . "/images/border/border2a.gif\" alt=\"border2a\">
 </div>";
 		return $html;
 	}
@@ -1625,7 +1810,7 @@ class html implements html_interface
 	{
 		$html = "
 <div class=\"image-border-bottom\">
-	<img src=\"" . self::$base_url . "/images/border1b.gif\" alt=\"border1b\">
+	<img src=\"" . self::$base_url . "/images/border/border1b.gif\" alt=\"border1b\">
 </div>";
 		return $html;
 	}
@@ -1635,7 +1820,7 @@ class html implements html_interface
 	{
 		$html = "
 <div class=\"image-border-bottom\">
-	<img src=\"" . self::$base_url . "/images/border2b.gif\" alt=\"border2b\">
+	<img src=\"" . self::$base_url . "/images/border/border2b.gif\" alt=\"border2b\">
 </div>";
 		return $html;
 	}
@@ -1729,6 +1914,9 @@ class html implements html_interface
 						break;
 					case self::TYPE_BUTTON:
 						$htmlCollection .= self::insertButtons($vx);
+						break;
+					case self::TYPE_SBUTTON:
+						$htmlCollection .= self::insertButtonSingle($vx);
 						break;
 					case self::TYPE_RADTABLE:
 						$htmlCollection .= self::insertSelectionTable($vx);
@@ -1880,7 +2068,7 @@ class html implements html_interface
 							<span class="icon-bar"></span>
 						</button>
 						<!-- Sea-Core Logo Image -->
-						<img class="navbar-brand" alt="Brand" src="<?php echo $url; ?>/images/seacore_logo_base_small.png">
+						<img class="navbar-brand" alt="Brand" src="<?php echo $url; ?>/images/branding/base_small.png">
 						<!-- Div for the time -->
 						<div class="navbar-text" id="timeday"></div>
 					</div>

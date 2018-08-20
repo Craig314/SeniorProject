@@ -31,14 +31,16 @@ function getFormData() {
 	return '';
 }
 
-// Prompts the user to make sure they want to proceed when
-// performing a potentially dangerous action.
-function selectItem(item) {
+// When working with a selection table listing, when
+// clicking anywhere in the row, this function marks
+// the corresponding item as selected, and then
+// deselects any other item.
+function selectItemRadio(name, item) {
 	var nodeList;
 	var nodeObject;
 	var i;
 
-	nodeList = document.getElementsByName('select_item');
+	nodeList = document.getElementsByName(name);
 	if (nodeList == null) return;
 	for (i = 0; i < nodeList.length; i++) {
 		nodeObject = nodeList[i];
@@ -47,6 +49,19 @@ function selectItem(item) {
 		} else {
 			nodeObject.checked = false;
 		}
+	}
+}
+
+// When working with a selection table listing, when
+// clicking anywhere in the row, this function toggles
+// the corresponding item selection status.
+function selectItemCheck(item) {
+	var nodeObject;
+
+	nodeObject = document.getElementById(item);
+	if (nodeObject != null) {
+		if (nodeObject.checked == true) nodeObject.checked = false;
+		else nodeObject.checked = true;
 	}
 }
 

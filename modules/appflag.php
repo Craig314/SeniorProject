@@ -195,6 +195,9 @@ function loadAdditionalContent()
 	$list = array(
 		'type' => html::TYPE_RADTABLE,
 		'name' => 'select_item',
+		'clickset' => true,
+		'condense' => true,
+		'hover' => true,
 		'titles' => array(
 			// Add column titles here
 			'Name',

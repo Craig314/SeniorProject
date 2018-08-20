@@ -38,3 +38,10 @@ function setStatusDefault()
 	document.getElementById('dcmST-' + id).setAttribute('class', 'form-group');
 	document.getElementById('dcmMS-' + id).innerHTML = '';
 }
+
+function testSubmit() {
+	var params;
+
+	params = treeWalker();
+	ajaxServerCommand.sendCommand(20, params);
+}

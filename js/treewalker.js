@@ -22,26 +22,42 @@ function treeWalker(nodeArray) {
 	var nameId;
 	var i;
 
-	// Searches the array for a valid ID or name.  The first one found
-	// is the one that is used.  If none are found, then it returns
-	// a blank string.
-	for (i = 0; i < nodeArray.length; i++) {
-		nodeObject = document.getElementById(nodeArray[i]);
-		if (nodeObject == null) {
-			// The ID doesn't exist, so we try the name.
-			nameId = document.getElementsByName(nodeArray[i]);
-			if (nameId == null) continue;
-			nodeObject = nameId[0];
-		}
+	if (nodeArray == null || nodeArray == '') {
+		// If no parameters were supplied, then we set the parent node
+		// to the body element and walk the entire document.
+		nodeObject = document.body;
 		if (nodeObject != null) {
-			if (i > 0) {
-				params += '&' + treeWalkerMainFunction(nodeObject);
-			} else {
-				params = treeWalkerMainFunction(nodeObject);
+			params = treeWalkerMainFunction(nodeObject);
+		} else {
+			throw ('treeWalker: No parameters given and body object is null.');
+		}
+	} else {
+		// Searches the array for a valid ID or name.  The first one found
+		// is the one that is used.  If none are found, then it returns
+		// a blank string.
+		for (i = 0; i < nodeArray.length; i++) {
+			nodeObject = document.getElementById(nodeArray[i]);
+			if (nodeObject == null) {
+				// The ID doesn't exist, so we try the name.
+				nameId = document.getElementsByName(nodeArray[i]);
+				if (nameId == null) continue;
+				nodeObject = nameId[0];
+			}
+			if (nodeObject != null) {
+				if (i > 0) {
+					params += '&' + treeWalkerMainFunction(nodeObject);
+				} else {
+					params = treeWalkerMainFunction(nodeObject);
+				}
 			}
 		}
 	}
 	return params;
+}
+
+function getNameId(nodeObject) {
+	if (nodeObject.name.length > 0) return nodeObject.name;
+	return nodeObject.id;
 }
 
 function treeWalkerMainFunction(nodeObject) {
@@ -81,7 +97,8 @@ function treeWalkerMainFunction(nodeObject) {
 					if (nodeObject.id === 'token_data') return params;
 					else {
 						if (params.length > 0) params += '&';
-						params += nodeObject.name + '=' + encodeURIComponent(nodeObject.value);
+						params += getNameId(nodeObject) + '=' +
+							encodeURIComponent(nodeObject.value);
 					}
 					break;
 
@@ -90,7 +107,8 @@ function treeWalkerMainFunction(nodeObject) {
 				case 'radio':
 					if (nodeObject.checked == true) {
 						if (params.length > 0) params += '&';
-						params += nodeObject.name + '=' + encodeURIComponent(nodeObject.value);
+						params += getNameId(nodeObject) + '=' +
+							encodeURIComponent(nodeObject.value);
 					}
 					break;
 
@@ -101,7 +119,8 @@ function treeWalkerMainFunction(nodeObject) {
 				// All other input types.
 				default:
 					if (params.length > 0) params += '&';
-					params += nodeObject.name + '=' + encodeURIComponent(nodeObject.value);
+					params += getNameId(nodeObject) + '=' +
+						encodeURIComponent(nodeObject.value);
 					break;
 			}
 		}
@@ -109,13 +128,15 @@ function treeWalkerMainFunction(nodeObject) {
 		// Look for any objects in the DOM with a tag name of TEXTAREA.
 		if (nodeObject.nodeName.toLowerCase() === 'textarea') {
 			if (params.length > 0) params += '&';
-			params += nodeObject.name + '=' + encodeURIComponent(nodeObject.value);
+			params += getNameId(nodeObject) + '=' +
+				encodeURIComponent(nodeObject.value);
 		}
 
 		// Selected Lists
 		if (nodeObject.nodeName.toLowerCase() === 'select') {
 			if (params.length > 0) params += '&';
-			params += nodeObject.name + '=' + encodeURIComponent(nodeObject.value);
+			params += getNameId(nodeObject) + '=' +
+				encodeURIComponent(nodeObject.value);
 		}
 	}
 }
