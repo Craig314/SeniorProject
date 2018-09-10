@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS `oauth` (
   `clientid` varchar(32) NOT NULL COMMENT 'The Client ID of this application that is given by the provider.',
   `clientsecret` varchar(64) DEFAULT NULL COMMENT 'The Client Secret that is supplied by the provider.',
   `scope` varchar(256) NOT NULL COMMENT 'The scope of the request.',
-  `authtype` varchar(16) NOT NULL COMMENT 'The type of authorization requested.  This is usually one of authcode, implicit, password, or client.',
+  `authtype` int(11) NOT NULL COMMENT 'The type of authorization requested.  This is usually one of the following: 0: authcode; 1: implicit; 2: password; 3: client.',
   `authurl` varchar(512) NOT NULL COMMENT 'The URL that the application will redirect the client to when logging in.',
   `redirecturl` varchar(512) NOT NULL COMMENT 'The URL that the provider redirects to when the user logs in and authorizes this application to access their data.',
   `resourceurl1` varchar(512) NOT NULL COMMENT 'The resource URL that the application uses to access the provider''s APIs.',
@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS `oauth` (
 -- Dumping data for table configuration.oauth: ~0 rows (approximately)
 /*!40000 ALTER TABLE `oauth` DISABLE KEYS */;
 INSERT INTO `oauth` (`provider`, `name`, `module`, `expire`, `clientid`, `clientsecret`, `scope`, `authtype`, `authurl`, `redirecturl`, `resourceurl1`, `resourceurl2`, `resourceurl3`, `resourceurl4`) VALUES
-	(0, 'Test Provider', 'XXXX', 3600, '3hdh2S6FKD8574qjpzx', '', 'real_name,home_address,mailing_address,email,home_phone,mobile_phone,work_phone', 'password', 'https://oauth.someprovider.com/oauth/authenticate.php', 'https://strata.danielrudy.org/oauth/redir_response.php', 'https://oauth.someprovider.com/oauth/resources.php', '', '', '');
+	(0, 'Test Provider', 'XXXX', 3600, '3hdh2S6FKD8574qjpzx', '', 'real_name,home_address,mailing_address,email,home_phone,mobile_phone,work_phone', 2, 'https://oauth.someprovider.com/oauth/authenticate.php', 'https://strata.danielrudy.org/oauth/redir_response.php', 'https://oauth.someprovider.com/oauth/resources.php', '', '', '');
 /*!40000 ALTER TABLE `oauth` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.openid
