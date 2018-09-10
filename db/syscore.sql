@@ -28,12 +28,12 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`setting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains configuration information about the application.\r\nThe following numerical ranges are defined:\r\n0-9  Server\r\n10-19 HTML\r\n20-29 SSL\r\n30-49 Security\r\n50-59 Session\r\n60-69 Time/Timezone\r\n70-79 Account/Profile\r\n1000+ Application Specific';
 
--- Dumping data for table configuration.config: ~45 rows (approximately)
+-- Dumping data for table configuration.config: ~44 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
 	(0, 0, 'server_document_root', 'Appliation Root Directory', '/usr/local/www/apache24/data', 'This sets the application root directory on the server.', 1),
 	(1, 0, 'server_hostname', 'Server Hostname', 'strata.danielrudy.org', 'This is the server hostname.  It is used to build the base\r\nURL which is used throughout the application.', 1),
-	(2, 2, 'server_secure', 'Use HTTPS', '0', 'The flag which indicates that the encrypted HTTPS protocol is to be used.', 1),
+	(2, 2, 'server_secure', 'Use HTTPS', '1', 'The flag which indicates that the encrypted HTTPS protocol is to be used.', 1),
 	(3, 1, 'server_http_port', 'HTTP Port Number', '22080', 'The network port number that the application is to use\r\nwhen using the unencrypted HTTP protocol.  Default is\r\n80.', 1),
 	(4, 1, 'server_https_port', 'HTTPS Port Number', '443', 'The network port number that the application is to use\r\nwhen using the encrypted HTTPS protocol. Default is\r\n443.', 1),
 	(10, 1, 'html_default_label_size', 'Default HTML Label Size', '2', 'Default size of field text labels on web forms.', 0),
@@ -74,8 +74,7 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(76, 1, 'profile_id_vendor', 'Vendor Profile ID', '1', 'The profile ID number of the vendor account.', 0),
 	(77, 1, 'profile_id_admin', 'Admin Profile ID', '2', 'The profile ID number of the administrator account.', 0),
 	(80, 2, 'oauth_enable', 'OAuth Login Enabled', '0', 'Specifies whether OAuth is a login method.', 1),
-	(90, 2, 'openid_enable', 'OpenID Login Enabled', '0', 'Specifies whether OpenID is a login method.', 1),
-	(125, 0, 'test_setting', 'Test Setting', 'TEST TEST TEST', 'This setting is for development testing purposes only.  Do not use.', 1);
+	(90, 2, 'openid_enable', 'OpenID Login Enabled', '0', 'Specifies whether OpenID is a login method.', 1);
 /*!40000 ALTER TABLE `config` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.flagdesc_app
@@ -103,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `flagdesc_core` (
   PRIMARY KEY (`flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the names and descriptions of core system flags from the userdata.profile table.  The flag attribute is the bit position of the flag.';
 
--- Dumping data for table configuration.flagdesc_core: ~7 rows (approximately)
+-- Dumping data for table configuration.flagdesc_core: ~6 rows (approximately)
 /*!40000 ALTER TABLE `flagdesc_core` DISABLE KEYS */;
 INSERT INTO `flagdesc_core` (`flag`, `name`, `description`) VALUES
 	(0, 'Test Flag S1', 'This flag is for testing purposes only&period;'),
@@ -143,14 +142,17 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~10 rows (approximately)
+-- Dumping data for table configuration.module: ~11 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
+	(1, 'Grid Portal', 'Views the available modules in grid format.', 'gridportal.php', 'icon_grid', 1, 1, 1, 0),
+	(2, 'Link Portal', 'Views the available modules in link format.', 'linkportal.php', 'icon_chain2', 1, 1, 1, 0),
 	(3, 'Module Data Editor', 'Edits module data in the database.', 'modedit.php', 'icon_gears', 1, 0, 1, 1),
 	(4, 'Configuration Editor', 'Edits the application configuration parameters&period;&NewLine;This allows inserting and deleting of configuration&NewLine;items in the database&period;', 'configedit.php', 'icon_tools3', 1, 0, 1, 1),
 	(5, 'Parameter Editor', 'Edits the configuration parameter values for the application&period;&NewLine;This only allows changing the configuration parameter values&period;', 'paramedit.php', 'icon_tools4', 1, 0, 1, 0),
 	(6, 'System Flags', 'This module edits the system flags which&NewLine;are used by the various user profiles&period;', 'sysflag.php', 'icon_checklist', 1, 0, 1, 1),
 	(7, 'Application Flags', 'This module edits the application flags&NewLine;which are used by the various user profiles&period;', 'appflag.php', 'icon_checklist', 1, 0, 1, 0),
+	(8, 'File Finder', 'Allows access to the server file system&period;', 'file.php', 'icon_harddisk', 1, 0, 1, 1),
 	(10, 'Change Password', 'Allows a user to change their login password&period;', 'passwd.php', 'icon_padlock', 1, 1, 1, 0),
 	(11, 'Profile Editor', 'Edits the available profiles that defines&NewLine;what access rights a user has&period;', 'profedit.php', 'icon_keys', 1, 0, 1, 0),
 	(12, 'OAuth Provider Edit', 'Edits the known list of external OAuth authentication providers&period;', 'oauthedit.php', 'icon_oauth', 1, 0, 1, 0),
@@ -162,12 +164,12 @@ INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`,
 CREATE TABLE IF NOT EXISTS `oauth` (
   `provider` int(11) NOT NULL COMMENT 'Key Field: The OAuth provider',
   `name` varchar(50) NOT NULL COMMENT 'The name of the OAuth provider.',
-  `module` varchar(32) NOT NULL COMMENT 'The OAuth API module in the OAuth directory to use.',
+  `module` varchar(64) NOT NULL COMMENT 'The OAuth API module in the OAuth directory to use.',
   `expire` bigint(20) NOT NULL COMMENT 'The default expire time if it is not given in the token.',
   `clientid` varchar(32) NOT NULL COMMENT 'The Client ID of this application that is given by the provider.',
   `clientsecret` varchar(64) DEFAULT NULL COMMENT 'The Client Secret that is supplied by the provider.',
   `scope` varchar(256) NOT NULL COMMENT 'The scope of the request.',
-  `authtype` varchar(16) NOT NULL COMMENT 'The type of authorization requested.',
+  `authtype` varchar(16) NOT NULL COMMENT 'The type of authorization requested.  This is usually one of authcode, implicit, password, or client.',
   `authurl` varchar(512) NOT NULL COMMENT 'The URL that the application will redirect the client to when logging in.',
   `redirecturl` varchar(512) NOT NULL COMMENT 'The URL that the provider redirects to when the user logs in and authorizes this application to access their data.',
   `resourceurl1` varchar(512) NOT NULL COMMENT 'The resource URL that the application uses to access the provider''s APIs.',
@@ -212,13 +214,13 @@ CREATE TABLE IF NOT EXISTS `profile` (
   PRIMARY KEY (`profileid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='All user accounts must be assigned one of the profiles which are defined in this table.';
 
--- Dumping data for table configuration.profile: ~4 rows (approximately)
+-- Dumping data for table configuration.profile: ~3 rows (approximately)
 /*!40000 ALTER TABLE `profile` DISABLE KEYS */;
 INSERT INTO `profile` (`profileid`, `name`, `description`, `portal`, `bitmap_core`, `bitmap_app`) VALUES
 	(0, 'NONE', NULL, 1, NULL, NULL),
 	(1, 'Vendor', 'Profile for use only by the application vendor.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
 	(2, 'Admin', 'Profile for use only by the application admin.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
-	(435, 'Test Profile', 'This profile is for development testing purposes&period;', 0, _binary 0x02000006000000000000000000000000, _binary 0x00010000000000000000000000000000);
+	(435, 'Test Profile', 'This profile is for development testing purposes&period;', 1, _binary 0x02000006000000000000000000000000, _binary 0x00010000000000000000000000000000);
 /*!40000 ALTER TABLE `profile` ENABLE KEYS */;
 
 
@@ -240,13 +242,13 @@ CREATE TABLE IF NOT EXISTS `contact` (
   CONSTRAINT `FK_contact_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the user contact information.';
 
--- Dumping data for table userdata.contact: ~4 rows (approximately)
+-- Dumping data for table userdata.contact: ~3 rows (approximately)
 /*!40000 ALTER TABLE `contact` DISABLE KEYS */;
 INSERT INTO `contact` (`userid`, `name`, `haddr`, `maddr`, `email`, `hphone`, `cphone`, `wphone`) VALUES
 	(1, 'Application Vendor', 'SEA-CORE International LTD.', NULL, 'seacoregroup@gmail.com', '', '', ''),
 	(2, 'Application Admin', 'SEA-CORE International LTD&period;', 'SEA-CORE International LTD&period;', 'seacoregroup&commat;gmail&period;com', '', '', ''),
 	(34, 'Test User', 'Test user for developmental purposes only&period;', 'Test user for developmental purposes only&period;', 'testuser&commat;localhost', '707-555-3343', '916-555-1212', '916-278-6000'),
-	(324, 'Test User 2', '', '', '', '', '', '');
+	(324, 'Test User Two', '', '', '', '', '', '');
 /*!40000 ALTER TABLE `contact` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.login
@@ -269,9 +271,9 @@ CREATE TABLE IF NOT EXISTS `login` (
 -- Dumping data for table userdata.login: ~4 rows (approximately)
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `active`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
-	(1, 1, 0, 1532714506, 1533190478, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 1, 0, 1532714506, 1534749167, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, 1, NULL, 0, 1532847480, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
-	(34, 1, 0, 1532817751, 1532818490, 0, 1540594510, 'SHA256', 100, 'b5de956016daa9da4bc7f407f36b56435222ee6329bafb17d78341669552f90e', 'a1193259f2fd91064d9ef5123bfec68fe80b29ca95fb395348579936c1c995cb'),
+	(34, 1, 0, 1532817751, 1534662670, 0, 1540594510, 'SHA256', 100, 'b5de956016daa9da4bc7f407f36b56435222ee6329bafb17d78341669552f90e', 'a1193259f2fd91064d9ef5123bfec68fe80b29ca95fb395348579936c1c995cb'),
 	(324, 1, 0, 0, 0, 0, 0, 'SHA256', 100, '59590d7e1f679dde2bc7a373ba5f25f60bf4060540fb50a2841b98a322cd1f71', 'e5bc3e1b91b086fda581afb04f16d32cbd89797adebd2b4b118cbff86675f2e0');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
 

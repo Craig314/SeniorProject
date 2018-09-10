@@ -487,7 +487,7 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('clientid', $clid, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('clientsecret', $clsecret, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('authtype', $authtype, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('authtype', $authtype, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('authurl', $authurl, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('redirecturl', $redirecturl, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl1', $resurl1, databaseCore::PTSTR, $qxa);
@@ -512,7 +512,7 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('clientid', $clid, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('clientsecret', $clsecret, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('authtype', $authtype, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('authtype', $authtype, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('authurl', $authurl, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('redirecturl', $redirecturl, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl1', $resurl1, databaseCore::PTSTR, $qxa);

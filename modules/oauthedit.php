@@ -187,6 +187,7 @@ function loadAdditionalContent()
 			'Module',
 			'Expire',
 			'Client ID',
+			'Auth Type',
 		),
 		'tdata' => array(),
 		'tooltip' => array(),
@@ -203,6 +204,7 @@ function loadAdditionalContent()
 			$vx['module'],
 			$vx['expire'],
 			$vx['clientid'],
+			$vx['authtype'],
 		);
 		array_push($list['tdata'], $tdata);
 		array_push($list['tooltip'], $vx['name']);
@@ -398,7 +400,7 @@ function updateRecordAction()
 	$vfystr->strchk($scope, 'Scope', 'scope', verifyString::STR_ALPHANUMPUNCT, true,
 		256, 3);
 	$vfystr->strchk($authtype, 'Authentication Type', 'authtype',
-		verifyString::STR_ALPHANUM, true, 16, 1);
+		verifyString::STR_PINTEGER, true, 3, 0);
 	$vfystr->strchk($authurl, 'Authentication URL', 'authurl',
 		verifyString::STR_URI, true, 512, 3);
 	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
