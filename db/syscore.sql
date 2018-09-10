@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `flagdesc_core` (
   PRIMARY KEY (`flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the names and descriptions of core system flags from the userdata.profile table.  The flag attribute is the bit position of the flag.';
 
--- Dumping data for table configuration.flagdesc_core: ~6 rows (approximately)
+-- Dumping data for table configuration.flagdesc_core: ~7 rows (approximately)
 /*!40000 ALTER TABLE `flagdesc_core` DISABLE KEYS */;
 INSERT INTO `flagdesc_core` (`flag`, `name`, `description`) VALUES
 	(0, 'Test Flag S1', 'This flag is for testing purposes only&period;'),
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~11 rows (approximately)
+-- Dumping data for table configuration.module: ~13 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
 	(1, 'Grid Portal', 'Views the available modules in grid format.', 'gridportal.php', 'icon_grid', 1, 1, 1, 0),
@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS `oauth` (
   PRIMARY KEY (`provider`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains OAuth information about this client';
 
--- Dumping data for table configuration.oauth: ~0 rows (approximately)
+-- Dumping data for table configuration.oauth: ~1 rows (approximately)
 /*!40000 ALTER TABLE `oauth` DISABLE KEYS */;
 INSERT INTO `oauth` (`provider`, `name`, `module`, `expire`, `clientid`, `clientsecret`, `scope`, `authtype`, `authurl`, `redirecturl`, `resourceurl1`, `resourceurl2`, `resourceurl3`, `resourceurl4`) VALUES
 	(0, 'Test Provider', 'XXXX', 3600, '3hdh2S6FKD8574qjpzx', '', 'real_name,home_address,mailing_address,email,home_phone,mobile_phone,work_phone', 2, 'https://oauth.someprovider.com/oauth/authenticate.php', 'https://strata.danielrudy.org/oauth/redir_response.php', 'https://oauth.someprovider.com/oauth/resources.php', '', '', '');
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS `profile` (
   PRIMARY KEY (`profileid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='All user accounts must be assigned one of the profiles which are defined in this table.';
 
--- Dumping data for table configuration.profile: ~3 rows (approximately)
+-- Dumping data for table configuration.profile: ~4 rows (approximately)
 /*!40000 ALTER TABLE `profile` DISABLE KEYS */;
 INSERT INTO `profile` (`profileid`, `name`, `description`, `portal`, `bitmap_core`, `bitmap_app`) VALUES
 	(0, 'NONE', NULL, 1, NULL, NULL),
