@@ -504,7 +504,7 @@ function insertRecordAction()
 	$vfystr->strchk($scope, 'Scope', 'scope', verifyString::STR_ALPHANUMPUNCT, true,
 		256, 3);
 	$vfystr->strchk($authtype, 'Authentication Type', 'authtype',
-		verifyString::STR_ALPHANUM, true, 16, 1);
+		verifyString::STR_PINTEGER, true, 3, 0);
 	$vfystr->strchk($authurl, 'Authentication URL', 'authurl',
 		verifyString::STR_URI, true, 512, 3);
 	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
@@ -701,15 +701,58 @@ function formPage($mode, $rxa)
 		);
 	}
 
+	// Scans the authorize directory for files of the form
+	// type.*.php where * is the provider and type is either
+	// oauth or openid depending on what is being searched
+	// for.
+	if ($mode == MODE_INSERT || $mode = MODE_UPDATE)
+	{
+		// Setup
+		$fileList = array();
+		$fileType = 'oauth';
+
+		// Get the directory listing.
+		$files = scandir('../authorize');
+		if ($files === false)
+			handleError('File System Error: Unable to get ' . $fileType .
+				' module filenames.<br>Contact your administrator.');
+		
+		// Since we have both oauth and openid files, we need to pick out
+		// just the one that we need.
+		foreach($files as $kx => $vx)
+		{
+			if ($vx == '.') continue;
+			if ($vx == '..') continue;
+			$strArray = explode('.', $vx);
+			if (strcmp($strArray[0], $fileType) != 0) continue;
+			$fileList[$strArray[1]] = $strArray[1];
+		}
+		unset($files);
+		$module = array(
+			'type' => html::TYPE_PULLDN,
+			'label' => 'Authentication Module',
+			'default' => $rxa['module'],
+			'name' => 'module',
+			'fsize' => 4,
+			'lsize' => 3,
+			'optlist' => $fileList,
+			'tooltip' => 'The module that the provider communicates with.',
+			'disable' => $disable,
+		);
+	}
+	else
+	{
+		$module = generateField(html::TYPE_TEXT, 'module', 'Module', 5,
+			$rxa['module'], 'The module that the provider communicates with.',
+			$default, $disable);
+	}
+
 	// Custom field rendering code
 	$provider = generateField(html::TYPE_TEXT, 'provider', 'Provider', 3,
 		$rxa['provider'], 'The provider\'s identification number', $default,
 		$key);
 	$name = generateField(html::TYPE_TEXT, 'name', 'Provider Name', 5,
 		$rxa['name'], 'The name of the provider.', $default, $disable);
-	$module = generateField(html::TYPE_TEXT, 'module', 'Module', 5,
-		$rxa['module'], 'The module that the provider communicates with.',
-		$default, $disable);
 	$expire = generateField(html::TYPE_TEXT, 'expire', 'Expire', 3,
 		$rxa['expire'], 'Default time that a user\'s login expires.',
 		true, $disable);

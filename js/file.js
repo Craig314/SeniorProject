@@ -83,12 +83,12 @@ function getConfirmation(type, method) {
 // When the user clicks anywhere in a row of a selection
 // list table, this will set the click status of the radio
 // button.
-function selectItem(item) {
-	var i;
+function selectItemRadio(name, item) {
 	var nodeList;
 	var nodeObject;
-	
-	nodeList = document.getElementsByName('select_item');
+	var i;
+
+	nodeList = document.getElementsByName(name);
 	if (nodeList == null) return;
 	for (i = 0; i < nodeList.length; i++) {
 		nodeObject = nodeList[i];
@@ -99,6 +99,7 @@ function selectItem(item) {
 		}
 	}
 }
+
 
 // Button click handler for moving to the home directory.
 $('#directoryHome').on('click', function() {

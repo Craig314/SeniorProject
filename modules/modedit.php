@@ -687,12 +687,16 @@ function formPage($mode, $rxa)
 		$filelist = array();
 
 		// Get the directory listing.
-		$file = scandir('.');
-		if ($file === false)
+		$modFiles = scandir('.');
+		if ($modFiles === false)
 			handleError('File System Error: Unable to get module filenames.<br>Contact your administrator.');
+		$appFiles = scandir('../application');
+		if ($appFiles === false)
+			handleError('File System Error: Unable to get application filenames.<br>Contact your administrator.');
+		$files = array_merge($modFiles, $appFiles);
 		
 		// Remove the filename extension as they are all .png files.
-		foreach($file as $kx => $vx)
+		foreach($files as $kx => $vx)
 		{
 			// Exclue files/directories that we don't want.
 			if ($vx == '.') continue;
@@ -700,7 +704,9 @@ function formPage($mode, $rxa)
 			if ($vx == 'template.php') continue;
 			$filelist[$vx] = $vx;
 		}
-		unset($file);
+		unset($files);
+		unset($modFiles);
+		unset($appFiles);
 		$modfile = array(
 			'type' => html::TYPE_PULLDN,
 			'label' => 'Filename',

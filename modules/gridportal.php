@@ -349,8 +349,19 @@ function loadModule()
 function redirect($filename)
 {
 	global $ajax;
+	global $CONFIGVAR;
 
-	$ajax->redirect('/modules/' . $filename);
+	$docRoot = $CONFIGVAR['server_document_root']['value'];
+	$result = file_exists($docRoot . '/modules/' . $filename);
+	if ($result) $ajax->redirect('/modules/' . $filename);
+	else
+	{
+		$result = file_exists($docRoot . '/application/' . $filename);
+		if ($result) $ajax->redirect('/applicatiion/' . $filename);
+		else
+			handleError('Configured module/application file is missing' .
+				'<br>Contact your administrator.');
+	}
 	exit(0);
 }
 

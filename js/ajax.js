@@ -289,7 +289,11 @@ var ajaxServerSend = {
 				}
 			}
 			else {
-				writeError("ERROR: " + link.status + " - " + link.statusText);
+				if (link.status == 0) {
+					writeError("You must disable your ad blocker, then log back in again.");
+				} else {
+					writeError("ERROR: " + link.status + " - " + link.statusText);
+				}
 			}
 		}
 	},

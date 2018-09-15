@@ -1372,7 +1372,7 @@ class html implements html_interface
 			<div class=\"button\">
 				<div class=\"form-group\">
 					<span class=\"col-xs-1\"></span>
-					<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Insert<?php echo ' ' . $dispname; ?>\" onclick=\"$action\">
+					<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Insert $dispname\" onclick=\"$action\">
 					<span class=\"col-xs-1\"></span>
 					<input type=\"button\" class=\"btn btn-info col-xs-3\" name=\"Reset\" value=\"Reset\" onclick=\"clearForm()\">
 					<span class=\"col-xs-1\"></span>
@@ -1387,7 +1387,7 @@ class html implements html_interface
 				<div class=\"button\">
 					<div class=\"form-group\">
 						<span class=\"col-xs-2\"></span>
-						<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Delete<?php echo ' ' . $dispname; ?>\" onclick=\"$action\">
+						<input type=\"button\" class=\"btn btn-danger col-xs-3\" name=\"Submit\" value=\"Delete $dispname\" onclick=\"$action\">
 						<span class=\"col-xs-2\"></span>
 						<input type=\"button\" class=\"btn btn-success col-xs-3\" name=\"initialview\" value=\"Go Back\" onclick=\"ajaxServerCommand.sendCommand(-1)\">
 						<span class=\"col-xs-2\"></span>

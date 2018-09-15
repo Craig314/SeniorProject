@@ -61,6 +61,7 @@ $htmlInjectFile = false;
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
+require_once BASEDIR . 'panels.php';
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -154,108 +155,18 @@ function loadAdditionalContent()
 	of the script.  New insert methods for various HTML controls
 	and constructs are being added on a regular basis.
 	*/
-	global $baseUrl;
-	global $account;
-	global $dbconf;
-	global $herr;
-	global $admin;
-	global $vendor;
-	global $special;
-	global $moduleId;
+	global $panels;
+	global $ajax;
 
-	// Load the modaccess table.
-	$rxa = $dbconf->queryModaccessProfile($_SESSION['profileId']);
-	if ($rxa == false)
-	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessage());
-	}
+	$navContent = $panels->getLinks();
+	$statusContent = $panels->getStatus();
 
-	// Load the module table.
-	$rxm = $dbconf->queryModuleAll();
-	if ($rxm == false)
-	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessage());
-		else
-			handleError('There are currently no modules to access.');
-	}
-
-	// Now we run the module list and check permissions and
-	// active status on each one. 
-	$access = false;
-	$navContent = '';
-	foreach($rxm as $kxa => $vxa)
-	{
-		// Check if the module is active.
-		if ($vxa['active'] == 0) continue;
-
-		// Get what we need from the database array.
-		$modId = $vxa['moduleid'];
-		$modName = $vxa['name'];
-		$modDesc = $vxa['description'];
-		$modIcon = $vxa['iconname'] . '.png';
-
-		// Check to see if the current module ID is the same as the
-		// executing module ID.  If it is, then skip.
-		if ($moduleId == $modId) continue;
-
-		// Don't change the order of these checks.
-		// Order Matters.
-
-		// The vendor account always has access.
-		if ($vendor != 0)
-		{
-			$access = true;
-			$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
-			continue;
-		}
-
-		// Some modules are only for the vendor.
-		if ($vxa['vendor'] != 0) continue;
-
-		// The admin account has access to everything that is not vendor
-		// only.  So we need to check if the user account is the admin
-		// account.
-		if ($admin != 0)
-		{
-			$access = true;
-			$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
-			continue;
-		}
-
-		// Modules with allusers set can be accessed by anyone.
-		if ($vxa['allusers'] != 0)
-		{
-			$access = true;
-			$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
-			continue;
-		}
-
-		// Now we have to bash the module id against the modaccess list.
-		// If the module id is not on the modaccess list, then that module
-		// is not displayed.
-		if (!empty($rxa))
-		{
-			foreach($rxa as $kxb => $vxb)
-			{
-				if ($modId == $vxb['moduleid'] && $profId == $vxb['profileid'])
-				{
-					$access = true;
-					$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
-					break;
-				}
-			}
-		}
-	}
+	// XXX Development
+	$statusContent = 'Status Panel';
 	
-	// Build the multi-send command.
-	$data = array(
-		0 => 'CMD 957 ' . $navContent,
-		1 => 'CMD 959 ' . '<b>Select an item to the left.</b>',
-	);
-	$sendData = json_encode($data);
-	echo 'MULTI ' . $sendData;
+	// Write the panels.
+	$ajax->writePanelsImmediate($navContent, $statusContent,
+		'<b>Select an item to the left.</b>');
 }
 
 // Called when the initial command processor doesn't have the
@@ -277,14 +188,6 @@ function commandProcessor($commandId)
 			exit(1);
 			break;
 	}
-}
-
-// This is the function that writes the HTML to the client.
-function writeModuleIcon($url, $id, $iname, $dname, $desc)
-{
-	$tooltip = 'data-toggle="tooltip" data-html="true" title="' . $desc . '"';
-	$content = "	<div class=\"linkicon iconfont\" onclick=\"loadModule($id)\" $tooltip>$dname</div>";
-	return $content;
 }
 
 // Loads the selected module.
@@ -347,8 +250,19 @@ function loadModule()
 function redirect($filename)
 {
 	global $ajax;
+	global $CONFIGVAR;
 
-	$ajax->redirect('/modules/' . $filename);
+	$docRoot = $CONFIGVAR['server_document_root']['value'];
+	$result = file_exists($docRoot . '/modules/' . $filename);
+	if ($result) $ajax->redirect('/modules/' . $filename);
+	else
+	{
+		$result = file_exists($docRoot . '/application/' . $filename);
+		if ($result) $ajax->redirect('/applicatiion/' . $filename);
+		else
+			handleError('Configured module/application file is missing' .
+				'<br>Contact your administrator.');
+	}
 	exit(0);
 }
 

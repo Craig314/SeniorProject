@@ -36,6 +36,9 @@ interface ajaxInterface
 	const CMD_CLRMSG		= 954;	// Clear Messages
 	const CMD_CLRMSGHTML	= 955;	// Clear Messeges, Write HTML
 	const CMD_ERRCLRCHTML	= 956;	// Status Error, Clear Form, Display, Clear HTML
+	const CMD_WNAVPANEL		= 957;	// Write HTML to navigation panel
+	const CMD_WSTATPANEL	= 958;	// Write HTML to status panel
+	const CMD_WMAINPANEL	= 959;	// Write HTML to main panel
 
 	// HTTP Status Codes: Special
 	const CODE_OK			= 200;	// Status OK
@@ -68,6 +71,7 @@ interface ajaxInterface
 	public function loadQueueJSON($jnbr, $data);
 	public function loadQueueFieldList($data);
 	public function sendQueue();
+	public function writePanelsImmediate($nav, $stat, $main);
 
 }
 
@@ -87,21 +91,21 @@ class ajaxClass implements ajaxInterface
 	// Note: Filename must begin with a /
 	public function redirect($filename)	{
 		$url = html::getBaseURL();
-		$this->sendCode(ajaxClass::CODE_REDIR, $url . $filename);
+		$this->sendCode(self::CODE_REDIR, $url . $filename);
 	}
 
 	// Sends a code to the client.
 	public function sendCode($code, $data = NULL)
 	{
-		if (empty($data)) echo ajaxClass::TYPE_CODE . $code;
-		else echo ajaxClass::TYPE_CODE . $code . ' ' . $data;
+		if (empty($data)) echo self::TYPE_CODE . $code;
+		else echo self::TYPE_CODE . $code . ' ' . $data;
 	}
 
 	// Sends a command to the client.
 	public function sendCommand($cmd, $data = NULL)
 	{
-		if (empty($data)) echo ajaxClass::TYPE_COMMAND . $cmd;
-		else echo ajaxClass::TYPE_COMMAND . $cmd . ' ' . $data;
+		if (empty($data)) echo self::TYPE_COMMAND . $cmd;
+		else echo self::TYPE_COMMAND . $cmd . ' ' . $data;
 	}
 
 	// Sends error status to the client.
@@ -112,26 +116,26 @@ class ajaxClass implements ajaxInterface
 		$str2 = json_encode($list);
 		if ($str1 === false || $str2 === false)
 		{
-			sendCommand(ajaxClass::CMD_ERRDISP, 'JSON encoding error: (' .
+			sendCommand(self::CMD_ERRDISP, 'JSON encoding error: (' .
 				json_last_error() . ') ' . json_last_error_msg());
 			exit(1);
 		}
 		$str = $str1 . chr(29) . $str2;
-		echo ajaxClass::TYPE_STATUS . $str;
+		echo self::TYPE_STATUS . $str;
 	}
 
 	// Sends JSON format data to the server.
 	public function sendJSON($jnbr, $data)
 	{
-		echo ajaxClass::JSON . $jnbr . ' ' . $data;
+		echo self::JSON . $jnbr . ' ' . $data;
 	}
 
 	// Loads a code into the send queue.
 	public function loadQueueCode($code, $data = NULL)
 	{
 		if ($this->codeStatus) return;
-		if (empty($data)) $str = ajaxClass::TYPE_CODE . $code;
-		else $str = ajaxClass::TYPE_CODE . $code . ' ' . $data;
+		if (empty($data)) $str = self::TYPE_CODE . $code;
+		else $str = self::TYPE_CODE . $code . ' ' . $data;
 		array_push($this->queue, $str);
 		$this->codeStatus = true;
 	}
@@ -139,8 +143,8 @@ class ajaxClass implements ajaxInterface
 	// Loads a command into the send queue.
 	public function loadQueueCommand($cmd, $data = NULL)
 	{
-		if (empty($data)) $str = ajaxClass::TYPE_COMMAND . $cmd;
-		else $str = ajaxClass::TYPE_COMMAND . $cmd . ' ' . $data;
+		if (empty($data)) $str = self::TYPE_COMMAND . $cmd;
+		else $str = self::TYPE_COMMAND . $cmd . ' ' . $data;
 		array_push($this->queue, $str);
 	}
 
@@ -151,11 +155,11 @@ class ajaxClass implements ajaxInterface
 		$str = json_encode($data);
 		if ($str === false)
 		{
-			sendCommand(ajaxClass::CMD_ERRDISP, 'JSON encoding error: (' .
+			sendCommand(self::CMD_ERRDISP, 'JSON encoding error: (' .
 				json_last_error() . ') ' . json_last_error_msg());
 			exit(1);
 		}
-		$str = ajaxClass::TYPE_STATUS . $str;
+		$str = self::TYPE_STATUS . $str;
 		array_push($this->queue, $str);
 	}
 
@@ -167,7 +171,7 @@ class ajaxClass implements ajaxInterface
 	// Loads JSON formatted data into the send queue.
 	public function loadQueueJSON($jnbr, $data)
 	{
-		$str = ajaxClass::TYPE_JSON . $jnbr . ' ' . $data;
+		$str = self::TYPE_JSON . $jnbr . ' ' . $data;
 		array_push($this->queue, $str);
 	}
 
@@ -178,13 +182,25 @@ class ajaxClass implements ajaxInterface
 		$str = json_encode($this->queue);
 		if ($str === false)
 		{
-			sendCommand(ajaxClass::CMD_ERRDISP, 'JSON encoding error: (' .
+			sendCommand(self::CMD_ERRDISP, 'JSON encoding error: (' .
 				json_last_error() . ') ' . json_last_error_msg());
 			exit(1);
 		}
-		echo ajaxClass::TYPE_MULTI . $str;
+		echo self::TYPE_MULTI . $str;
 		$this->queue = array();
 		$this->codeStatus = false;
+	}
+
+	// Writes the given data to the three panels.
+	public function writePanelsImmediate($nav, $stat, $main)
+	{
+		$data = array(
+			0 => self::TYPE_COMMAND . self::CMD_WNAVPANEL . ' ' . $nav,
+			1 => self::TYPE_COMMAND . self::CMD_WSTATPANEL . ' ' . $stat,
+			2 => self::TYPE_COMMAND . self::CMD_WMAINPANEL . ' ' . $main,
+		);
+		$sendData = json_encode($data);
+		echo self::TYPE_MULTI . $sendData;
 	}
 
 }

@@ -4,7 +4,7 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application OpenID Provider Edit
+PHP Web Application Module Template
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -17,6 +17,10 @@ the features/abilities they represent are being used:
 		Specifies a HTML file to use as the template instead of the
 		default page.
 
+Note on filenames:  Filename conflicts between files in the modules
+directory and the application directory are resolved by the files in
+the module directory taking precidence.
+
 */
 
 
@@ -25,27 +29,27 @@ the features/abilities they represent are being used:
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = 'openidedit.php';
+$moduleFilename = '';
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
-$moduleTitle = 'OpenID Provider Editor';
+$moduleTitle = '';
 
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 13;
+$moduleId = 0;
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
-$moduleDisplayUpper = 'OpenID Provider';
+$moduleDisplayUpper = '';
 
 // The lowercase short display name of the module.  This shows up in
 // various messages.
-$moduleDisplayLower = 'provider';
+$moduleDisplayLower = '';
 
 // Set to true if this is a system module.
-$moduleSystem = true;
+$moduleSystem = false;
 
 // Flags in the permissions bitmap of what permissions the user
 // has in this module.  Currently not implemented.
@@ -118,7 +122,7 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/common.js',
-			'/js/openidedit.js',
+			'/js/.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -128,18 +132,21 @@ function loadInitialContent()
 
 		// The final option, htmlFlags, is an array that holds the names
 		// of supported options.  Currently, those options are checkbox,
-		// datepick, and tooltip.
+		// datepick, tooltip, and type2.
 		// $htmlFlags= array(
 		// 	'checkbox',
 		// 	'datepick',
 		// 	'tooltip',
+		//	'type2',
 		// );
 		$htmlFlags = array(
 			'tooltip',
+			'type2',
 		);
 
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
-		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
+		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags,
+		//	$funcbar2, $funcbar3);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
 			$left, '', $funcBar, $jsFiles, '', $htmlFlags);
 	}
@@ -160,17 +167,15 @@ function loadInitialContent()
 function loadAdditionalContent()
 {
 	global $baseUrl;
-	global $dbconf;
 
 	// Get data from database.
-	$rxa = $dbconf->queryOpenIdAll();
+	$rxa = $DATABASE_QUERY_ALL();	// XXX Set This
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
 		else
-			handleError('There are no ' . $moduleDisplayLower .
-				's in the database to edit.');
+			handleError('There are no ' . $moduleDisplayLower . 's in the database to edit.');
 	}
 
 	// Generate Selection Table.
@@ -182,10 +187,7 @@ function loadAdditionalContent()
 		'hover' => true,
 		'titles' => array(
 			// Add column titles here
-			'Name',
-			'ID',
-			'Module',
-			'Expire',
+			'',
 		),
 		'tdata' => array(),
 		'tooltip' => array(),
@@ -196,21 +198,19 @@ function loadAdditionalContent()
 			// These are the values that show up under the columns above.
 			// The *FIRST* value is the value that is sent when a row
 			// is selected.  AKA Key Field.
-			$vx['provider'],
-			$vx['name'],
-			$vx['provider'],
-			$vx['module'],
-			$vx['expire'],
+			$vx[''],
+			$vx[''],
+			$vx[''],
 		);
 		array_push($list['tdata'], $tdata);
-		array_push($list['tooltip'], $vx['name']);
+		array_push($list['tooltip'], $vx['description']);
 	}
 
 	// Generate rest of page.
 	$data = array(
 		array(
 			'type' => html::TYPE_HEADING,
-			'message1' => 'OpenID Provider Edit',
+			'message1' => 'Module Template Page',
 			'message2' => '',	// Delete if not needed.
 			'warning' => '',
 		),
@@ -275,25 +275,23 @@ function commandProcessor($commandId)
 
 // Helper function for the view functions below that loads information
 // from the database and check for errors.
+// XXX: Requires customization.
 function databaseLoad()
 {
 	global $herr;
 	global $moduleDisplayLower;
-	global $dbconf;
 
 	$key = getPostValue('select_item', 'hidden');
 	if ($key == NULL)
-		handleError('You must select a ' . $moduleDisplayLower .
-			' from the list view.');
+		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
 	// The below line requires customization for database loading.	
-	$rxa = $dbconf->queryOpenId($key);
+	$rxa = $DATABASE_QUERY_OPERATION($key);	// XXX: Set This
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
 		else
-			handleError('Database Error: Unable to retrieve required '
-				. $moduleDisplayLower . ' data.');
+			handleError('Database Error: Unable to retrieve required ' . $moduleDisplayLower . ' data.');
 	}
 	return $rxa;
 }
@@ -326,6 +324,7 @@ function deleteRecordView()
 }
 
 // Updates the record in the database.
+// XXX: Requires customization.
 function updateRecordAction()
 {
 	global $ajax;
@@ -334,21 +333,15 @@ function updateRecordAction()
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
-	global $dbconf;
 
 	// Set the field list.
 	$fieldlist = array(
-		'provider',
-		'name',
-		'module',
-		'expire',
-		'serverurl',
-		'redirect',
+		'',
 	);
 	
 	// Get data
 	$key = getPostValue('hidden');
-	$id = getPostValue('provider');
+	$id = getPostValue('');
 
 	// Check key data.
 	if ($key == NULL)
@@ -362,23 +355,11 @@ function updateRecordAction()
 	if ($key != $id)
 		handleError('Database key mismatch.');
 
-	// Get data.
-	$name = getPostValue('name');
-	$module = getPostValue('module');
-	$expire = getPostValue('expire');
-	$serverurl = getPostValue('serverurl');
-	$redirect = getPostValue('redirect');
-
 	// Check mandatory fields.
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 3);
-	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
-		true, 32, 3);
-	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
-		true, 1209600, 900);
-	$vfystr->strchk($serverurl, 'Server URL', 'serverurl',
-		verifyString::STR_URI, true, 512, 3);
-	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
-		verifyString::STR_URI, true, 512, 3);
+	$vfystr->strchk();
+
+	// Check optional fields.
+	$vfystr->strchk();
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -392,11 +373,13 @@ function updateRecordAction()
 	}
 
 	// Safely encode all strings to prevent XSS attacks.
-	$name = safeEncodeString($name);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
 	
 	// We are good, update the record
-	$result = $dbconf->updateOpenId($key, $name, $module, $expire, $serverurl,
-		$redirect);
+	$result = $DATABASE_UPDATE_OPERATION($key);	// XXX: Set This
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -409,6 +392,7 @@ function updateRecordAction()
 }
 
 // Inserts the record into the database.
+// XXX: Requires customization.
 function insertRecordAction()
 {
 	global $ajax;
@@ -417,39 +401,21 @@ function insertRecordAction()
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
-	global $dbconf;
 
 	// Set the field list.
 	$fieldlist = array(
-		'provider',
-		'name',
-		'module',
-		'expire',
-		'serverurl',
-		'redirect',
+		'',
 	);
 	
 	// Get data
-	$id = getPostValue('provider');
-	$name = getPostValue('name');
-	$module = getPostValue('module');
-	$expire = getPostValue('expire');
-	$serverurl = getPostValue('serverurl');
-	$redirect = getPostValue('redirect');
+	$id = getPostValue('');
 
 	// Check mandatory fields.
-	$vfystr->strchk($id, 'Provider', 'provider', verifyString::STR_PINTEGER,
-		true, 2147483647, 0);
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 3);
-	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
-		true, 32, 3);
-	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
-		true, 1209600, 900);
-	$vfystr->strchk($serverurl, 'Server URL', 'serverurl',
-		verifyString::STR_URI, true, 512, 3);
-	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
-		verifyString::STR_URI, true, 512, 3);
-	
+	$vfystr->strchk();
+
+	// Check optional fields.
+	$vfystr->strchk();
+
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
 	{
@@ -462,11 +428,13 @@ function insertRecordAction()
 	}
 
 	// Safely encode all strings to prevent XSS attacks.
-	$name = safeEncodeString($name);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
+	// $ = safeEncodeString($);
 	
 	// We are good, insert the record
-	$result = $dbconf->insertOpenId($id, $name, $module, $expire, $serverurl,
-		$redirect);
+	$result = $DATABASE_INSERT_OPERATION($id);	// XXX: Set This
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -480,6 +448,7 @@ function insertRecordAction()
 }
 
 // Deletes the record from the database.
+// XXX: Requires customization.
 function deleteRecordAction()
 {
 	global $ajax;
@@ -488,12 +457,10 @@ function deleteRecordAction()
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
-	global $dbconf;
-	global $dbuser;
 
 	// Gather data...
 	$key = getPostValue('hidden');
-	$id = getPostValue('provider');
+	$id = getPostValue('');		// XXX: Set This
 
 	// ...and check it.
 	if ($key == NULL)
@@ -507,20 +474,8 @@ function deleteRecordAction()
 	if ($key != $id)
 		handleError('Database key mismatch.');
 	
-	// Check if any users are using this provider.
-	$result = $dbuser->queryOpenIdProvAll($key);
-	if ($result == false)
-	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
-	}
-	else
-	{
-		handleError('Unable to delete provider while users are still using it.');
-	}
-	
 	// Now remove the record from the database.
-	$result = $dbconf->deleteOpenId($key);
+	$result = $DATABASE_DELETE_OPERATION($key);	// XXX: Set This
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -545,29 +500,28 @@ function formPage($mode, $rxa)
 	{
 		case MODE_VIEW:			// View
 			$msg1 = 'Viewing ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['name'];
+			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_VIEW;
 			$action = '';
-			$hideValue = $rxa['provider'];
+			$hideValue = '';
 			$disable = true;
 			$default = true;
 			$key = true;
 			break;
 		case MODE_UPDATE:		// Update
 			$msg1 = 'Updating ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['name'];
-			$warn = 'Updating a provider will affect all users who use that provider.';
+			$msg2 = '';
+			$warn = '';
 			$btnset = html::BTNTYP_UPDATE;
 			$action = 'submitUpdate()';
-			$hideValue = $rxa['provider'];
+			$hideValue = '';
 			$disable = false;
 			$default = true;
 			$key = true;
 			break;
 		case MODE_INSERT:		// Insert
 			$msg1 = 'Inserting ' . $moduleDisplayUpper . ' Data';
-			$msg2 = $rxa['name'];
 			$msg2 = '';
 			$warn = '';
 			$btnset = html::BTNTYP_INSERT;
@@ -578,11 +532,11 @@ function formPage($mode, $rxa)
 			break;
 		case MODE_DELETE:		// Delete
 			$msg1 = 'Deleting ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['name'];
-			$warn = 'A provider can only be deleted when there are no users using it.';
+			$msg2 = '';
+			$warn = '';
 			$btnset = html::BTNTYP_DELETE;
 			$action = 'submitDelete()';
-			$hideValue = $rxa['provider'];
+			$hideValue = '';
 			$disable = true;
 			$default = true;
 			$key = true;
@@ -611,79 +565,12 @@ function formPage($mode, $rxa)
 		// Datafill this array with dummy values to prevent PHP
 		// from issuing errors.
 		$rxa = array(
-			'provider' => 0,
-			'name' => '',
-			'module' => '',
-			'expire' => 3600,
-			'serverurl' => '',
-			'redirecturl' => '',
+			'' => '',
 		);
-	}
-
-	// Scans the authorize directory for files of the form
-	// type.*.php where * is the provider and type is either
-	// oauth or openid depending on what is being searched
-	// for.
-	if ($mode == MODE_INSERT || $mode = MODE_UPDATE)
-	{
-		// Setup
-		$fileList = array();
-		$fileType = 'openid';
-
-		// Get the directory listing.
-		$files = scandir('../authorize');
-		if ($files === false)
-			handleError('File System Error: Unable to get ' . $fileType .
-				' module filenames.<br>Contact your administrator.');
-		
-		// Since we have both oauth and openid files, we need to pick out
-		// just the one that we need.
-		foreach($files as $kx => $vx)
-		{
-			if ($vx == '.') continue;
-			if ($vx == '..') continue;
-			$strArray = explode('.', $vx);
-			if (strcmp($strArray[0], $fileType) != 0) continue;
-			$fileList[$strArray[1]] = $strArray[1];
-		}
-		unset($files);
-		$module = array(
-			'type' => html::TYPE_PULLDN,
-			'label' => 'Authentication Module',
-			'default' => $rxa['module'],
-			'name' => 'module',
-			'fsize' => 4,
-			'lsize' => 3,
-			'optlist' => $fileList,
-			'tooltip' => 'The module that the provider communicates with.',
-			'disable' => $disable,
-		);
-	}
-	else
-	{
-		$module = generateField(html::TYPE_TEXT, 'module', 'Module', 5,
-		$rxa['module'], 'The module that the provider communicates with.',
-		$default, $disable);
 	}
 
 	// Custom field rendering code
-	$provider = generateField(html::TYPE_TEXT, 'provider', 'Provider', 3,
-		$rxa['provider'], 'The provider\'s identification number', $default,
-		$key);
-	$name = generateField(html::TYPE_TEXT, 'name', 'Provider Name', 5,
-		$rxa['name'], 'The name of the provider.', $default, $disable);
-	$expire = generateField(html::TYPE_TEXT, 'expire', 'Expire', 3,
-		$rxa['expire'], 'Default time that a user\'s login expires.',
-		true, $disable);
-	$serverurl = generateField(html::TYPE_AREA, 'serverurl', 'Server URL', 8,
-		$rxa['serverurl'], 'The URL to redirect the user to for authentication' .
-		' by the provider.', $default, $disable);
-	$serverurl['rows'] = 5;
-	$redirect = generateField(html::TYPE_AREA, 'redirect', 'Redirect URL', 8,
-		$rxa['redirecturl'], 'The URL that the user is redirected to when ' .
-		'authentication is completed.',
-		$default, $disable);
-	$redirect['rows'] = 5;
+
 
 	// Build out the form array.
 	$data = array(
@@ -702,33 +589,7 @@ function formPage($mode, $rxa)
 		),
 
 		// Enter custom field data here.
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Key',
-		),
-		$provider,
-		array(
-			'type' => html::TYPE_FSETCLOSE,
-		),
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Provider Settings',
-		),
-		$name,
-		$module,
-		$expire,
-		array(
-			'type' => html::TYPE_FSETCLOSE,
-		),
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'User Authentication',
-		),
-		$serverurl,
-		$redirect,
-		array(
-			'type' => html::TYPE_FSETCLOSE,
-		),
+
 
 		array(
 			'type' => html::TYPE_ACTBTN,
@@ -765,7 +626,6 @@ function generateField($type, $name, $label, $size = 0, $value = '',
 		$data['default'] = $value;
 	}
 	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
-	$data['lsize'] = 3;
 	return $data;
 }
 

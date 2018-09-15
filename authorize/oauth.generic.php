@@ -47,18 +47,48 @@ function buildRequestImplicit($rxa)
 }
 
 // Builds an implicit URI to send the user to for OAuth Authentication.
-function buildRequestPassword($rxa)
+function buildRequestPassword($username, $password, $rxa)
 {
 	$url = $rxa['authurl'];
 	$clientid = $rxa['clientid'];
-	$redirect = $rxa['redirecturl'];
-	$scope = $rxa['scope'];
 
 	$request = $url;
-	$request .= '?response_type=' . 'token';
+	$request .= '?grant_type=' . 'password';
+	$request .= '&username=' . $username;
+	$request .= '&password=' . $password;
 	$request .= '&client_id=' . $clientid;
-	$request .= '&redirect_uri=' . $redirect;
-	$request .= '&scope=' . $scope;
+
+	return $request;
+}
+
+// Builds a application URI for OAuth authentication.
+function buildRequestClient($rxa)
+{
+	$url = $rxa['authurl'];
+	$clientid = $rxa['clientid'];
+	$clientsecret = $rxa['clientsecret'];
+
+	$request = $url;
+	$request .= '?grant_type=' . 'client_credentials';
+	$request .= '&client_id=' . $clientid;
+	$request .= '&client_secret=' . $clientsecret;
+
+	return $request;
+}
+
+// Builds a refresh request for an expired token.
+// Does not work with the implicit request type.
+function buildRequestRefresh($refresh, $rxa)
+{
+	$url = $rxa['authurl'];
+	$clientid = $rxa['clientid'];
+	$clientsecret = $rxa['clientsecret'];
+
+	$request = $url;
+	$request .= '?grant_type=' . 'refresh_token';
+	$request .= '&client_id=' . $clientid;
+	$request .= '&client_secret=' . $clientsecret;
+	$request .= '&refresh_token=' . $refresh;
 
 	return $request;
 }
