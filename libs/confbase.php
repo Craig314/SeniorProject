@@ -34,9 +34,9 @@ const APP_SYSV_SHAREDMEMORY_SIZE = 32768;
 
 // Database
 const APP_DATABASE_TYPE = 'mysql';				// Database type
-const APP_DATABASE_CONNECT = 'default';			// Must be inet, sock, or default
-const APP_DATABASE_HOST = 'localhost';			// Hostname of DB server for inet
-const APP_DATABASE_PORT = NULL;					// Port number of DB server for inet
+const APP_DATABASE_CONNECT = 'inet';			// Must be inet, sock, or default
+const APP_DATABASE_HOST = '127.0.0.1';			// Hostname of DB server for inet
+const APP_DATABASE_PORT = 3306;					// Port number of DB server for inet
 const APP_DATABASE_SOCKET = NULL;				// Socket of DB server for sock
 const APP_DATABASE_USER = 'default_db_user';	// Database username
 const APP_DATABASE_PASSWORD = '4otOxis2S1p5';	// Database password for username
