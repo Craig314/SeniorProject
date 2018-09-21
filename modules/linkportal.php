@@ -61,7 +61,7 @@ $htmlInjectFile = false;
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
-require_once BASEDIR . 'panels.php';
+require_once '../applibs/panels.php';
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.

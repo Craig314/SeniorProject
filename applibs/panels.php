@@ -15,11 +15,12 @@ in the status panel of the library.
 */
 
 
-require_once 'confload.php';
-require_once 'account.php';
-require_once 'dbaseconf.php';
-require_once 'dbaseuser.php';
-require_once 'error.php';
+$BASEDIR = '../libs/';
+require_once $BASEDIR . 'confload.php';
+require_once $BASEDIR . 'account.php';
+require_once $BASEDIR . 'dbaseconf.php';
+require_once $BASEDIR . 'dbaseuser.php';
+require_once $BASEDIR . 'error.php';
 // require_once '.php';
 // require_once '.php';
 // require_once '.php';
