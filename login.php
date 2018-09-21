@@ -221,6 +221,7 @@ function native_login()
 	if ($rxa_users == false) error_exit('Invalid Username/Password');
 	$userid = (int)$rxa_users['userid'];
 	$profid = (int)$rxa_users['profileid'];
+	$active = (int)$rxa_users['active'];
 
 	// Get the login data
 	$rxa_login = $dbuser->queryLogin($userid);
@@ -279,7 +280,6 @@ function native_login()
 	$rxa_login = $dbuser->queryLogin($userid);
 	if ($rxa_login == false)
 		error_exit('Stored Data Conflict<br>Contact Your Administrator<br>XX32745');
-	$active = (int)$rxa_login['active'];
 	$lockout = (int)$rxa_login['locked'];
 	$locktime = (int)$rxa_login['locktime'];
 	if ($active == 0)

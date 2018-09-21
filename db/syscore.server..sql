@@ -31,9 +31,9 @@ CREATE TABLE IF NOT EXISTS `config` (
 -- Dumping data for table configuration.config: ~44 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
-	(0, 0, 'server_document_root', 'Appliation Root Directory', '/Servers/webdocs', 'This sets the application root directory on the server.', 1),
-	(1, 0, 'server_hostname', 'Server Hostname', 'localhost', 'This is the server hostname.  It is used to build the base\r\nURL which is used throughout the application.', 1),
-	(2, 2, 'server_secure', 'Use HTTPS', '0', 'The flag which indicates that the encrypted HTTPS protocol is to be used.', 1),
+	(0, 0, 'server_document_root', 'Appliation Root Directory', '/usr/local/www/apache24/data', 'This sets the application root directory on the server.', 1),
+	(1, 0, 'server_hostname', 'Server Hostname', 'strata.danielrudy.org', 'This is the server hostname.  It is used to build the base\r\nURL which is used throughout the application.', 1),
+	(2, 2, 'server_secure', 'Use HTTPS', '1', 'The flag which indicates that the encrypted HTTPS protocol is to be used.', 1),
 	(3, 1, 'server_http_port', 'HTTP Port Number', '22080', 'The network port number that the application is to use\r\nwhen using the unencrypted HTTP protocol.  Default is\r\n80.', 1),
 	(4, 1, 'server_https_port', 'HTTPS Port Number', '443', 'The network port number that the application is to use\r\nwhen using the encrypted HTTPS protocol. Default is\r\n443.', 1),
 	(10, 1, 'html_default_label_size', 'Default HTML Label Size', '2', 'Default size of field text labels on web forms.', 0),

@@ -22,16 +22,16 @@ interface database_userdata_interface
 	public function insertContact($userid, $name, $haddr, $maddr, $email,
 		$hphone, $wphone, $cphone);
 	public function deleteContact($userid);
+
 	// Table: login
 	public function queryLogin($userid);
 	public function updateLoginPassword($userid, $change, $digest, $count, $salt, $passwd);
-	public function updateLoginActive($userid, $active);
 	public function updateLoginLockout($userid, $lock, $locktime);
 	public function updateLoginFail($userid, $failcount);
 	public function updateLoginLastlog($userid, $lastlog);
-	public function updateLogin($userid, $active, $lock, $locktime, $failcount,
+	public function updateLogin($userid, $lock, $locktime, $failcount,
 		$lastlog, $timeout, $digest, $count, $salt, $passwd);
-	public function insertLogin($userid, $active, $lock, $locktime, $failcount,
+	public function insertLogin($userid, $lock, $locktime, $failcount,
 		$lastlog, $timeout, $digest, $count, $salt, $passwd);
 	public function deleteLogin($userid);
 
@@ -63,8 +63,9 @@ interface database_userdata_interface
 	public function queryUsersUserId($userid);
 	public function queryUsersProfId($profid);
 	public function queryUsersAll();
-	public function updateUsers($username, $userid, $profid, $method);
-	public function insertUsers($username, $userid, $profid, $method);
+	public function updateUsers($username, $userid, $profid, $method, $active, $orgid);
+	public function updateUsersActive($userid, $active);
+	public function insertUsers($username, $userid, $profid, $method, $active, $orgid);
 	public function deleteUsers($username);
 }
 
@@ -177,15 +178,6 @@ class database_user implements database_userdata_interface
 		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
 	}
 
-	// Updates the account's active status.
-	public function updateLoginActive($userid, $active)
-	{
-		global $dbcore;
-		$table = $this->tablebase . '.login';
-		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT);
-		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
-	}
-
 	// Updates the account lockout status.
 	public function updateLoginLockout($userid, $lock, $locktime)
 	{
@@ -215,13 +207,12 @@ class database_user implements database_userdata_interface
 	}
 
 	// Updates all fields.
-	public function updateLogin($userid, $active, $lock, $locktime, $failcount,
+	public function updateLogin($userid, $lock, $locktime, $failcount,
 		$lastlog, $timeout, $digest, $count, $salt, $passwd)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.login';
-		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT);
-		$qxa = $dbcore->buildArray('locked', $lock, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('locked', $lock, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('locktime', $locktime, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('lastlog', $lastlog, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('failcount', $failcount, databaseCore::PTINT, $qxa);
@@ -234,13 +225,12 @@ class database_user implements database_userdata_interface
 	}
 
 	// Inserts a new user.
-	public function insertLogin($userid, $active, $lock, $locktime, $failcount,
+	public function insertLogin($userid, $lock, $locktime, $failcount,
 		$lastlog, $timeout, $digest, $count, $salt, $passwd)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.login';
 		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
-		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('locked', $lock, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('locktime', $locktime, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('lastlog', $lastlog, databaseCore::PTINT, $qxa);
@@ -508,18 +498,29 @@ class database_user implements database_userdata_interface
 	}
 
 	// Updates the users table for the specified username.
-	public function updateUsers($username, $userid, $profid, $method)
+	public function updateUsers($username, $userid, $profid, $method, $active, $orgid)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.users';
 		$qxa = $dbcore->buildArray('username', $username, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('orgid', $orgid, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
 	}	
 
+	// Updates the account's active status.
+	public function updateUsersActive($userid, $active)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.users';
+		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT);
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+	}
+
 	// Inserts a user.
-	public function insertUsers($username, $userid, $profid, $method)
+	public function insertUsers($username, $userid, $profid, $method, $active, $orgid)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.users';
@@ -527,6 +528,8 @@ class database_user implements database_userdata_interface
 		$qxa = $dbcore->buildArray('username', $username, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('profileid', $profid, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('method', $method, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('active', $active, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('orgid', $orgid, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}	
 

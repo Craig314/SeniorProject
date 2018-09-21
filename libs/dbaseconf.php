@@ -89,7 +89,7 @@ interface database_config_interface
 class database_config implements database_config_interface
 {
 
-	private $tablebase = 'configuration';
+	private $tablebase = APP_DATABASE_CONFIG;
 
 
 

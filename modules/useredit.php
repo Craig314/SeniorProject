@@ -442,6 +442,7 @@ function updateRecordAction()
 	$fieldlist = array(
 		'username',
 		'userid',
+		'orgid',
 		'profid',
 		'method',
 		'newpass1',
@@ -464,6 +465,8 @@ function updateRecordAction()
 	$userid = getPostValue('userid');
 	$profid = getPostValue('profid');
 	$method = getPostValue('method');
+	$orgid = getPostValue('orgid');
+	$active = getPostValue('active');
 
 	// Check key data.
 	if ($key == NULL)
@@ -493,6 +496,9 @@ function updateRecordAction()
 		true, 2147483647, 1);
 	$vfystr->strchk($method, 'Login Method', 'method', verifyString::STR_PINTEGER,
 		true, 2, 0);
+	$vfystr->strchk($username, 'Organization ID', 'orgid', verifyString::STR_USERID,
+		false, 32, 0);
+	if (!empty($active)) $active = true; else $active = false;
 	if ($vfystr->errstat())
 	{
 		$rxe = $herr->errorGetData();
@@ -508,7 +514,6 @@ function updateRecordAction()
 		case LOGIN_METHOD_NATIVE:
 			$newpass1 = getPostValue('newpass1');
 			$newpass2 = getPostValue('newpass2');
-			$active = getPostValue('active');
 			$pwdflag = 0;
 			if (!empty($newpass1) || !empty($newpass2))
 			{
@@ -556,7 +561,6 @@ function updateRecordAction()
 					}
 				}
 			}
-			if ($active != NULL) $active = true; else $active = false;
 			$dbChangeNative = DBCHG_UPD;
 			break;
 		case LOGIN_METHOD_OAUTH:
@@ -740,9 +744,8 @@ function updateRecordAction()
 			$locktime = $rxLogin['locktime'];
 			$failcount = $rxLogin['failcount'];
 			$lastlog = $rxLogin['lastlog'];
-			$res = $dbuser->updateLogin($userid, $active, $lock, $locktime,
-				$failcount, $lastlog, $timeout, $pwddigest, $pwdcount, $pwdsalt,
-				$pwdpasswd);
+			$res = $dbuser->updateLogin($userid, $lock, $locktime, $failcount,
+				$lastlog, $timeout, $pwddigest, $pwdcount, $pwdsalt, $pwdpasswd);
 			break;
 		case DBCHG_INS:
 			if ($pwdflag != 1)
@@ -769,9 +772,8 @@ function updateRecordAction()
 			$locktime = $rxLogin[''];
 			$failcount = $rxLogin[''];
 			$lastlog = $rxLogin[''];
-			$res = $dbuser->updateLogin($userid, $active, $lock, $locktime,
-				$failcount, $lastlog, $timeout, $pwddigest, $pwdcount, $pwdsalt,
-				$pwdpasswd);
+			$res = $dbuser->insertLogin($userid, $lock, $locktime, $failcount,
+				$lastlog, $timeout, $pwddigest, $pwdcount, $pwdsalt, $pwdpasswd);
 			break;
 		case DBCHG_DEL:
 			$res = $dbuser->deleteLogin($userid);
@@ -860,7 +862,7 @@ function updateRecordAction()
 	$result = ($res) ? $result : false;
 
 	// Users Table Transaction
-	$res = $dbuser->updateUsers($username, $userid, $profid, $method);
+	$res = $dbuser->updateUsers($username, $userid, $profid, $method, $active, $orgid);
 	$result = ($res) ? $result : false;
 
 	// Contact Table Transaction
@@ -908,6 +910,7 @@ function insertRecordAction()
 	$fieldlist = array(
 		'username',
 		'userid',
+		'orgid',
 		'profid',
 		'method',
 		'newpass1',
@@ -929,6 +932,8 @@ function insertRecordAction()
 	$username = getPostValue('username');
 	$profid = getPostValue('profid');
 	$method = getPostValue('method');
+	$orgid = getPostValue('orgid');
+	$active = getPostValue('active');
 
 	// ...and check it.
 	$vfystr->strchk($userid, 'User ID', 'userid', verifyString::STR_PINTEGER,
@@ -940,6 +945,10 @@ function insertRecordAction()
 		true, 2147483647, 1);
 	$vfystr->strchk($method, 'Login Method', 'method', verifyString::STR_PINTEGER,
 		true, 2, 0);
+	$vfystr->strchk($username, 'Organization ID', 'orgid', verifyString::STR_USERID,
+		false, 32, 0);
+	if (!empty($active)) $active = true; else $active = false;
+
 	
 	// We need to make sure that we have a valid profile Id.
 	checkProfileId($profid);
@@ -992,10 +1001,6 @@ function insertRecordAction()
 					$pwdflag = 2;
 				}
 			}
-
-			// Account Active
-			$active = getPostValue('active');
-			if (!empty($active)) $active = true; else $active = false;
 
 			// Default Values
 			$lock = 0;
@@ -1129,7 +1134,7 @@ function insertRecordAction()
 
 	// ** ORDER MATTERS HERE **
 	// First we put the user in the users table.
-	$res = $dbuser->insertUsers($username, $userid, $profid, $method);
+	$res = $dbuser->insertUsers($username, $userid, $profid, $method, $active, $orgid);
 	$result = ($res) ? $result : false;
 
 	// Then contacts
@@ -1141,7 +1146,7 @@ function insertRecordAction()
 	switch ($method)
 	{
 		case LOGIN_METHOD_NATIVE:
-			$res = $dbuser->insertLogin($userid, $active, $lock, $locktime,
+			$res = $dbuser->insertLogin($userid, $lock, $locktime,
 				$failcount, $lastlog, $timeout, $pwdhash, $pwdcount, $pwdsalt,
 				$pwdpasswd);
 			break;
@@ -1435,7 +1440,6 @@ function formPage($mode, $rxa)
 		case LOGIN_METHOD_NATIVE:
 			if ($mode == MODE_INSERT)
 			{
-				$db_active = '';
 				$db_locked = '';
 				$db_locktime = '';
 				$db_lastlog = '';
@@ -1456,7 +1460,6 @@ function formPage($mode, $rxa)
 				}
 
 				// Datafill the native login information.
-				$db_active = $rxl['active'];
 				$db_locked = $rxl['locked'];
 				$db_locktime = timedate::unix2canonical($rxl['locktime']);
 				$db_lastlog = timedate::unix2canonical($rxl['lastlog']);
@@ -1527,7 +1530,6 @@ function formPage($mode, $rxa)
 
 			// Now datafill the other login types so we don't get errors.
 			// Native
-			$db_active = '';
 			$db_locked = '';
 			$db_locktime = '';
 			$db_lastlog = '';
@@ -1578,7 +1580,6 @@ function formPage($mode, $rxa)
 
 			// Now datafill the other login types so we don't get errors.
 			// Native
-			$db_active = '';
 			$db_locked = '';
 			$db_locktime = '';
 			$db_lastlog = '';
@@ -1672,6 +1673,8 @@ function formPage($mode, $rxa)
 			'username' => '',
 			'profileid' => '',
 			'method' => '',
+			'active' => true,
+			'orgid' => '',
 		);
 	}
 
@@ -1709,12 +1712,15 @@ function formPage($mode, $rxa)
 		'event' => 'onchange',
 		'action' => 'setHidden()',
 		);
+	$active = generateField(html::TYPE_CHECK, 'active', 'Account Active', 1,
+		$rxa['active'], 'Indicates if the account is active or not.',
+		$default, $disable);
+	$orgid = generateField(html::TYPE_TEXT, 'orgid', 'Organization ID', 6,
+		$rxa['orgid'], 'The organizational ID the user has been assigned.' .
+		'<br>This is different from the user ID.', $default, $disable);
 	
 	
 	// Native login method fields.
-	$active = generateField(html::TYPE_CHECK, 'active', 'Account Active', 1,
-		$db_active, 'Indicates if the account is active or not.',
-		$default, $disable);
 
 	// OAuth login method fields.
 	switch ($mode)
@@ -1768,13 +1774,9 @@ function formPage($mode, $rxa)
 		// Native
 		$newpass1 = NULL;
 		$newpass2 = NULL;
-		$active['sidemode'] = true;
-		$active['side'] = 0;
 		$locked = generateField(html::TYPE_CHECK, 'locked', 'Account Locked', 1,
 			$db_locked, 'Indicates if the account has been locked out.',
 			$default, true);
-		$locked['sidemode'] = true;
-		$locked['side'] = 1;
 		$locktime = generateField(html::TYPE_TEXT, 'locktime', 'Lockout Time',
 			4, $db_locktime, 'View the time that the user\'s locked out ' .
 			'account is reenabled.', true, true);
@@ -1889,6 +1891,8 @@ function formPage($mode, $rxa)
 		$uname,
 		$profid,
 		$method,
+		$orgid,
+		$active,
 		array(
 			'type' => html::TYPE_FSETCLOSE,
 		),
@@ -1904,7 +1908,6 @@ function formPage($mode, $rxa)
 		),
 		$newpass1,
 		$newpass2,
-		$active,
 		$locked,
 		$locktime,
 		$lastlog,
