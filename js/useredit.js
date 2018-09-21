@@ -23,6 +23,7 @@ var fields = [
 	'userid',
 	'username',
 	'profid',
+	'orgid',
 	'method',
 	'newpass1',
 	'newpass2',
