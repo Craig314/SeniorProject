@@ -428,7 +428,7 @@ class databaseCore implements databaseCoreInterface
 		$str = "";
 		foreach($qxa as $fx => $vx)
 		{
-			if ($flag) $str .= ",";
+			if ($flag) $str .= " AND ";
 			else $flag = true;
 			$str .= $vx['field'] . "=?";
 		}

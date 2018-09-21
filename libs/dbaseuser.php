@@ -39,12 +39,14 @@ interface database_userdata_interface
 	public function queryOAuth($userid);
 	public function queryOAuthProvAll($provider);
 	public function updateOAuth($userid, $state, $provider, $token, $tokentype,
-		$issue, $expire, $refresh, $scope);
+		$issue, $expire, $refresh, $scope, $challenge);
 	public function updateOAuthLogin($userid, $state, $token, $tokentype,
-		$issue, $expire, $refresh, $scope);
+		$issue, $expire, $refresh, $scope, $challenge);
 	public function updateOAuthProvider($userid, $provider);
+	public function updateOAuthState($userid, $state);
+	public function updateOAuthChallenge($userid, $challenge);
 	public function insertOAuth($userid, $state, $provider, $token, $tokentype,
-		$issue, $expire, $refresh, $scope);
+		$issue, $expire, $refresh, $scope, $challenge);
 	public function deleteOAuth($userid);
 
 	// Table: openid
@@ -70,7 +72,7 @@ interface database_userdata_interface
 class database_user implements database_userdata_interface
 {
 
-	private $tablebase = 'userdata';
+	private $tablebase = APP_DATABASE_USERDATA;
 
 
 	/* ******** CONTACT TABLE ******** */
@@ -279,6 +281,7 @@ class database_user implements database_userdata_interface
 	// specified provider.
 	public function queryOAuthProvAll($provider)
 	{
+		global $dbcore;
 		$table = $this->tablebase . '.oauth';
 		$column = 'userid,provider';
 		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
@@ -286,8 +289,9 @@ class database_user implements database_userdata_interface
 	}
 
 	public function updateOAuth($userid, $state, $provider, $token, $tokentype,
-		$issue, $expire, $refresh, $scope)
-	{		global $dbcore;
+		$issue, $expire, $refresh, $scope, $challenge)
+	{
+		global $dbcore;
 		$table = $this->tablebase . '.oauth';
 		$qxa = $dbcore->buildArray('state', $state, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT, $qxa);
@@ -297,12 +301,14 @@ class database_user implements database_userdata_interface
 		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('refresh', $refresh, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('challenge', $challenge, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
 	}
 
 	public function updateOAuthLogin($userid, $state, $token, $tokentype,
-		$issue, $expire, $refresh, $scope)
+		$issue, $expire, $refresh, $scope, $challenge)
 	{
+		global $dbcore;
 		$table = $this->tablebase . '.oauth';
 		$qxa = $dbcore->buildArray('state', $state, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('token', $token, databaseCore::PTSTR, $qxa);
@@ -311,18 +317,47 @@ class database_user implements database_userdata_interface
 		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('refresh', $refresh, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('challenge', $challenge, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
 	}
 
 	public function updateOAuthProvider($userid, $provider)
 	{
+		global $dbcore;
 		$table = $this->tablebase . '.oauth';
 		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
 		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
 	}
 
+	public function updateOAuthState($userid, $state)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('state', $state, databaseCore::PTSTR);
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+	}
+
+	public function updateOAuthChallenge($userid, $challenge)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('challenge', $challenge, databaseCore::PTSTR);
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+	}
+
+	public function updateOAuthToken($userid, $token, $issue, $expire, $tokentype)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.oauth';
+		$qxa = $dbcore->buildArray('token', $token, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('tokentype', $tokentype, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+	}
+
 	public function insertOAuth($userid, $state, $provider, $token, $tokentype,
-		$issue, $expire, $refresh, $scope)
+		$issue, $expire, $refresh, $scope, $challenge)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.oauth';
@@ -335,6 +370,7 @@ class database_user implements database_userdata_interface
 		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('refresh', $refresh, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('challenge', $challenge, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 

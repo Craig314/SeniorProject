@@ -155,8 +155,10 @@ function checkUserSecurity()
 	if ($moduleId == $CONFIGVAR['html_link_mod_id']['value']) return;
 
 	// Now check if the user has access according to their profile.
-	if ($dbconf->queryModaccess($moduleId, $_SESSION['profileId']) == false)
-		redirectPortal();
+	$result = $dbconf->queryModaccess($_SESSION['profileId'], $moduleId);
+	if ($result == false)
+		//redirectPortal();
+		exit(0);
 }
 
 // Checks to make sure that the token is present and the same

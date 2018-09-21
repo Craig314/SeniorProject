@@ -794,6 +794,7 @@ function updateRecordAction()
 				$oaexpire = 0;
 				$refresh = '';
 				$scope = '';
+				$challenge = '';
 			}
 			else
 			{
@@ -804,9 +805,10 @@ function updateRecordAction()
 				$oaexpire = $rxOAuth['expire'];
 				$refresh = $rxOAuth['refresh'];
 				$scope = $rxOAuth['scope'];
+				$challenge = $rxOAuth['challenge'];
 			}
 			$res = $dbuser->updateOAuth($userid, $state, $provider, $oatok,
-				$oatoktype, $oaissue, $oaexpire, $refresh, $scope);
+				$oatoktype, $oaissue, $oaexpire, $refresh, $scope, $challenge);
 			break;
 		case DBCHG_INS:
 			$state = '';
@@ -816,8 +818,9 @@ function updateRecordAction()
 			$oaexpire = 0;
 			$refresh = '';
 			$scope = '';
+			$challenge = '';
 			$res = $dbuser->insertOAuth($userid, $state, $provider, $oatok,
-				$oatoktype, $oaissue, $oaexpire, $refresh, $scope);
+				$oatoktype, $oaissue, $oaexpire, $refresh, $scope, $challenge);
 		break;
 		case DBCHG_DEL:
 			$res = $dbuser->deleteOAuth($userid);
@@ -1015,7 +1018,7 @@ function insertRecordAction()
 			// OAuth Provider
 			$provider = getPostValue('oaprovider');
 			$result = $vfystr->strchk($provider, 'Provider', 'oaprovider',
-				verifyString::STR_PINTEGER, true, 2147483647, 1);
+				verifyString::STR_PINTEGER, true, 2147483647, 0);
 			if ($result)
 			{
 				// We have to do a database read to make sure the provider
@@ -1031,6 +1034,7 @@ function insertRecordAction()
 			$oaexpire = 0;
 			$refresh = '';
 			$scope = '';
+			$challenge = '';
 			break;
 		case LOGIN_METHOD_OPENID:
 			// OpenID Provider
@@ -1143,7 +1147,7 @@ function insertRecordAction()
 			break;
 		case LOGIN_METHOD_OAUTH:
 			$res = $dbuser->inserOAuth($userid, $state, $provider, $oatok,
-				$oatoktype, $oaissue, $oaexpire, $refresh, $scope);
+				$oatoktype, $oaissue, $oaexpire, $refresh, $scope, $challenge);
 			break;
 		case LOGIN_METHOD_OPENID:
 			$res = $dbuser->insertOpenId($userid, $provider, $opident,

@@ -21,6 +21,12 @@ const LOGIN_METHOD_NATIVE = 0;
 const LOGIN_METHOD_OAUTH = 1;
 const LOGIN_METHOD_OPENID = 2;
 
+// OAuth Grant Types
+const OAUTH_AUTHCODE = 0;
+const OAUTH_IMPLICIT = 1;
+const OAUTH_PASSWORD = 2;
+const OAUTH_CLIENTAPP = 3;
+
 // Flag counts
 const FLAG_COUNT_SYSTEM = 128;
 const FLAG_COUNT_APPLICATION = 128;

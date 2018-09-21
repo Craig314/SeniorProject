@@ -165,8 +165,11 @@ function loadAdditionalContent()
 	global $special;
 	global $moduleId;
 
+	// Get the current user's profile Id.
+	$profId = $_SESSION['profileId'];
+
 	// Load the modaccess table.
-	$rxa = $dbconf->queryModaccessProfile($_SESSION['profileId']);
+	$rxa = $dbconf->queryModaccessProfile($profId);
 	if ($rxa == false)
 	{
 		if ($herr->checkState())

@@ -204,7 +204,7 @@ function loadAdditionalContent()
 			$vx['module'],
 			$vx['expire'],
 			$vx['clientid'],
-			$vx['authtype'],
+			authTypeText($vx['authtype']),
 		);
 		array_push($list['tdata'], $tdata);
 		array_push($list['tooltip'], $vx['name']);
@@ -350,7 +350,9 @@ function updateRecordAction()
 		'clientsecret',
 		'scope',
 		'authtype',
+		'pkcemethod',
 		'authurl',
+		'exchange',
 		'redirect',
 		'resource1',
 		'resource2',
@@ -382,12 +384,15 @@ function updateRecordAction()
 	$clientsecret = getPostValue('clientsecret');
 	$scope = getPostValue('scope');
 	$authtype = getPostValue('authtype');
+	$exchange = getPostValue('exchange');
 	$authurl = getPostValue('authurl');
 	$redirect = getPostValue('redirect');
 	$resource1 = getPostValue('resource1');
 	$resource2 = getPostValue('resource2');
 	$resource3 = getPostValue('resource3');
 	$resource4 = getPostValue('resource4');
+	$usepkce = getPostValue('usepkce');
+	$pkcemethod = getPostValue('pkcemethod');
 
 	// Check mandatory fields.
 	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 3);
@@ -401,6 +406,8 @@ function updateRecordAction()
 		256, 3);
 	$vfystr->strchk($authtype, 'Authentication Type', 'authtype',
 		verifyString::STR_PINTEGER, true, 3, 0);
+	$vfystr->strchk($pkcemethod, 'PKCE Method', 'pkcemethod',
+		verifyString::STR_PINTEGER, true, 1, 0);
 	$vfystr->strchk($authurl, 'Authentication URL', 'authurl',
 		verifyString::STR_URI, true, 512, 3);
 	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
@@ -411,6 +418,8 @@ function updateRecordAction()
 	// Check optional fields.
 	$vfystr->strchk($clientsecret, 'Client Secret', 'clientsecret',
 		verifyString::STR_ALPHANUM, false, 64, 3);
+	$vfystr->strchk($exchange, 'Token Exchange URL', 'exchange',
+		verifyString::STR_URI, false, 512, 3);
 	$vfystr->strchk($resource2, 'Resource URL 2', 'resource2',
 		verifyString::STR_URI, false, 512, 3);
 	$vfystr->strchk($resource3, 'Resource URL 3', 'resource3',
@@ -431,11 +440,15 @@ function updateRecordAction()
 
 	// Safely encode all strings to prevent XSS attacks.
 	$name = safeEncodeString($name);
+
+	// Run the checkboxes
+	if ($usepkce != true) $cb_usepkce = 0; else $cb_usepkce = 1;
 	
 	// We are good, update the record
 	$result = $dbconf->updateOAuth($key, $name, $module, $expire, $clientid,
-		$clientsecret, $scope, $authtype, $authurl, $redirect, $resource1,
-		$resource2, $resource3, $resource4);
+		$clientsecret, $scope, $authtype, $authurl, $exchange, $redirect,
+		$resource1, $resource2, $resource3, $resource4, $cb_usepkce,
+		$pkcemethod);
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -456,6 +469,7 @@ function insertRecordAction()
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $dbconf;
 
 	// Set the field list.
 	$fieldlist = array(
@@ -467,7 +481,9 @@ function insertRecordAction()
 		'clientsecret',
 		'scope',
 		'authtype',
+		'pkcemethod',
 		'authurl',
+		'exchange',
 		'redirect',
 		'resource1',
 		'resource2',
@@ -485,11 +501,14 @@ function insertRecordAction()
 	$scope = getPostValue('scope');
 	$authtype = getPostValue('authtype');
 	$authurl = getPostValue('authurl');
+	$exchange = getPostValue('exchange');
 	$redirect = getPostValue('redirect');
 	$resource1 = getPostValue('resource1');
 	$resource2 = getPostValue('resource2');
 	$resource3 = getPostValue('resource3');
 	$resource4 = getPostValue('resource4');
+	$usepkce = getPostValue('usepkce');
+	$pkcemethod = getPostValue('pkcemethod');
 
 	// Check mandatory fields.
 	$vfystr->strchk($id, 'Provider', 'provider', verifyString::STR_PINTEGER,
@@ -505,6 +524,8 @@ function insertRecordAction()
 		256, 3);
 	$vfystr->strchk($authtype, 'Authentication Type', 'authtype',
 		verifyString::STR_PINTEGER, true, 3, 0);
+	$vfystr->strchk($pkcemethod, 'PKCE Method', 'pkcemethod',
+		verifyString::STR_PINTEGER, true, 1, 0);
 	$vfystr->strchk($authurl, 'Authentication URL', 'authurl',
 		verifyString::STR_URI, true, 512, 3);
 	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
@@ -515,6 +536,8 @@ function insertRecordAction()
 	// Check optional fields.
 	$vfystr->strchk($clientsecret, 'Client Secret', 'clientsecret',
 		verifyString::STR_ALPHANUM, false, 64, 3);
+	$vfystr->strchk($exchange, 'Token Exchange URL', 'exchange',
+		verifyString::STR_URI, false, 512, 3);
 	$vfystr->strchk($resource2, 'Resource URL 2', 'resource2',
 		verifyString::STR_URI, false, 512, 3);
 	$vfystr->strchk($resource3, 'Resource URL 3', 'resource3',
@@ -536,10 +559,14 @@ function insertRecordAction()
 	// Safely encode all strings to prevent XSS attacks.
 	$name = safeEncodeString($name);
 	
+	// Run the checkboxes
+	if ($usepkce != true) $cb_usepkce = 0; else $cb_usepkce = 1;
+	
 	// We are good, insert the record
 	$result = $dbconf->insertOAuth($id, $name, $module, $expire, $clientid,
-		$clientsecret, $scope, $authtype, $authurl, $redirect, $resource1,
-		$resource2, $resource3, $resource4);
+		$clientsecret, $scope, $authtype, $authurl, $exchange, $redirect,
+		$resource1, $resource2, $resource3, $resource4, $cb_usepkce,
+		$pkcemethod);
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -692,7 +719,10 @@ function formPage($mode, $rxa)
 			'clientsecret' => '',
 			'scope' => '',
 			'authtype' => '',
+			'usepkce' => 0,
+			'pkcemethod' => 1,
 			'authurl' => '',
+			'exchangeurl' => '',
 			'redirecturl' => '',
 			'resourceurl1' => '',
 			'resourceurl2' => '',
@@ -705,7 +735,7 @@ function formPage($mode, $rxa)
 	// type.*.php where * is the provider and type is either
 	// oauth or openid depending on what is being searched
 	// for.
-	if ($mode == MODE_INSERT || $mode = MODE_UPDATE)
+	if ($mode == MODE_INSERT || $mode == MODE_UPDATE)
 	{
 		// Setup
 		$fileList = array();
@@ -747,6 +777,71 @@ function formPage($mode, $rxa)
 			$default, $disable);
 	}
 
+	// Generates a pulldown list for authentication types.
+	if ($mode == MODE_INSERT || $mode == MODE_UPDATE)
+	{
+		$authtype = array(
+			'type' => html::TYPE_PULLDN,
+			'label' => 'Authentication Type',
+			'default' => $rxa['authtype'],
+			'name' => 'authtype',
+			'fsize' => 3,
+			'lsize' => 3,
+			'optlist' => array(
+				'Auth Code' => OAUTH_AUTHCODE,
+				'Implicit' => OAUTH_IMPLICIT,
+				'Password' => OAUTH_PASSWORD,
+				'Client' => OAUTH_CLIENTAPP,
+			),
+			'tooltip' => 'The type of authentication requested.',
+			'disable' => $disable,
+		);
+	}
+	else
+	{
+		$authtype = generateField(html::TYPE_TEXT, 'authtype', 'Authentication Type',
+			3, authTypeText($rxa['authtype']), 'The type of authentication requested.',
+			$default, $disable);
+	}
+
+	// Generates a pulldown list for PKCE hash methods.
+	if ($mode == MODE_INSERT || $mode == MODE_UPDATE)
+	{
+		$pkcemethod = array(
+			'type' => html::TYPE_PULLDN,
+			'label' => 'PKCE Method',
+			'default' => $rxa['pkcemethod'],
+			'name' => 'pkcemethod',
+			'fsize' => 3,
+			'lsize' => 3,
+			'optlist' => array(
+				'None' => 0,
+				'SHA-256' => 1,
+			),
+			'tooltip' => 'PKCE hashing method to use.  See RFC 7636 for more information.',
+			'disable' => $disable,
+		);
+	}
+	else
+	{
+		switch ($rxa['pkcemethod'])
+		{
+			case 0:
+				$pkcemname = 'None';
+				break;
+			case 1:
+				$pkcemname = 'SHA-256';
+				break;
+			default:
+				$pkcemname = 'Invalid';
+				break;
+		}
+		$pkcemethod = generateField(html::TYPE_TEXT, 'pkcemethod',
+			'PKCE Hash Method', 3, $pkcemname, 'PKCE hashing method' .
+			' to use.  See RFC 7636 for more information.', $default,
+			$disable);
+	}
+
 	// Custom field rendering code
 	$provider = generateField(html::TYPE_TEXT, 'provider', 'Provider', 3,
 		$rxa['provider'], 'The provider\'s identification number', $default,
@@ -768,13 +863,17 @@ function formPage($mode, $rxa)
 		$rxa['scope'], 'The default scope of authority as granted by the user.',
 		$default, $disable);
 	$scope['rows'] = 5;
-	$authtype = generateField(html::TYPE_TEXT, 'authtype', 'Authentication Type',
-		5, $rxa['authtype'], 'The type of authentication requested.',
-		$default, $disable);
+	$usepkce = generateField(html::TYPE_CHECK, 'usepkce', 'PKCE Active', 1,
+		$rxa['usepkce'], 'Indicates if the provider requires PKCE.', $default,
+		$disable);
 	$authurl = generateField(html::TYPE_AREA, 'authurl', 'Authentication URL', 8,
 		$rxa['authurl'], 'The URL to redirect the user to for authentication' .
 		' by the provider.', $default, $disable);
 	$authurl['rows'] = 5;
+	$exchange = generateField(html::TYPE_AREA, 'exchange', 'Token Exchange URL', 8,
+		$rxa['exchangeurl'], 'The URL to communicate with to exchange a auth code' .
+		' for a token.', $default, $disable);
+	$exchange['rows'] = 5;
 	$redirect = generateField(html::TYPE_AREA, 'redirect', 'Redirect URL', 8,
 		$rxa['redirecturl'], 'The URL that the user is redirected to when ' .
 		'authentication is completed.',
@@ -838,6 +937,8 @@ function formPage($mode, $rxa)
 		),
 		$clientid,
 		$clientsecret,
+		$usepkce,
+		$pkcemethod,
 		array(
 			'type' => html::TYPE_FSETCLOSE,
 		),
@@ -847,6 +948,7 @@ function formPage($mode, $rxa)
 		),
 		$authtype,
 		$authurl,
+		$exchange,
 		$scope,
 		$redirect,
 		array(
@@ -912,6 +1014,30 @@ function getPostValue(...$list)
 		if (isset($_POST[$param])) return $_POST[$param];
 	}
 	return NULL;
+}
+
+// Returns the text of the given authorization type.
+function authTypeText($authtype)
+{
+	switch ($authtype)
+		{
+			case OAUTH_AUTHCODE:
+				$authtypetxt = 'Auth Code';
+				break;
+			case OAUTH_IMPLICIT:
+				$authtypetxt = 'Implicit';
+				break;
+			case OAUTH_PASSWORD:
+				$authtypetxt = 'Password';
+				break;
+			case OAUTH_CLIENTAPP:
+				$authtypetxt = 'Client';
+				break;
+			default:
+				$authtypetxt = 'Invalid';
+				break;
+		}
+	return $authtypetxt;
 }
 
 

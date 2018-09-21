@@ -15,16 +15,13 @@ in the status panel of the library.
 */
 
 
-$BASEDIR = '../libs/';
-require_once $BASEDIR . 'confload.php';
-require_once $BASEDIR . 'account.php';
-require_once $BASEDIR . 'dbaseconf.php';
-require_once $BASEDIR . 'dbaseuser.php';
-require_once $BASEDIR . 'error.php';
-// require_once '.php';
-// require_once '.php';
-// require_once '.php';
-// require_once '.php';
+const LIBSDIR = '../libs/';
+require_once LIBSDIR . 'confload.php';
+require_once LIBSDIR . 'account.php';
+require_once LIBSDIR . 'dbaseconf.php';
+require_once LIBSDIR . 'dbaseuser.php';
+require_once LIBSDIR . 'error.php';
+// require_once LIBSDIR . '.php';
 
 
 interface linkPanelInterface
@@ -56,8 +53,11 @@ class linkPanel implements linkPanelInterface
 		global $special;
 		global $moduleId;
 
+		// Get the current user's profile Id.
+		$profId = $_SESSION['profileId'];
+
 		// Load the modaccess table.
-		$rxa = $dbconf->queryModaccessProfile($_SESSION['profileId']);
+		$rxa = $dbconf->queryModaccessProfile($profId);
 		if ($rxa == false)
 		{
 			if ($herr->checkState())

@@ -60,11 +60,11 @@ interface database_config_interface
 	public function queryOAuth($provider);
 	public function queryOAuthAll();
 	public function updateOAuth($provider, $name, $module, $expire, $clid,
-		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
-		$resurl2, $resurl3, $resurl4);
+		$clsecret, $scope, $authtype, $authurl, $exchangeurl, $redirecturl,
+		$resurl1, $resurl2, $resurl3, $resurl4, $usepkce, $pkcemethod);
 	public function insertOAuth($provider, $name, $module, $expire, $clid,
-		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
-		$resurl2, $resurl3, $resurl4);
+		$clsecret, $scope, $authtype, $authurl, $exchangeurl, $redirecturl,
+		$resurl1, $resurl2, $resurl3, $resurl4, $usepkce, $pkcemethod);
 	public function deleteOAuth($provider);
 
 	// Table: openid
@@ -476,8 +476,8 @@ class database_config implements database_config_interface
 
 	// Updates the data associated with the specified OAuth provider.
 	public function updateOAuth($provider, $name, $module, $expire, $clid,
-		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
-		$resurl2, $resurl3, $resurl4)
+		$clsecret, $scope, $authtype, $authurl, $exchangeurl, $redirecturl,
+		$resurl1, $resurl2, $resurl3, $resurl4, $usepkce, $pkcemethod)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.oauth';
@@ -489,19 +489,22 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('authtype', $authtype, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('authurl', $authurl, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('exchangeurl', $exchangeurl, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('redirecturl', $redirecturl, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl1', $resurl1, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl2', $resurl2, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl3', $resurl3, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl4', $resurl4, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('usepkce', $usepkce, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('pkcemethod', $pkcemethod, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'provider', $provider,
 			databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a new OAuth provider in the database.
 	public function insertOAuth($provider, $name, $module, $expire, $clid,
-		$clsecret, $scope, $authtype, $authurl, $redirecturl, $resurl1,
-		$resurl2, $resurl3, $resurl4)
+		$clsecret, $scope, $authtype, $authurl, $exchangeurl, $redirecturl,
+		$resurl1, $resurl2, $resurl3, $resurl4, $usepkce, $pkcemethod)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.oauth';
@@ -514,11 +517,14 @@ class database_config implements database_config_interface
 		$qxa = $dbcore->buildArray('scope', $scope, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('authtype', $authtype, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('authurl', $authurl, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('exchangeurl', $exchangeurl, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('redirecturl', $redirecturl, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl1', $resurl1, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl2', $resurl2, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl3', $resurl3, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('resourceurl4', $resurl4, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('usepkce', $usepkce, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('pkcemethod', $pkcemethod, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $rxa));
 	}
 

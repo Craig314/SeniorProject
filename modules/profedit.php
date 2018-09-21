@@ -421,6 +421,16 @@ function updateRecordAction()
 		}
 	}
 
+	// Retrieve the module list so we know what modules are available.
+	$rxm = $dbconf->queryModuleAll();
+	if ($rxm == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages);
+		else
+			handleError('Database Error: Unable to retrieve module list.');
+	}
+
 	// We are good, update the record
 	$result = $dbconf->updateProfile($key, $name, $desc, $port, $bmfs, $bmfa);
 	if ($result == false)
@@ -430,6 +440,66 @@ function updateRecordAction()
 		else
 			handleError('Database: Record update failed. Key = ' . $key);
 	}
+
+	// Now we look for any module flags that are set to true.
+	foreach ($rxm as $kx => $vx)
+	{
+		if ($vx['vendor'] != 0) continue;
+		if ($vx['allusers'] != 0) continue;
+		if ($vx['active'] == 0) continue;
+		$maflag = getPostValue(html::CHECKFLAG_NAME . 'mdac_' . $vx['moduleid']);
+		if ($maflag != NULL)
+		{
+			// If the entry is not in the database, then insert it.
+			// Otherwise leave it.
+			$result = $dbconf->queryModaccess($id, $vx['moduleid']);
+			if ($result == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessages . '<br>PROF='
+						. $id . '; MOD=' . $vx['moduleid']);
+				$result = $dbconf->insertModaccess($id, $vx['moduleid']);
+				if ($result == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessages . '<br>PROF='
+							. $id . '; MOD=' . $vx['moduleid']);
+					else
+						handleError('Database Error: Unable to insert module ' .
+							'access record.<br>' . 'PROF=' . $id . '; MOD=' .
+							$vx['moduleid']);
+				}
+			}
+		}
+		else
+		{
+			// If the entry is in the database, then we have to remove it.
+			// Otherwise do nothing.
+			$result = $dbconf->queryModaccess($id, $vx['moduleid']);
+			if ($result == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessages . '<br>PROF='
+						. $id . '; MOD=' . $vx['moduleid']);
+			}
+			else
+			{
+				$result = $dbconf->deleteModaccess($id, $vx['moduleid']);
+				if ($result == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessages . '<br>PROF='
+							. $id . '; MOD=' . $vx['moduleid']);
+					else
+						handleError('Database Error: Unable to delete module ' .
+							'access record<br>PROF=' . $id . '; MOD=' .
+							$vx['moduleid']);
+				}
+			}
+		}
+	}
+
+	// Notify the user.
 	sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
 	exit(0);
 }
@@ -483,8 +553,8 @@ function insertRecordAction()
 	$desc = safeEncodeString($desc);
 	
 	// Set default flag values based on profile type.
-	if ($key == $CONFIGVAR['profile_id_vendor']['value'] ||
-		$key == $CONFIGVAR['profile_id_admin']['value'])
+	if ($id == $CONFIGVAR['profile_id_vendor']['value'] ||
+		$id == $CONFIGVAR['profile_id_admin']['value'])
 	{
 		// Admin and Vendor profiles have all 1's set.
 		$bmfs = hex2bin('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
@@ -508,9 +578,18 @@ function insertRecordAction()
 				else flag::setFlag($i, $bmfa, true);
 		}
 	}
-	var_dump($bmfs, $bmfa);
 
-	// We are good, update the record
+	// Retrieve the module list so we know what modules are available.
+	$rxm = $dbconf->queryModuleAll();
+	if ($rxm == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages);
+		else
+			handleError('Database Error: Unable to retrieve module list.');
+	}
+
+	// We are good, insert the record
 	$result = $dbconf->insertProfile($id, $name, $desc, $port, $bmfs, $bmfa);
 	if ($result == false)
 	{
@@ -519,6 +598,30 @@ function insertRecordAction()
 		else
 			handleError('Database: Record insert failed. Key = ' . $id);
 	}
+
+	// Now we look for any module flags that are set to true.
+	foreach ($rxm as $kx => $vx)
+	{
+		if ($vx['vendor'] != 0) continue;
+		if ($vx['allusers'] != 0) continue;
+		if ($vx['active'] == 0) continue;
+		$maflag = getPostValue(html::CHECKFLAG_NAME . 'mdac_' . $vx['moduleid']);
+		if ($maflag != NULL)
+		{
+			$result = $dbconf->insertModaccess($id, $vx['moduleid']);
+			if ($result == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessages);
+				else
+					handleError('Database Error: Unable to insert module ' .
+						'access record.<br>' . 'PROF=' . $id . '; MOD=' .
+						$vx['moduleid']);
+			}
+		}
+	}
+
+	// Notify the user.
 	sendResponseClear($moduleDisplayUpper . ' insert completed: key = '
 		. $id);
 	exit(0);
@@ -582,6 +685,7 @@ function formPage($mode, $rxa)
 	global $CONFIGVAR;
 	global $vendor;
 	global $dbconf;
+	global $herr;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -681,78 +785,163 @@ function formPage($mode, $rxa)
 		),
 	);
 
-	// This generates the system flag checkbox list
-	$rxcs = $dbconf->queryFlagdescCoreAll();
-	if ($rxcs == false)
+	// System defined profiles cannot have their accesses changed.
+	if ($rxa['profileid'] != $CONFIGVAR['profile_id_vendor']['value'] &&
+		$rxa['profileid'] != $CONFIGVAR['profile_id_admin']['value'] &&
+		$rxa['profileid'] != $CONFIGVAR['profile_id_none']['value'])
 	{
+		// This generates the system flag checkbox list
+		$rxcs = $dbconf->queryFlagdescCoreAll();
+		if ($rxcs == false)
+		{
+			$clsysfo = NULL;
+			$clsysfc = NULL;
+			$clsys = NULL;
+		}
+		else
+		{
+			$clsysfo = array(
+				'type' => html::TYPE_FSETOPEN,
+				'name' => 'System Flags',
+			);
+			$clsysfc = array(
+				'type' => html::TYPE_FSETCLOSE,
+			);
+			$clsys= array(
+				'type' => html::TYPE_CHECKLIST,
+				'list' => array(),
+				'lsize' => 4,
+				'fsize' => 1,
+				'default' => $default,
+				'disable' => $disable,
+			);
+			foreach ($rxcs as $kx => $vx)
+			{
+				$flag = array(
+					'flag' => 'sys_' . $vx['flag'],
+					'label' => $vx['name'],
+					'tooltip' => $vx['description'],
+					'default' => flag::getFlag($vx['flag'], $rxa['bitmap_core']),
+				);
+				array_push($clsys['list'], $flag);
+			}
+		}
+		
+		// This generates the application flag checkbox list
+		$rxca = $dbconf->queryFlagdescAppAll();
+		if ($rxca == false)
+		{
+			$clappfo = NULL;
+			$clappfc = NULL;
+			$clapp = NULL;
+		}
+		else
+		{
+			$clappfo = array(
+				'type' => html::TYPE_FSETOPEN,
+				'name' => 'Application Flags',
+			);
+			$clappfc = array(
+				'type' => html::TYPE_FSETCLOSE,
+			);
+			$clapp= array(
+				'type' => html::TYPE_CHECKLIST,
+				'list' => array(),
+				'lsize' => 4,
+				'fsize' => 1,
+				'default' => $default,
+				'disable' => $disable,
+			);
+			foreach ($rxca as $kx => $vx)
+			{
+				$flag = array(
+					'flag' => 'app_' . $vx['flag'],
+					'label' => $vx['name'],
+					'tooltip' => $vx['description'],
+					'default' => flag::getFlag($vx['flag'], $rxa['bitmap_app']),
+				);
+				array_push($clapp['list'], $flag);
+			}
+		}
+
+		// This generates the module access checkbox list.
+		$rxb = $dbconf->queryModuleAll();
+		if ($rxb == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessages);
+			else
+				handleError('Database Error: Unable to retrieve module list.');
+		}
+		if ($mode != MODE_INSERT)
+		{
+			$rxc = $dbconf->queryModaccessProfile($rxa['profileid']);
+			if ($rxc == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessages);
+				else $rxc = NULL;
+			}
+		}
+		else $rxc = NULL;
+		$modaccfo = array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Module Access',
+		);
+		$modaccfc = array(
+			'type' => html::TYPE_FSETCLOSE,
+		);
+		$modacc = array(
+			'type' => html::TYPE_CHECKLIST,
+			'list' => array(),
+			'lsize' => 4,
+			'fsize' => 1,
+			'default' => $default,
+			'disable' => $disable,
+		);
+		foreach ($rxb as $kx => $vx)
+		{
+			if ($vx['vendor'] != 0) continue;
+			if ($vx['allusers'] != 0) continue;
+			if ($vx['active'] == 0) continue;
+			$accDefault = false;
+			if (is_array($rxc))
+			{
+				foreach ($rxc as $ka => $va)
+				{
+					if ($vx['moduleid'] == $va['moduleid'])
+					{
+						$accDefault = true;
+						break;
+					}
+				}
+			}
+			$flag = array(
+				'flag' => 'mdac_' . $vx['moduleid'],
+				'label' => $vx['name'],
+				'tooltip' => $vx['description'],
+				'default' => $accDefault,
+			);
+			array_push($modacc['list'], $flag);
+		}
+	}
+	else
+	{
+		// The vendor and admin accounts don't get to see the check lists
+		// for the system flags and modules because
+		// 1. The vendor has access to everything.
+		// 2. The admin has access to everything that is not vendor only.
+		// 3. The system and application flags are all set to 1 for both
+		//    the vendor and admin profiles.
 		$clsysfo = NULL;
 		$clsysfc = NULL;
 		$clsys = NULL;
-	}
-	else
-	{
-		$clsysfo = array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'System Flags',
-		);
-		$clsysfc = array(
-			'type' => html::TYPE_FSETCLOSE,
-		);
-		$clsys= array(
-			'type' => html::TYPE_CHECKLIST,
-			'list' => array(),
-			'lsize' => 4,
-			'fsize' => 1,
-			'default' => $default,
-			'disable' => $disable,
-		);
-		foreach ($rxcs as $kx => $vx)
-		{
-			$flag = array(
-				'flag' => 'sys_' . $vx['flag'],
-				'label' => $vx['name'],
-				'tooltip' => $vx['description'],
-				'default' => flag::getFlag($vx['flag'], $rxa['bitmap_core']),
-			);
-			array_push($clsys['list'], $flag);
-		}
-	}
-	
-	// This generates the application flag checkbox list
-	$rxca = $dbconf->queryFlagdescAppAll();
-	if ($rxca == false)
-	{
 		$clappfo = NULL;
 		$clappfc = NULL;
 		$clapp = NULL;
-	}
-	else
-	{
-		$clappfo = array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Application Flags',
-		);
-		$clappfc = array(
-			'type' => html::TYPE_FSETCLOSE,
-		);
-		$clapp= array(
-			'type' => html::TYPE_CHECKLIST,
-			'list' => array(),
-			'lsize' => 4,
-			'fsize' => 1,
-			'default' => $default,
-			'disable' => $disable,
-		);
-		foreach ($rxca as $kx => $vx)
-		{
-			$flag = array(
-				'flag' => 'app_' . $vx['flag'],
-				'label' => $vx['name'],
-				'tooltip' => $vx['description'],
-				'default' => flag::getFlag($vx['flag'], $rxa['bitmap_app']),
-			);
-			array_push($clapp['list'], $flag);
-		}
+		$modaccfo = NULL;
+		$modaccfc = NULL;
+		$modacc = NULL;
 	}
 
 	// System profile warnings.
@@ -803,6 +992,9 @@ function formPage($mode, $rxa)
 		$clsysfo,
 		$clsys,
 		$clsysfc,
+		$modaccfo,
+		$modacc,
+		$modaccfc,
 
 		array(
 			'type' => html::TYPE_ACTBTN,
