@@ -122,8 +122,7 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
-			'/js/common.js',
-			'/js/profedit.js',
+			'/js/baseline/common.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -362,11 +361,11 @@ function updateRecordAction()
 
 	// Check mandatory fields.
 	$vfystr->strchk($id, 'Profile ID', 'profid', verifyString::STR_PINTEGER, true, 2147483647, 0);
-	$vfystr->strchk($name, 'Name', 'profname', verifyString::STR_ALPHA, true, 32, 3);
+	$vfystr->strchk($name, 'Name', 'profname', verifyString::STR_ALPHA, true, 32, 1);
 	$vfystr->strchk($port, 'Portal', 'profport', verifyString::STR_PINTEGER, true, 1, 0);
 
 	// Check optional fields.
-	$vfystr->strchk($desc, 'Description', 'profdesc', verifyString::STR_ASCII, false, 256, 0);
+	$vfystr->strchk($desc, 'Description', 'profdesc', verifyString::STR_ASCII, true, 256, 1);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -374,7 +373,7 @@ function updateRecordAction()
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -515,14 +514,6 @@ function insertRecordAction()
 	global $dbconf;
 	global $CONFIGVAR;
 
-	// Set the field list.
-	$fieldlist = array(
-		'profid',
-		'profname',
-		'profdesc',
-		'profport',
-	);
-	
 	// Get data
 	$id = getPostValue('profid');
 	$name = getPostValue('profname');
@@ -533,9 +524,9 @@ function insertRecordAction()
 	$vfystr->strchk($id, 'Profile ID', 'profid', verifyString::STR_PINTEGER, true, 2147483647, 0);
 	$vfystr->strchk($name, 'Name', 'profname', verifyString::STR_ALPHA, true, 32, 3);
 	$vfystr->strchk($port, 'Portal', 'profport', verifyString::STR_PINTEGER, true, 1, 0);
+	$vfystr->strchk($desc, 'Description', 'profdesc', verifyString::STR_ASCII, true, 256, 3);
 
 	// Check optional fields.
-	$vfystr->strchk($desc, 'Description', 'profdesc', verifyString::STR_ASCII, false, 256, 0);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -543,7 +534,7 @@ function insertRecordAction()
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -686,6 +677,7 @@ function formPage($mode, $rxa)
 	global $vendor;
 	global $dbconf;
 	global $herr;
+	global $ajax;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -1009,37 +1001,50 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	echo html::pageAutoGenerate($data);
+	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
+		generateFieldCheck());
 }
 
-// Generates a generic field array from the different fields.
-// If more or different fields are needed, then one can just
-// add them manually.
-function generateField($type, $name, $label, $size = 0, $value = '',
-	$tooltip = '', $default = false, $disabled = false)
+// Generate the field definitions for client side error checking.
+function generateFieldCheck()
 {
+	global $CONFIGVAR;
+	global $vfystr;
+
 	$data = array(
-		'type' => $type,
-		'name' => $name,
-		'label' => $label,
+		0 => array(
+			'name' => 'profid',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 2147483647,
+			'min' => 0,
+		),
+		1 => array(
+			'name' => 'profname',
+			'type' => $vfystr::STR_ALPHA,
+			'noblank' => true,
+			'max' => 32,
+			'min' => 1,
+		),
+		2 => array(
+			'name' => 'profport',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 1,
+			'min' => 0,
+		),
+		3 => array(
+			'name' => 'profdesc',
+			'type' => $vfystr::STR_ASCII,
+			'noblank' => true,
+			'max' => 256,
+			'min' => 1,
+		),
 	);
-	if ($size != 0) $data['fsize'] = $size;
-	if ($disabled == true) $data['disable'] = true;
-	if ($default != false) $data['value'] = $value;
-	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
-	return $data;
+	$fieldcheck = json_encode($data);
+	return $fieldcheck;
 }
 
-// Returns the first argument match of a $_POST value.  If no
-// values are found, then returns null.
-function getPostValue(...$list)
-{
-	foreach($list as $param)
-	{
-		if (isset($_POST[$param])) return $_POST[$param];
-	}
-	return NULL;
-}
 
 
 ?>

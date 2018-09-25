@@ -371,30 +371,29 @@ var ajaxProcessData = ({
 			else cmdnum = parseInt(str.slice(cst, est));
 		switch (cmdnum) {
 			case 950:   // OK, call clearForm (if available), display to responseTarget
-				txt = str.slice(est + 1);
-				writeError("");
-				writeResponse(txt);
 				if (typeof clearForm === 'function') clearForm();
 				if (typeof resetErrorStatus === 'function') resetErrorStatus();
-				break;
-			case 951:   // Ok, display to responseTarget
 				txt = str.slice(est + 1);
 				writeError("");
 				writeResponse(txt);
+				break;
+			case 951:   // Ok, display to responseTarget
 				if (typeof resetErrorStatus === 'function') resetErrorStatus();
+				txt = str.slice(est + 1);
+				writeError("");
+				writeResponse(txt);
 				break;
 			case 952:   // Error, call clearForm (if available), display to errorTarget
+				if (typeof clearForm === 'function') clearForm();
+				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				txt = str.slice(est + 1);
 				writeError(txt);
 				writeResponse("");
-				if (typeof clearForm === 'function') clearForm();
-				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 953:   // Error, display to errorTarget
 				txt = str.slice(est + 1);
 				writeError(txt);
 				writeResponse("");
-				if (typeof resetErrorStatus === 'function') resetErrorStatus();
 				break;
 			case 954:   // Clear all messages
 				writeError("");
@@ -408,11 +407,11 @@ var ajaxProcessData = ({
 				writeHTML(txt);
 				break;
 			case 956:	// Error, call clearForm, display to errorTarget, clear HTML
+				if (typeof clearForm === 'function') clearForm();
 				txt = str.slice(est + 1);
 				writeError(txt);
 				writeResponse("");
 				writeHTML("");
-				if (typeof clearForm === 'function') clearForm();
 				break;
 			case 957:	// Write HTML to link-nav panel, or prepend to main panel.
 				txt = str.slice(est + 1);
@@ -436,11 +435,16 @@ var ajaxProcessData = ({
 					newObject.innerHTML = etxt;
 				}
 				break;
-			case 959:	// Append HTML to main panel.
+			case 959:	// Write HTML to main panel.
 				txt = str.slice(est + 1);
 				newObject = document.getElementById('main');
-				etxt = newObject.innerHTML + txt;
-				newObject.innerHTML = etxt;
+				newObject.innerHTML = txt;
+				break;
+			case 960:	// Load field data.
+				if (typeof verifyData === 'object') {
+					txt = str.slice(est + 1);
+					verifyData.loadFieldData(txt);
+				}
 				break;
 			default:
 				// If the command is none of the above, then we are dealing
@@ -463,12 +467,9 @@ var ajaxProcessData = ({
 		var cst;
 		var entity;
 		var i;
-		var text1;
-		var text2;
-		var fieldArray;
+		var txt;
 		var statusArray;
 		var message;
-		var mark;
 
 		entity = str.indexOf("STAT");
 		if (entity != 0) return;
@@ -477,29 +478,16 @@ var ajaxProcessData = ({
 			writeError("JSON data format error from server.");
 			return;
 		}
-		mark = str.indexOf(String.fromCharCode(29));
-		text1 = str.slice(cst + 1, mark);
+		txt = str.slice(cst + 1);
 		try {
-			statusArray = JSON.parse(text1);
+			statusArray = JSON.parse(txt);
 		}
 		catch (error) {
 			writeError(error.message);
 			return;
 		}
-		if (mark > 0)
-		{
-			text2 = str.slice(mark + 1);
-			try {
-				fieldArray = JSON.parse(text2);
-			}
-			catch (error) {
-				writeError(error.message);
-				return;
-			}
-			for (i = 0; i < fieldArray.length; i++) {
-				this.setStatusTextDefault(fieldArray[i], '');
-			}
-		}
+		if (typeof resetErrorStatus === 'function')
+			resetErrorStatus();
 		message = '';
 		for (i = 0; i < statusArray.length; i++) {
 			this.setValueText(statusArray[i].id, statusArray[i].value);

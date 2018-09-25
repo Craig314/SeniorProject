@@ -39,6 +39,7 @@ interface ajaxInterface
 	const CMD_WNAVPANEL		= 957;	// Write HTML to navigation panel
 	const CMD_WSTATPANEL	= 958;	// Write HTML to status panel
 	const CMD_WMAINPANEL	= 959;	// Write HTML to main panel
+	const CMD_LDFLDATA		= 960;	// Loads field checking data
 
 	// HTTP Status Codes: Special
 	const CODE_OK			= 200;	// Status OK
@@ -63,16 +64,15 @@ interface ajaxInterface
 	public function redirect($filename);
 	public function sendCode($code, $data = NULL);
 	public function sendCommand($cmd, $data = NULL);
-	public function sendStatus($data, $list);
+	public function sendStatus($data);
 	public function sendJSON($jnbr, $data);
 	public function loadQueueCode($code, $data = NULL);
 	public function loadQueueCommand($cmd, $data = NULL);
 	public function loadQueueStatus($data);
 	public function loadQueueJSON($jnbr, $data);
-	public function loadQueueFieldList($data);
 	public function sendQueue();
-	public function writePanelsImmediate($nav, $stat, $main);
-
+	public function writePanelsImmediate($nav, $stat, $main, $fields = NULL);
+	public function writeMainPanelImmediate($main, $fields);
 }
 
 
@@ -109,18 +109,16 @@ class ajaxClass implements ajaxInterface
 	}
 
 	// Sends error status to the client.
-	public function sendStatus($data, $list)
+	public function sendStatus($data)
 	{
 		if (empty($data)) return;
-		$str1 = json_encode($data);
-		$str2 = json_encode($list);
-		if ($str1 === false || $str2 === false)
+		$str = json_encode($data);
+		if ($str === false)
 		{
 			sendCommand(self::CMD_ERRDISP, 'JSON encoding error: (' .
 				json_last_error() . ') ' . json_last_error_msg());
 			exit(1);
 		}
-		$str = $str1 . chr(29) . $str2;
 		echo self::TYPE_STATUS . $str;
 	}
 
@@ -192,12 +190,24 @@ class ajaxClass implements ajaxInterface
 	}
 
 	// Writes the given data to the three panels.
-	public function writePanelsImmediate($nav, $stat, $main)
+	public function writePanelsImmediate($nav, $stat, $main, $fields = NULL)
 	{
 		$data = array(
 			0 => self::TYPE_COMMAND . self::CMD_WNAVPANEL . ' ' . $nav,
 			1 => self::TYPE_COMMAND . self::CMD_WSTATPANEL . ' ' . $stat,
 			2 => self::TYPE_COMMAND . self::CMD_WMAINPANEL . ' ' . $main,
+		);
+		if (!empty($fields)) $data[3] = self::TYPE_COMMAND .
+			self::CMD_LDFLDATA . ' ' . $fields;
+		$sendData = json_encode($data);
+		echo self::TYPE_MULTI . $sendData;
+	}
+
+	public function writeMainPanelImmediate($main, $fields)
+	{
+		$data = array(
+			0 => self::TYPE_COMMAND . self::CMD_WMAINPANEL . ' ' . $main,
+			1 => self::TYPE_COMMAND . self::CMD_LDFLDATA . ' ' . $fields,
 		);
 		$sendData = json_encode($data);
 		echo self::TYPE_MULTI . $sendData;

@@ -63,6 +63,10 @@ const MODE_UPDATE	= 1;
 const MODE_INSERT	= 2;
 const MODE_DELETE	= 3;
 
+// Field check generation data formats.
+const FIELDCHK_JSON		= 0;
+const FIELDCHK_ARRAY	= 1;
+
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
@@ -121,8 +125,8 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
-			'/js/common.js',
-			'/js/.js',
+			'/js/baseline/common.js',
+			'/js/application/.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -334,11 +338,9 @@ function updateRecordAction()
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 
-	// Set the field list.
-	$fieldlist = array(
-		'',
-	);
-	
+	// Get field data.
+	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
+
 	// Get data
 	$key = getPostValue('hidden');
 	$id = getPostValue('');
@@ -355,11 +357,8 @@ function updateRecordAction()
 	if ($key != $id)
 		handleError('Database key mismatch.');
 
-	// Check mandatory fields.
-	$vfystr->strchk();
-
-	// Check optional fields.
-	$vfystr->strchk();
+	// Check field data.
+	$vfystr->fieldchk($fieldData, $index, $postData);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -367,7 +366,7 @@ function updateRecordAction()
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -402,19 +401,14 @@ function insertRecordAction()
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 
-	// Set the field list.
-	$fieldlist = array(
-		'',
-	);
-	
+	// Get field data.
+	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
+
 	// Get data
 	$id = getPostValue('');
 
-	// Check mandatory fields.
-	$vfystr->strchk();
-
-	// Check optional fields.
-	$vfystr->strchk();
+	// Check field data.
+	$vfystr->fieldchk($fieldData, $index, $postData);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -422,7 +416,7 @@ function insertRecordAction()
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -494,6 +488,7 @@ function formPage($mode, $rxa)
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $ajax;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -604,40 +599,65 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	echo html::pageAutoGenerate($data);
+	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
+		generateFieldCheck());
 }
 
-// Generates a generic field array from the different fields.
-// If more or different fields are needed, then one can just
-// add them manually.
-function generateField($type, $name, $label, $size = 0, $value = '',
-	$tooltip = '', $default = false, $disabled = false)
+// Generate the field definitions for client side error checking.
+function generateFieldCheck($returnType = 0)
 {
+	global $CONFIGVAR;
+	global $vfystr;
+
 	$data = array(
-		'type' => $type,
-		'name' => $name,
-		'label' => $label,
+		0 => array(
+			// This is the display name of the field.
+			'dispname' => '',
+			// The internal name of the field.
+			'name' => '',
+			// The type of the field.
+			'type' => $vfystr::STR_,
+			// If special handling of this field is required, then set type
+			// to $vfystr::STR_CUSTOM and this field to the actual datatype.
+			// Remove if this field is not needed.
+			'ctype' => $vfystr::STR_,
+			// True if this field cannot be blank.  False otherwise.
+			'noblank' => true,
+			// Same as noblank above, except this is only for insert mode.
+			// Use only if different from noblank.
+			// Remove if this field is not needed.
+			'noblankins' => true,
+			// Maximum allowable field length (or numeric value).
+			'max' => 0,
+			// Minimum allowable field length (or numeric value).
+			// In all cases, if min > max, then no checking is done.
+			'min' => 0,
+		),
+		0 => array(
+			'dispname' => '',
+			'name' => '',
+			'type' => $vfystr::STR_,
+			'ctype' => $vfystr::STR_,
+			'noblank' => true,
+			'noblankins' => true,
+			'max' => 0,
+			'min' => 0,
+		),
 	);
-	if ($size != 0) $data['fsize'] = $size;
-	if ($disabled == true) $data['disable'] = true;
-	if ($default != false)
+	switch ($returnType)
 	{
-		$data['value'] = $value;
-		$data['default'] = $value;
+		case FIELDCHK_JSON:
+			$fieldcheck = json_encode($data);
+			break;
+		case FIELDCHK_ARRAY:
+			$fieldcheck = $data;
+			break;
+		default:
+			handleError('Internal Programming Error: CODE XY039223<br>' .
+				'Contact your administrator.');
+			break;
 	}
-	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
-	return $data;
-}
-
-// Returns the first argument match of a $_POST value.  If no
-// values are found, then returns null.
-function getPostValue(...$list)
-{
-	foreach($list as $param)
-	{
-		if (isset($_POST[$param])) return $_POST[$param];
-	}
-	return NULL;
+	return $fieldcheck;
 }
 
 

@@ -67,4 +67,38 @@ function identOS()
 	return 0;
 }
 
+// Generates a generic field array from the different fields.
+// If more or different fields are needed, then one can just
+// add them manually.
+function generateField($type, $name, $label, $size = 0, $value = '',
+	$tooltip = '', $default = false, $disabled = false)
+{
+	$data = array(
+		'type' => $type,
+		'name' => $name,
+		'label' => $label,
+	);
+	if ($size != 0) $data['fsize'] = $size;
+	if ($disabled == true) $data['disable'] = true;
+	if ($default != false)
+	{
+		$data['value'] = $value;
+		$data['default'] = $value;
+	}
+	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
+	return $data;
+}
+
+// Returns the first argument match of a $_POST value.  If no
+// values are found, then returns null.
+function getPostValue(...$list)
+{
+	foreach($list as $param)
+	{
+		if (isset($_POST[$param])) return $_POST[$param];
+	}
+	return NULL;
+}
+
+
 ?>

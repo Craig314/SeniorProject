@@ -106,7 +106,7 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
-			'/js/portal.js'
+			'/js/module/portal.js'
 		);
 	
 		// cssFiles is an associtive array which contains additional

@@ -129,8 +129,8 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
-			'/js/common.js',
-			'/js/configedit.js',
+			'/js/baseline/common.js',
+			'/js/module/configedit.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -348,18 +348,7 @@ function updateRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
-	// Set the field list.
-	$fieldlist = array(
-		'setting',
-		'intname',
-		'dispname',
-		'description',
-		'datatype',
-		'datavalue1',
-		'datavalue3',
-	);
-	
-	// Get data
+// Get data
 	$key = getPostValue('hidden');
 	$id = getPostValue('setting');
 
@@ -425,7 +414,7 @@ function updateRecordAction()
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -459,17 +448,6 @@ function insertRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
-	// Set the field list.
-	$fieldlist = array(
-		'setting',
-		'intname',
-		'dispname',
-		'description',
-		'datatype',
-		'datavalue1',
-		'datavalue3',
-	);
-	
 	// Get data
 	$id = getPostValue('setting');
 	$vfystr->strchk($id, 'Setting Number', 'setting', verifyString::STR_INTEGER, true);
@@ -524,7 +502,7 @@ function insertRecordAction()
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -597,6 +575,7 @@ function formPage($mode, $rxa)
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $ajax;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -835,40 +814,8 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	echo html::pageAutoGenerate($data);
-}
-
-// Generates a generic field array from the different fields.
-// If more or different fields are needed, then one can just
-// add them manually.
-function generateField($type, $name, $label, $size = 0, $value = '',
-	$tooltip = '', $default = false, $disabled = false)
-{
-	$data = array(
-		'type' => $type,
-		'name' => $name,
-		'label' => $label,
-	);
-	if ($size != 0) $data['fsize'] = $size;
-	if ($disabled == true) $data['disable'] = true;
-	if ($default != false)
-	{
-		$data['value'] = $value;
-		$data['default'] = $value;
-	}
-	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
-	return $data;
-}
-
-// Returns the first argument match of a $_POST value.  If no
-// values are found, then returns NULL.
-function getPostValue(...$list)
-{
-	foreach($list as $param)
-	{
-		if (isset($_POST[$param])) return $_POST[$param];
-	}
-	return NULL;
+	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
+		generateFieldCheck());
 }
 
 // Converts type numbers into names.
@@ -916,6 +863,83 @@ function convertLongString($type, $value)
 		return $data;
 	}
 	return $value;
+}
+
+// Generate the field definitions for client side error checking.
+function generateFieldCheck()
+{
+	global $CONFIGVAR;
+	global $vfystr;
+
+	$data = array(
+		0 => array(
+			'name' => 'setting',
+			'type' => $vfystr::STR_INTEGER,
+			'noblank' => true,
+			'max' => 0,
+			'min' => 1,
+		),
+		1 => array(
+			'name' => 'datatype',
+			'type' => $vfystr::STR_INTEGER,
+			'noblank' => true,
+			'max' => 25,
+			'min' => 0,
+		),
+		2 => array(
+			'name' => 'intname',
+			'type' => $vfystr::STR_ALPHASPEC,
+			'noblank' => true,
+			'max' => 32,
+			'min' => 1,
+		),
+		3 => array(
+			'name' => 'dispname',
+			'type' => $vfystr::STR_ALPHANUM,
+			'noblank' => true,
+			'max' => 64,
+			'min' => 1,
+		),
+		4 => array(
+			'name' => 'description',
+			'type' => $vfystr::STR_ASCII,
+			'noblank' => true,
+			'max' => 256,
+			'min' => 1,
+		),
+		5 => array(
+			'name' => 'accadmin',
+			'type' => $vfystr::STR_NONE,
+			'noblank' => false,
+			'max' => 0,
+			'min' => 1,
+		),
+		6 => array(
+			'name' => 'datavalue1',
+			'type' => $vfystr::STR_CUSTOM,
+			'ctype' => $vfystr::STR_NONE,
+			'noblank' => false,
+			'max' => 0,
+			'min' => 1,
+		),
+		7 => array(
+			'name' => 'datavalue2',
+			'type' => $vfystr::STR_NONE,
+			'noblank' => false,
+			'max' => 0,
+			'min' => 1,
+		),
+		8 => array(
+			'name' => 'datavalue3',
+			'type' => $vfystr::STR_CUSTOM,
+			'ctype' => $vfystr::STR_NONE,
+			'noblank' => false,
+			'max' => 0,
+			'min' => 1,
+		),
+	);
+	$fieldcheck = json_encode($data);
+	return $fieldcheck;
 }
 
 ?>

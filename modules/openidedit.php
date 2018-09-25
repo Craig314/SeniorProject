@@ -117,8 +117,7 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
-			'/js/common.js',
-			'/js/openidedit.js',
+			'/js/baseline/common.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -370,9 +369,9 @@ function updateRecordAction()
 	$redirect = getPostValue('redirect');
 
 	// Check mandatory fields.
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 3);
+	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 1);
 	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
-		true, 32, 3);
+		true, 32, 1);
 	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
 		true, 1209600, 900);
 	$vfystr->strchk($serverurl, 'Server URL', 'serverurl',
@@ -439,10 +438,10 @@ function insertRecordAction()
 
 	// Check mandatory fields.
 	$vfystr->strchk($id, 'Provider', 'provider', verifyString::STR_PINTEGER,
-		true, 2147483647, 0);
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 3);
+		true, 214748364, 0);
+	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 1);
 	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
-		true, 32, 3);
+		true, 32, 1);
 	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
 		true, 1209600, 900);
 	$vfystr->strchk($serverurl, 'Server URL', 'serverurl',
@@ -539,6 +538,7 @@ function formPage($mode, $rxa)
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $ajax;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -743,42 +743,64 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	echo html::pageAutoGenerate($data);
+	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
+		generateFieldCheck());
 }
 
-// Generates a generic field array from the different fields.
-// If more or different fields are needed, then one can just
-// add them manually.
-function generateField($type, $name, $label, $size = 0, $value = '',
-	$tooltip = '', $default = false, $disabled = false)
+// Generate the field definitions for client side error checking.
+function generateFieldCheck()
 {
+	global $CONFIGVAR;
+	global $vfystr;
+
 	$data = array(
-		'type' => $type,
-		'name' => $name,
-		'label' => $label,
+		0 => array(
+			'name' => 'provider',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 2147483647,
+			'min' => 0,
+		),
+		1 => array(
+			'name' => 'name',
+			'type' => $vfystr::STR_NAME,
+			'noblank' => true,
+			'max' => 50,
+			'min' => 1,
+		),
+		2 => array(
+			'name' => 'module',
+			'type' => $vfystr::STR_FILENAME,
+			'noblank' => true,
+			'max' => 32,
+			'min' => 1,
+		),
+		3 => array(
+			'name' => 'expire',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 1209600,
+			'min' => 900,
+		),
+		4 => array(
+			'name' => 'serverurl',
+			'type' => $vfystr::STR_URI,
+			'noblank' => true,
+			'max' => 512,
+			'min' => 3,
+		),
+		5 => array(
+			'name' => 'redirect',
+			'type' => $vfystr::STR_URI,
+			'noblank' => true,
+			'max' => 512,
+			'min' => 3,
+		),
 	);
-	if ($size != 0) $data['fsize'] = $size;
-	if ($disabled == true) $data['disable'] = true;
-	if ($default != false)
-	{
-		$data['value'] = $value;
-		$data['default'] = $value;
-	}
-	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
-	$data['lsize'] = 3;
-	return $data;
+	$fieldcheck = json_encode($data);
+	return $fieldcheck;
 }
 
-// Returns the first argument match of a $_POST value.  If no
-// values are found, then returns null.
-function getPostValue(...$list)
-{
-	foreach($list as $param)
-	{
-		if (isset($_POST[$param])) return $_POST[$param];
-	}
-	return NULL;
-}
 
 
 ?>

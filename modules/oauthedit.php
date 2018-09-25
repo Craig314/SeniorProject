@@ -117,8 +117,7 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
-			'/js/common.js',
-			'/js/oauthedit.js',
+			'/js/baseline/common.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -340,26 +339,9 @@ function updateRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
-	// Set the field list.
-	$fieldlist = array(
-		'provider',
-		'name',
-		'module',
-		'expire',
-		'clientid',
-		'clientsecret',
-		'scope',
-		'authtype',
-		'pkcemethod',
-		'authurl',
-		'exchange',
-		'redirect',
-		'resource1',
-		'resource2',
-		'resource3',
-		'resource4',
-	);
-	
+	// Get field data.
+	$fieldData = generateFieldCheck(1);
+
 	// Get data
 	$key = getPostValue('hidden');
 	$id = getPostValue('provider');
@@ -394,46 +376,31 @@ function updateRecordAction()
 	$usepkce = getPostValue('usepkce');
 	$pkcemethod = getPostValue('pkcemethod');
 
-	// Check mandatory fields.
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 3);
-	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
-		true, 32, 3);
-	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
-		true, 1209600, 900);
-	$vfystr->strchk($clientid, 'Client ID', 'clientid',
-		verifyString::STR_ALPHANUM, true, 32, 3);
-	$vfystr->strchk($scope, 'Scope', 'scope', verifyString::STR_ALPHANUMPUNCT, true,
-		256, 3);
-	$vfystr->strchk($authtype, 'Authentication Type', 'authtype',
-		verifyString::STR_PINTEGER, true, 3, 0);
-	$vfystr->strchk($pkcemethod, 'PKCE Method', 'pkcemethod',
-		verifyString::STR_PINTEGER, true, 1, 0);
-	$vfystr->strchk($authurl, 'Authentication URL', 'authurl',
-		verifyString::STR_URI, true, 512, 3);
-	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
-		verifyString::STR_URI, true, 512, 3);
-	$vfystr->strchk($resource1, 'Resource URL 1', 'resource1',
-		verifyString::STR_URI, true, 512, 3);
-
-	// Check optional fields.
-	$vfystr->strchk($clientsecret, 'Client Secret', 'clientsecret',
-		verifyString::STR_ALPHANUM, false, 64, 3);
-	$vfystr->strchk($exchange, 'Token Exchange URL', 'exchange',
-		verifyString::STR_URI, false, 512, 3);
-	$vfystr->strchk($resource2, 'Resource URL 2', 'resource2',
-		verifyString::STR_URI, false, 512, 3);
-	$vfystr->strchk($resource3, 'Resource URL 3', 'resource3',
-		verifyString::STR_URI, false, 512, 3);
-	$vfystr->strchk($resource4, 'Resource URL 4', 'resource4',
-		verifyString::STR_URI, false, 512, 3);
-
+	// Check field data.
+	$vfystr->fieldchk($fieldData, 0, $id);
+	$vfystr->fieldchk($fieldData, 1, $name);
+	$vfystr->fieldchk($fieldData, 2, $module);
+	$vfystr->fieldchk($fieldData, 3, $expire);
+	$vfystr->fieldchk($fieldData, 4, $clientid);
+	$vfystr->fieldchk($fieldData, 5, $scope);
+	$vfystr->fieldchk($fieldData, 6, $authtype);
+	$vfystr->fieldchk($fieldData, 7, $pkcemethod);
+	$vfystr->fieldchk($fieldData, 8, $authurl);
+	$vfystr->fieldchk($fieldData, 9, $redirect);
+	$vfystr->fieldchk($fieldData, 10, $resource1);
+	$vfystr->fieldchk($fieldData, 11, $clientsecret);
+	$vfystr->fieldchk($fieldData, 12, $exchange);
+	$vfystr->fieldchk($fieldData, 13, $resource2);
+	$vfystr->fieldchk($fieldData, 14, $resource3);
+	$vfystr->fieldchk($fieldData, 14, $resource4);
+	
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
 	{
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -471,26 +438,6 @@ function insertRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
-	// Set the field list.
-	$fieldlist = array(
-		'provider',
-		'name',
-		'module',
-		'expire',
-		'clientid',
-		'clientsecret',
-		'scope',
-		'authtype',
-		'pkcemethod',
-		'authurl',
-		'exchange',
-		'redirect',
-		'resource1',
-		'resource2',
-		'resource3',
-		'resource4',
-	);
-	
 	// Get data
 	$id = getPostValue('provider');
 	$name = getPostValue('name');
@@ -510,12 +457,11 @@ function insertRecordAction()
 	$usepkce = getPostValue('usepkce');
 	$pkcemethod = getPostValue('pkcemethod');
 
-	// Check mandatory fields.
 	$vfystr->strchk($id, 'Provider', 'provider', verifyString::STR_PINTEGER,
 		true, 2147483647, 0);
 	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 3);
 	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
-		true, 32, 3);
+		true, 32, 1);
 	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
 		true, 1209600, 900);
 	$vfystr->strchk($clientid, 'Client ID', 'clientid',
@@ -551,7 +497,7 @@ function insertRecordAction()
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -639,6 +585,7 @@ function formPage($mode, $rxa)
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $ajax;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -979,41 +926,8 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	echo html::pageAutoGenerate($data);
-}
-
-// Generates a generic field array from the different fields.
-// If more or different fields are needed, then one can just
-// add them manually.
-function generateField($type, $name, $label, $size = 0, $value = '',
-	$tooltip = '', $default = false, $disabled = false)
-{
-	$data = array(
-		'type' => $type,
-		'name' => $name,
-		'label' => $label,
-	);
-	if ($size != 0) $data['fsize'] = $size;
-	if ($disabled == true) $data['disable'] = true;
-	if ($default != false)
-	{
-		$data['value'] = $value;
-		$data['default'] = $value;
-	}
-	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
-	$data['lsize'] = 3;
-	return $data;
-}
-
-// Returns the first argument match of a $_POST value.  If no
-// values are found, then returns null.
-function getPostValue(...$list)
-{
-	foreach($list as $param)
-	{
-		if (isset($_POST[$param])) return $_POST[$param];
-	}
-	return NULL;
+	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
+		generateFieldCheck());
 }
 
 // Returns the text of the given authorization type.
@@ -1038,6 +952,158 @@ function authTypeText($authtype)
 				break;
 		}
 	return $authtypetxt;
+}
+
+// Generate the field definitions for client side error checking.
+function generateFieldCheck($returnType = 0)
+{
+	global $CONFIGVAR;
+	global $vfystr;
+
+	$data = array(
+		0 => array(
+			'dispname' => 'Provider ID',
+			'name' => 'provider',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 2147483647,
+			'min' => 0,
+		),
+		1 => array(
+			'dispname' => 'Name',
+			'name' => 'name',
+			'type' => $vfystr::STR_NAME,
+			'noblank' => true,
+			'max' => 50,
+			'min' => 3,
+		),
+		2 => array(
+			'dispname' => 'Module',
+			'name' => 'module',
+			'type' => $vfystr::STR_FILENAME,
+			'noblank' => true,
+			'max' => 32,
+			'min' => 1,
+		),
+		3 => array(
+			'dispname' => 'Expire',
+			'name' => 'expire',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 1209600,
+			'min' => 900,
+		),
+		4 => array(
+			'dispname' => 'Client ID',
+			'name' => 'clientid',
+			'type' => $vfystr::STR_ALPHANUM,
+			'noblank' => true,
+			'max' => 32,
+			'min' => 3,
+		),
+		5 => array(
+			'dispname' => 'Scope',
+			'name' => 'scope',
+			'type' => $vfystr::STR_ALPHANUMPUNCT,
+			'noblank' => true,
+			'max' => 256,
+			'min' => 3,
+		),
+		6 => array(
+			'dispname' => 'Authentication Type',
+			'name' => 'authtype',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 3,
+			'min' => 0,
+		),
+		7 => array(
+			'dispname' => 'PKCE Method',
+			'name' => 'pkcemethod',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 1,
+			'min' => 0,
+		),
+		8 => array(
+			'dispname' => 'Authentication URL',
+			'name' => 'authurl',
+			'type' => $vfystr::STR_URI,
+			'noblank' => true,
+			'max' => 512,
+			'min' => 3,
+		),
+		9 => array(
+			'dispname' => 'Redirect URL',
+			'name' => 'redirect',
+			'type' => $vfystr::STR_URI,
+			'noblank' => true,
+			'max' => 512,
+			'min' => 3,
+		),
+		10 => array(
+			'dispname' => 'Resource URL 1',
+			'name' => 'resource1',
+			'type' => $vfystr::STR_URI,
+			'noblank' => true,
+			'max' => 512,
+			'min' => 3,
+		),
+		11 => array(
+			'dispname' => 'Client Secret',
+			'name' => 'clientsecret',
+			'type' => $vfystr::STR_ALPHANUM,
+			'noblank' => false,
+			'max' => 64,
+			'min' => 3,
+		),
+		12 => array(
+			'dispname' => 'Token Exchange URL',
+			'name' => 'exchange',
+			'type' => $vfystr::STR_URI,
+			'noblank' => false,
+			'max' => 512,
+			'min' => 3,
+		),
+		13 => array(
+			'dispname' => 'Resource URL 2',
+			'name' => 'resource2',
+			'type' => $vfystr::STR_URI,
+			'noblank' => false,
+			'max' => 512,
+			'min' => 3,
+		),
+		14 => array(
+			'dispname' => 'Resource URL 3',
+			'name' => 'resource3',
+			'type' => $vfystr::STR_URI,
+			'noblank' => false,
+			'max' => 512,
+			'min' => 3,
+		),
+		15 => array(
+			'dispname' => 'Resource URL 4',
+			'name' => 'resource4',
+			'type' => $vfystr::STR_URI,
+			'noblank' => false,
+			'max' => 512,
+			'min' => 3,
+		),
+	);
+	switch ($returnType)
+	{
+		case 0:
+			$fieldcheck = json_encode($data);
+			break;
+		case 1:
+			$fieldcheck = $data;
+			break;
+		default:
+			handleError('Internal Programming Error: CODE XY039223<br>' .
+				'Contact your administrator.');
+			break;
+	}
+	return $fieldcheck;
 }
 
 

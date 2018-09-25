@@ -2031,9 +2031,10 @@ class html implements html_interface
 	<head>
 		<title><?php echo $title; ?></title>
 		<!-- Install baseline Ajax system -->
-		<script type="text/javascript" src="<?php echo $url; ?>/js/ajax.js"></script>
-		<script type="text/javascript" src="<?php echo $url; ?>/js/heartbeat.js"></script>
-		<script type="text/javascript" src="<?php echo $url; ?>/js/treewalker.js"></script>
+		<script type="text/javascript" src="<?php echo $url; ?>/js/baseline/ajax.js"></script>
+		<script type="text/javascript" src="<?php echo $url; ?>/js/baseline/heartbeat.js"></script>
+		<script type="text/javascript" src="<?php echo $url; ?>/js/baseline/treewalker.js"></script>
+		<script type="text/javascript" src="<?php echo $url; ?>/js/baseline/verify.js"></script>
 		<!-- Install Bootstrap CSS -->
 		<link rel="stylesheet" type="text/css" href="<?php echo $url; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/css/bootstrap.css">
 		<!-- Install Custom Common CSS -->
@@ -2256,7 +2257,7 @@ class html implements html_interface
 		}
 ?>
 		<!-- Install Timer -->
-		<script type="text/javascript" src="<?php echo $url; ?>/js/timer.js"></script>
+		<script type="text/javascript" src="<?php echo $url; ?>/js/baseline/timer.js"></script>
 		<!-- Install regular jQuery -->
 		<script type="text/javascript" src="<?php echo $url; ?>/APIs/JQuery/BaseJQuery/jquery-3.1.0.min.js"></script>
 		<!-- Install Bootstrap -->
@@ -2271,7 +2272,7 @@ class html implements html_interface
 		}
 ?>
 		<!-- Install Header Custom JavaScript -->
-		<script type="text/javascript" src="<?php echo $url; ?>/js/header.js"></script>
+		<script type="text/javascript" src="<?php echo $url; ?>/js/baseline/header.js"></script>
 <?php
 		if ($flag_jsfile)
 		{

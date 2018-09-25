@@ -120,8 +120,8 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 			$jsFiles = array(
-				'/js/common.js',
-				'/js/modedit.js',
+				'/js/baseline/common.js',
+				'/js/module/modedit.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -339,15 +339,6 @@ function updateRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
-	// Set the field list
-	$fieldlist = array(
-		'modid',
-		'modname',
-		'moddesc',
-		'modfile',
-		'modicon',
-	);
-
 	// Get data
 	$key = getPostValue('hidden');
 	$id = getPostValue('modid');
@@ -375,19 +366,17 @@ function updateRecordAction()
 	// Check mandatory fields.
 	$vfystr->strchk($id, 'Module ID', 'modid', verifyString::STR_PINTEGER, true, 2147483647, 1);
 	$vfystr->strchk($name, 'Name', 'modname', verifyString::STR_ALPHA, true, 32, 3);
-	$vfystr->strchk($file, 'Filename', 'modfile', verifyString::STR_FILENAME, true, 50, 3);
-	$vfystr->strchk($icon, 'Icon', 'modicon', verifyString::STR_FILENAME, true, 50, 3);
+	$vfystr->strchk($desc, 'Description', 'moddesc', verifyString::STR_ASCII, true, 256, 1);
+	$vfystr->strchk($file, 'Filename', 'modfile', verifyString::STR_FILENAME, true, 50, 1);
+	$vfystr->strchk($icon, 'Icon', 'modicon', verifyString::STR_FILENAME, true, 50, 1);
 	
-	// Check optional fields.
-	$vfystr->strchk($desc, 'Description', 'moddesc', verifyString::STR_ASCII, false, 256, 0);
-
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
 	{
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -426,15 +415,6 @@ function insertRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
-	// Set field list
-	$fieldlist = array(
-		'modid',
-		'modname',
-		'moddesc',
-		'modfile',
-		'modicon',
-	);
-
 	// Get data
 	$id = getPostValue('modid');
 	$name = getPostValue('modname');
@@ -449,19 +429,17 @@ function insertRecordAction()
 	// Check mandatory fields.
 	$vfystr->strchk($id, 'Module ID', 'modid', verifyString::STR_PINTEGER, true, 2147483647, 1);
 	$vfystr->strchk($name, 'Name', 'modname', verifyString::STR_ALPHA, true, 32, 3);
-	$vfystr->strchk($file, 'Filename', 'modfile', verifyString::STR_FILENAME, true, 50, 3);
-	$vfystr->strchk($icon, 'Icon', 'modicon', verifyString::STR_FILENAME, true, 50, 3);
+	$vfystr->strchk($desc, 'Description', 'moddesc', verifyString::STR_ASCII, true, 256, 1);
+	$vfystr->strchk($file, 'Filename', 'modfile', verifyString::STR_FILENAME, true, 50, 1);
+	$vfystr->strchk($icon, 'Icon', 'modicon', verifyString::STR_FILENAME, true, 50, 1);
 	
-	// Check optional fields.
-	$vfystr->strchk($desc, 'Description', 'moddesc', verifyString::STR_ASCII, false, 256, 0);
-
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
 	{
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -539,6 +517,7 @@ function formPage($mode, $rxa)
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 	global $baseUrl;
+	global $ajax;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -822,40 +801,83 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	echo html::pageAutoGenerate($data);
+	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
+		generateFieldCheck());
 }
 
-// Generates a generic field array from the different fields.
-// If more or different fields are needed, then one can just
-// add them manually.
-function generateField($type, $name, $label, $size = 0, $value = '',
-	$tooltip = '', $default = false, $disabled = false)
+// Generate the field definitions for client side error checking.
+function generateFieldCheck()
 {
+	global $CONFIGVAR;
+	global $vfystr;
+
 	$data = array(
-		'type' => $type,
-		'name' => $name,
-		'label' => $label,
+		0 => array(
+			'name' => 'modid',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 2147483647,
+			'min' => 1,
+		),
+		1 => array(
+			'name' => 'modname',
+			'type' => $vfystr::STR_ALPHA,
+			'noblank' => true,
+			'max' => 32,
+			'min' => 3,
+		),
+		2 => array(
+			'name' => 'moddesc',
+			'type' => $vfystr::STR_ASCII,
+			'noblank' => true,
+			'max' => 256,
+			'min' => 1,
+		),
+		3 => array(
+			'name' => 'modfile',
+			'type' => $vfystr::STR_FILENAME,
+			'noblank' => true,
+			'max' => 50,
+			'min' => 1,
+		),
+		4 => array(
+			'name' => 'modicon',
+			'type' => $vfystr::STR_FILENAME,
+			'noblank' => true,
+			'max' => 50,
+			'min' => 1,
+		),
+		5 => array(
+			'name' => 'modact',
+			'type' => $vfystr::STR_NONE,
+			'noblank' => false,
+			'max' => 0,
+			'min' => 1,
+		),
+		6 => array(
+			'name' => 'modalluser',
+			'type' => $vfystr::STR_NONE,
+			'noblank' => false,
+			'max' => 0,
+			'min' => 1,
+		),
+		7 => array(
+			'name' => 'modvend',
+			'type' => $vfystr::STR_NONE,
+			'noblank' => false,
+			'max' => 0,
+			'min' => 1,
+		),
+		8 => array(
+			'name' => 'modsys',
+			'type' => $vfystr::STR_NONE,
+			'noblank' => false,
+			'max' => 0,
+			'min' => 1,
+		),
 	);
-	if ($size != 0) $data['fsize'] = $size;
-	if ($disabled == true) $data['disable'] = true;
-	if ($default != false)
-	{
-		$data['value'] = $value;
-		$data['default'] = $value;
-	}
-	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
-	return $data;
-}
-
-// Returns the first argument match of a $_POST value.  If no
-// values are found, then returns null.
-function getPostValue(...$list)
-{
-	foreach($list as $param)
-	{
-		if (isset($_POST[$param])) return $_POST[$param];
-	}
-	return NULL;
+	$fieldcheck = json_encode($data);
+	return $fieldcheck;
 }
 
 

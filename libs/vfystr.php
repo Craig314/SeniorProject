@@ -19,33 +19,36 @@ require_once 'error.php';
 
 interface verifyStringInterface
 {
-	const STR_USERID		= 0;	// User ID
-	const STR_PASSWD		= 1;	// Password
-	const STR_NAME			= 2;	// Name
-	const STR_ADDR			= 3;	// Address
-	const STR_PHONE			= 4;	// Phone Number
-	const STR_EMAIL			= 5;	// EMail Address
-	const STR_ASCII			= 6;	// ASCII String
-	const STR_ALPHA			= 7;	// Alpha Only
-	const STR_NUMERIC		= 8;	// Numeric Only
-	const STR_ALPHANUM		= 9;	// Alphanumeric
-	const STR_ALPHANUMPUNCT	= 10;	// Alphanumeric + Punctuation.
-	const STR_PINTEGER		= 11;	// Positive Integer
-	const STR_INTEGER		= 12;	// Integer (decimal or 0x hex format)
-	const STR_FLOAT			= 13;	// Floating Point
-	const STR_DATE			= 14;	// Date
-	const STR_DATEUNIX		= 15;	// Unix Date Timestamp
-	const STR_FILENAME		= 16;	// Filename
-	const STR_PATHNAME		= 17;	// Pathname
-	const STR_URI			= 18;	// Uniform Resource Identifier
-	const STR_URL			= 19;	// Uniform Resource Location
-	const STR_TIMEDISP		= 20;	// Time Displacement
-	const STR_ALPHASPEC		= 21;	// Alpha Spec'd (a-z_ only)
-	const STR_DESC			= 22;	// Descriptions
+	const STR_NONE			= 0;	// No Verification
+	const STR_USERID		= 1;	// User ID
+	const STR_PASSWD		= 2;	// Password
+	const STR_NAME			= 3;	// Name
+	const STR_ADDR			= 4;	// Address
+	const STR_PHONE			= 5;	// Phone Number
+	const STR_EMAIL			= 6;	// EMail Address
+	const STR_ASCII			= 7;	// ASCII String
+	const STR_ALPHA			= 8;	// Alpha Only
+	const STR_NUMERIC		= 9;	// Numeric Only
+	const STR_ALPHANUM		= 10;	// Alphanumeric
+	const STR_ALPHANUMPUNCT	= 11;	// Alphanumeric + Punctuation.
+	const STR_PINTEGER		= 12;	// Positive Integer
+	const STR_INTEGER		= 13;	// Integer (decimal or 0x hex format)
+	const STR_FLOAT			= 14;	// Floating Point
+	const STR_DATE			= 15;	// Date
+	const STR_DATEUNIX		= 16;	// Unix Date Timestamp
+	const STR_FILENAME		= 17;	// Filename
+	const STR_PATHNAME		= 18;	// Pathname
+	const STR_URI			= 19;	// Uniform Resource Identifier
+	const STR_URL			= 20;	// Uniform Resource Location
+	const STR_TIMEDISP		= 21;	// Time Displacement
+	const STR_ALPHASPEC		= 22;	// Alpha Spec'd (a-z_ only)
+	const STR_DESC			= 23;	// Descriptions
+	const STR_CUSTOM		= 99;	// Custom Verification (Do Not Use);
 
 	// Start custom checks at 100
 
 	public function errstat();
+	public function fieldchk(&$fieldData, $index, $data);
 	public function strchk($data, $field, $id, $type, $blank = true, $max = 0, $min = 0);
 }
 
@@ -63,6 +66,20 @@ class verifyString implements verifyStringInterface
 		global $herr;
 
 		return $herr->checkState();
+	}
+
+	// Same as strchk below, but uses the field data array to perform
+	// checks. $index is the index into the array.  $data is the data
+	// to check.
+	public function fieldchk(&$fieldData, $index, $data)
+	{
+		if ($fieldData[$index]['type'] == self::STR_CUSTOM)
+			$type = $fieldData[$index]['ctype'];
+		else
+			$type = $fieldData[$index]['type'];
+		return $this->strchk($data, $fieldData[$index]['dispname'],
+			$fieldData[$index]['name'], $type, $fieldData[$index]['noblank'],
+			$fieldData[$index]['max'], $fieldData[$index]['min']);
 	}
 
 	// Runs the checks.
@@ -87,7 +104,7 @@ class verifyString implements verifyStringInterface
 			if ($this->checkBlank($data, $field, $id))
 			{
 				if ($type != self::STR_NUMERIC && $type != self::STR_PINTEGER
-					&& $type != self::STR_FLOAT)
+					&& $type != self::STR_FLOAT && $type != self::STR_INTEGER)
 				{
 					if (!$this->checkLengthMinimum($data, $field, $id, $min)) return false;
 					if (!$this->checkLengthMaximum($data, $field, $id, $max)) return false;
@@ -116,6 +133,9 @@ class verifyString implements verifyStringInterface
 		// Specific Checks
 		switch ($type)
 		{
+			case self::STR_NONE:
+				$result = true;
+				break;
 			case self::STR_USERID:
 				$result = $this->checkCharLogin($data, $field, $id);
 				break;
@@ -183,7 +203,7 @@ class verifyString implements verifyStringInterface
 				$result = $this->checkCharAlphaSpec($data, $field, $id);
 				break;
 			case self::STR_DESC:
-				$result = $this->chechCharASCIIFormat($data, $field, $id);
+				$result = $this->checkCharASCIIFormat($data, $field, $id);
 				break;
 			default:
 				$herr->errorPutMessage($this->etype,

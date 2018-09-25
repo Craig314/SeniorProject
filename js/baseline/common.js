@@ -7,13 +7,30 @@ Common Core JavaScript File
 
 */
 
+// Don't change this.  Override in the module specific Javascript
+// file if needed.
+var ident = [
+	'select_table',
+	'hiddenForm',
+];
+
+// Don't change this.  Override in the module specific Javascript
+// file if needed.
+var dataForm = [
+	'dataForm',
+];
+
 // Returns all parameters from forms, hidden fields, etc...
 // where the array ident contains the form tag's name and/
 // or id of the forms to be checked.
 function getParameters() {
 	var params;
 
-	params = treeWalker(ident);
+	if (typeof overrideIdent != 'undefined') {
+		params = treeWalker(overrideIdent);
+	} else {
+		params = treeWalker(ident);
+	}
 	return(params);
 }
 
@@ -23,8 +40,16 @@ function getFormData() {
 	var id;
 	var params;
 
-	id = treeWalker(ident);
-	params = treeWalker(data);
+	if (typeof overrideIdent != 'undefined') {
+		id = treeWalker(overrideIdent);
+	} else {
+		id = treeWalker(ident);
+	}
+	if (typeof overrideIdent != 'undefined') {
+		params = treeWalker(overrideDataForm);
+	} else {
+		params = treeWalker(dataForm);
+	}
 	if (id != '' && params != '') return(id + '&' + params);
 	if (id != '') return(id);
 	if (params != '') return(params);
@@ -67,6 +92,8 @@ function selectItemCheck(item) {
 
 // Button click handler for List.
 $('#listDataItems').on('click', function () {
+	writeError('');
+	writeResponse('');
 	ajaxServerCommand.sendCommand(-1);
 });
 
@@ -74,6 +101,8 @@ $('#listDataItems').on('click', function () {
 $('#viewDataItem').on('click', function() {
 	var params;
 
+	writeError('');
+	writeResponse('');
 	params = getParameters();
 	ajaxServerCommand.sendCommand(1, params);
 });
@@ -82,6 +111,8 @@ $('#viewDataItem').on('click', function() {
 $('#updateDataItem').on('click', function() {
 	var params;
 
+	writeError('');
+	writeResponse('');
 	params = getParameters();
 	ajaxServerCommand.sendCommand(2, params);
 });
@@ -90,6 +121,8 @@ $('#updateDataItem').on('click', function() {
 $('#insertDataItem').on('click', function() {
 	var params;
 
+	writeError('');
+	writeResponse('');
 	params = getParameters();
 	ajaxServerCommand.sendCommand(3, params);
 });
@@ -98,6 +131,8 @@ $('#insertDataItem').on('click', function() {
 $('#deleteDataItem').on('click', function() {
 	var params;
 
+	writeError('');
+	writeResponse('');
 	params = getParameters();
 	ajaxServerCommand.sendCommand(4, params);
 
@@ -107,6 +142,9 @@ $('#deleteDataItem').on('click', function() {
 function submitUpdate() {
 	var params;
 
+	writeError('');
+	writeResponse('');
+	if (verifyData.verify(VERIFY_MODE_OTHER) == false) return;
 	params = getFormData();
 	ajaxServerCommand.sendCommand(12, params);
 }
@@ -114,7 +152,11 @@ function submitUpdate() {
 // Button click hander for submit add.
 function submitInsert() {
 	var params;
+	var result;
 
+	writeError('');
+	writeResponse('');
+	if (verifyData.verify(VERIFY_MODE_INSERT) == false) return;
 	params = getFormData();
 	ajaxServerCommand.sendCommand(13, params);
 }
@@ -123,6 +165,8 @@ function submitInsert() {
 function submitDelete() {
 	var params;
 
+	writeError('');
+	writeResponse('');
 	params = getFormData();
 	ajaxServerCommand.sendCommand(14, params);
 }
@@ -132,13 +176,22 @@ function submitDelete() {
 function clearForm() {
 	var i;
 	var j;
+	var k;
 	var nodeObject;
 	var optionList;
 	var nodeList;
+	var fieldData;
 
-	// Non-Radio fields.
-	for (i = 0; i < fields.length; i++) {
-		nodeObject = document.getElementById(fields[i]);
+	// Setup
+	writeError('');
+	writeResponse('');
+	resetErrorStatus();
+	fieldData = verifyData.getFieldData();
+	if (fieldData == null) return;
+
+	// Reset all fields.
+	for (i = 0; i < fieldData.length; i++) {
+		nodeObject = document.getElementById(fieldData[i].name);
 		if (nodeObject == null) continue;
 		switch (nodeObject.nodeName.toLowerCase()) {
 			case 'input':
@@ -146,7 +199,14 @@ function clearForm() {
 					case 'checkbox':	// Checkbox is special.
 						nodeObject.checked = nodeObject.defaultChecked;
 						break;
-					case 'radio':		// We handle this separately below.
+					case 'radio':		// Radio buttons require a bit of work.
+						nodeList = document.getElementsByName(fieldData[i].name);
+						if (nodeList == null) continue;
+						for (j = 0; j < nodeList.length; j++) {
+							nodeObject = nodeList[j];
+							nodeObject.checked = nodeObject.defaultChecked;
+						}
+						break;
 					case 'button':		// This is ignored.
 						break;
 					default:			// All other field types.
@@ -169,36 +229,34 @@ function clearForm() {
 				}
 				break;
 			default:
-				console.log('clearForm(): Unknown Input Type: ' +
+				console.warn('clearForm(): Unknown Input Type: ' +
 					nodeObject.nodeName.toLowerCase());
 				break;
 		}
 	}
 
-	// Radio fields.
-	for (i = 0; i < radios.length; i++) {
-		nodeList = document.getElementsByName(radios[i]);
-		if (nodeList == null) continue;
-		for (j = 0; j < nodeList.length; j++) {
-			nodeObject = nodeList[j];
-			nodeObject.checked = nodeObject.defaultChecked;
-		}
-	}
-
-	// Reset hidden objects if needed.
-	if (hiddenList.length > 0) setHidden();
+	// Reset hidden objects.
+	setHidden();
 
 	// Call a custom reset form if needed
-	if (typeof customResetForm == 'function') customResetForm();
+	if (typeof customResetForm == 'function') {
+		customResetForm();
+	}
 }
 
 // Resets the error status of all fields.
 function resetErrorStatus() {
 	var nodeObject;
 	var i;
+	var fieldData;
 
-	for (i = 0; i < fields.length; i++) {
-		nodeObject = document.getElementById(fields[i]);
+	writeError('');
+	writeResponse('');
+	if (verifyData.getLoadStatus() == false) return;
+	fieldData = verifyData.getFieldData();
+	if (fieldData == null) return;
+	for (i = 0; i < fieldData.length; i++) {
+		nodeObject = document.getElementById(fieldData[i].name);
 		if (nodeObject == null) continue;
 		switch (nodeObject.nodeName.toLowerCase()) {
 			case 'input':
@@ -209,14 +267,14 @@ function resetErrorStatus() {
 					case 'button':
 						break;
 					default:
-						ajaxProcessData.setStatusTextDefault(fields[i], '');
+						ajaxProcessData.setStatusTextDefault(fieldData[i].name, '');
 				}
 				break;
 			case 'textarea':
-				ajaxProcessData.setStatusTextDefault(fields[i], '');
+				ajaxProcessData.setStatusTextDefault(fieldData[i].name, '');
 				break;
 			case 'select':
-				ajaxProcessData.setStatusTextDefault(fields[i], '');
+				ajaxProcessData.setStatusTextDefault(fieldData[i].name, '');
 				break;
 			default:
 		}
@@ -237,11 +295,25 @@ function setHidden() {
 	var targetId;
 	var i;
 
+	// Check to make sure everything has been defined.
+	i = 0;
+	if (typeof hiddenList == 'undefined') return;
+	if (hiddenList.length == 0) {
+		console.warn('Variable hiddenList defined but empty.');
+		i++;
+	}
+	if (typeof hiddenSelect == 'undefined') {
+		colsole.warn('Variable hiddenList defined, but variable hiddenSelect isn\'t.');
+		i++;
+	}
+	if (i > 0) return;
+
+	// Now we go through and reset the hidden stuff.
 	selectObject = document.getElementById(hiddenSelect);
 	optionList = selectObject.children;
 	if (optionList != null) {
 		if (optionList.length != hiddenList.length) {
-			console.log('WANRING: Length of hiddenList and optionList do not match.');
+			console.warn('Length of hiddenList and optionList do not match.');
 			loopterm = Math.max(hiddenList.length, optionList.length);
 		} else {
 			loopterm = optionList.length;
@@ -255,6 +327,41 @@ function setHidden() {
 			} else {
 				if (targetId === repeat) continue;
 				targetId.hidden = true;
+			}
+		}
+	}
+}
+
+// This returns the current selection of which selection is currently
+// visible in the client.
+function getHidden() {
+	var selectObject;
+	var optionList;
+	var i;
+
+	// Check to make sure everything has been defined.
+	i = 0;
+	if (typeof hiddenList == 'undefined') return;
+	if (hiddenList.length == 0) {
+		console.warn('Variable hiddenList defined but empty.');
+		i++;
+	}
+	if (typeof hiddenSelect == 'undefined') {
+		colsole.warn('Variable hiddenList defined, but variable hiddenSelect isn\'t.');
+		i++;
+	}
+	if (i > 0) return;
+
+	// Now we go through and find which one is selected.
+	selectObject = document.getElementById(hiddenSelect);
+	optionList = selectObject.children;
+	if (optionList != null) {
+		if (optionList.length != hiddenList.length) {
+			console.warn('Length of hiddenList and optionList do not match.');
+		}
+		for (i = 0; i < optionList.length; i++) {
+			if (optionList[i].selected) {
+				return optionList[i];
 			}
 		}
 	}

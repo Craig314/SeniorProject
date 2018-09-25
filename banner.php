@@ -323,8 +323,8 @@ function bannerShowHeader($title, $subtitle, $message, $token)
 <html lang="en-US">
 	<head>
 		<title>Login Banner</title>
-		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/ajax.js"></script>
-		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/banner.js"></script>
+		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/baseline/ajax.js"></script>
+		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/module/banner.js"></script>
 		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/css/bootstrap.css">
 		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/css/common.css">
 	</head>

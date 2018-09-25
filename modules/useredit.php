@@ -132,8 +132,8 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
-			'/js/common.js',
-			'/js/useredit.js',
+			'/js/baseline/common.js',
+			'/js/module/useredit.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -438,27 +438,6 @@ function updateRecordAction()
 	$dbChangeOAuth = DBCHG_NONE;
 	$dbChangeOpenId = DBCHG_NONE;
 
-	// Set the field list.
-	$fieldlist = array(
-		'username',
-		'userid',
-		'orgid',
-		'profid',
-		'method',
-		'newpass1',
-		'newpass2',
-		'oaprovider',
-		'opprovider',
-		'opident',
-		'name',
-		'haddr',
-		'maddr',
-		'email',
-		'hphone',
-		'cphone',
-		'wphone',
-	);
-	
 	// Get identity data
 	$key = getPostValue('hidden');
 	$username = getPostValue('username');
@@ -482,7 +461,7 @@ function updateRecordAction()
 	if ($vfystr->errstat())
 	{
 		$rxe = $herr->errorGetData();
-		$ajax->sendStatus($rxe, $fieldlist);
+		$ajax->sendStatus($rxe);
 		exit(1);
 	}
 	if ($key != $userid)
@@ -502,7 +481,7 @@ function updateRecordAction()
 	if ($vfystr->errstat())
 	{
 		$rxe = $herr->errorGetData();
-		$ajax->sendStatus($rxe, $fieldlist);
+		$ajax->sendStatus($rxe);
 		exit(1);
 	}
 	
@@ -621,7 +600,7 @@ function updateRecordAction()
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -759,7 +738,7 @@ function updateRecordAction()
 					'Password required when changing login method to native.',
 					handleErrors::ESFAIL, '', 'newpass2');
 				$rxe = $herr->errorGetData();
-				$ajax->sendStatus($rxe, $fieldlist);
+				$ajax->sendStatus($rxe);
 				exit(1);
 			}
 			$pwdcount = $CONFIGVAR['security_hash_rounds']['value'];
@@ -906,27 +885,6 @@ function insertRecordAction()
 	global $dbuser;
 	global $dbcore;
 
-	// Set the field list.
-	$fieldlist = array(
-		'username',
-		'userid',
-		'orgid',
-		'profid',
-		'method',
-		'newpass1',
-		'newpass2',
-		'oaprovider',
-		'opprovider',
-		'opident',
-		'name',
-		'haddr',
-		'maddr',
-		'email',
-		'hphone',
-		'cphone',
-		'wphone',
-	);
-	
 	// Get identiy data...
 	$userid = getPostValue('userid');
 	$username = getPostValue('username');
@@ -1093,7 +1051,7 @@ function insertRecordAction()
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -1219,7 +1177,7 @@ function deleteRecordAction()
 	if ($vfystr->errstat())
 	{
 		$rxe = $herr->errorGetData();
-		$ajax->sendStatus($rxe, $fieldlist);
+		$ajax->sendStatus($rxe);
 		exit(1);
 	}
 	if ($key != $userid)
@@ -1318,6 +1276,7 @@ function formPage($mode, $rxa)
 	global $vendor;
 	global $admin;
 	global $herr;
+	global $ajax;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -1976,41 +1935,8 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	echo html::pageAutoGenerate($data);
-}
-
-// Generates a generic field array from the different fields.
-// If more or different fields are needed, then one can just
-// add them manually.
-function generateField($type, $name, $label, $size = 0, $value = '',
-	$tooltip = '', $default = false, $disabled = false)
-{
-	$data = array(
-		'type' => $type,
-		'name' => $name,
-		'label' => $label,
-	);
-	if ($size != 0) $data['fsize'] = $size;
-	if ($disabled == true) $data['disable'] = true;
-	if ($default != false)
-	{
-		$data['value'] = $value;
-		$data['default'] = $value;
-	}
-	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
-	$data['lsize'] = 4;
-	return $data;
-}
-
-// Returns the first argument match of a $_POST value.  If no
-// values are found, then returns null.
-function getPostValue(...$list)
-{
-	foreach($list as $param)
-	{
-		if (isset($_POST[$param])) return $_POST[$param];
-	}
-	return NULL;
+	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
+		generateFieldCheck());
 }
 
 // Checks to make sure that the given OAuth provider is valid.
@@ -2054,5 +1980,149 @@ function checkProfileId($profid)
 			handleErrors::ESFAIL, '', 'profid');
 	}
 }
+
+// Generate the field definitions for client side error checking.
+function generateFieldCheck()
+{
+	global $CONFIGVAR;
+	global $vfystr;
+
+	$data = array(
+		0 => array(
+			'name' => 'userid',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 2147483647,
+			'min' => 1,
+		),
+		1 => array(
+			'name' => 'username',
+			'type' => $vfystr::STR_USERID,
+			'noblank' => true,
+			'max' => $CONFIGVAR['security_username_maxlen']['value'],
+			'min' => $CONFIGVAR['security_username_minlen']['value'],
+		),
+		2 => array(
+			'name' => 'orgid',
+			'type' => $vfystr::STR_USERID,
+			'noblank' => false,
+			'max' => 32,
+			'min' => 0,
+		),
+		3 => array(
+			'name' => 'profid',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 2147483647,
+			'min' => 1,
+		),
+		4 => array(
+			'name' => 'method',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 2,
+			'min' => 0,
+		),
+		5 => array(
+			'name' => 'active',
+			'type' => $vfystr::STR_NONE,
+			'noblank' => false,
+			'max' => 0,
+			'min' => 1,
+		),
+		6 => array(
+			'name' => 'newpass1',
+			'type' => $vfystr::STR_CUSTOM,
+			'ctype' => $vfystr::STR_PASSWD,
+			'noblank' => false,
+			'max' => $CONFIGVAR['security_passwd_maxlen']['value'],
+			'min' => $CONFIGVAR['security_passwd_minlen']['value'],
+		),
+		7 => array(
+			'name' => 'newpass2',
+			'type' => $vfystr::STR_CUSTOM,
+			'ctype' => $vfystr::STR_PASSWD,
+			'noblank' => false,
+			'max' => $CONFIGVAR['security_passwd_maxlen']['value'],
+			'min' => $CONFIGVAR['security_passwd_minlen']['value'],
+		),
+		8 => array(
+			'name' => 'oaprovider',
+			'type' => $vfystr::STR_CUSTOM,
+			'ctype' => $vfystr::STR_PINTEGER,
+			'noblank' => false,
+			'max' => 2147483647,
+			'min' => 0,
+		),
+		9 => array(
+			'name' => 'opprovider',
+			'type' => $vfystr::STR_CUSTOM,
+			'ctype' => $vfystr::STR_PINTEGER,
+			'noblank' => false,
+			'max' => 2147483647,
+			'min' => 0,
+		),
+		10 => array(
+			'name' => 'opident',
+			'type' => $vfystr::STR_CUSTOM,
+			'ctype' => $vfystr::STR_URI,
+			'noblank' => false,
+			'max' => 512,
+			'min' => 0,
+		),
+		11 => array(
+			'name' => 'name',
+			'type' => $vfystr::STR_NAME,
+			'noblank' => true,
+			'max' => 50,
+			'min' => 0,
+		),
+		12 => array(
+			'name' => 'haddr',
+			'type' => $vfystr::STR_ADDR,
+			'noblank' => false,
+			'max' => 100,
+			'min' => 0,
+		),
+		13 => array(
+			'name' => 'maddr',
+			'type' => $vfystr::STR_ADDR,
+			'noblank' => false,
+			'max' => 100,
+			'min' => 0,
+		),
+		14 => array(
+			'name' => 'email',
+			'type' => $vfystr::STR_EMAIL,
+			'noblank' => false,
+			'max' => 50,
+			'min' => 0,
+		),
+		15 => array(
+			'name' => 'hphone',
+			'type' => $vfystr::STR_PHONE,
+			'noblank' => false,
+			'max' => 30,
+			'min' => 0,
+		),
+		16 => array(
+			'name' => 'cphone',
+			'type' => $vfystr::STR_PHONE,
+			'noblank' => false,
+			'max' => 30,
+			'min' => 0,
+		),
+		17 => array(
+			'name' => 'wphone',
+			'type' => $vfystr::STR_PHONE,
+			'noblank' => false,
+			'max' => 30,
+			'min' => 0,
+		),
+	);
+	$fieldcheck = json_encode($data);
+	return $fieldcheck;
+}
+
 
 ?>

@@ -117,8 +117,7 @@ function loadInitialContent()
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
-			'/js/common.js',
-			'/js/sysflag.js',
+			'/js/baseline/common.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -352,13 +351,6 @@ function updateRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
-	// Set the field list.
-	$fieldlist = array(
-		'flag',
-		'name',
-		'desc',
-	);
-	
 	// Get data
 	$key = getPostValue('hidden');
 	$id = getPostValue('flag');
@@ -389,7 +381,7 @@ function updateRecordAction()
 		if ($herr->checkState() == true)
 		{
 			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe, $fieldlist);
+			$ajax->sendStatus($rxe);
 			exit(1);
 		}
 	}
@@ -474,6 +466,7 @@ function formPage($mode, $rxa)
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $ajax;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -593,40 +586,41 @@ function formPage($mode, $rxa)
 	);
 
 	// Render
-	echo html::pageAutoGenerate($data);
+	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
+		generateFieldCheck());
 }
 
-// Generates a generic field array from the different fields.
-// If more or different fields are needed, then one can just
-// add them manually.
-function generateField($type, $name, $label, $size = 0, $value = '',
-	$tooltip = '', $default = false, $disabled = false)
+// Generate the field definitions for client side error checking.
+function generateFieldCheck()
 {
+	global $CONFIGVAR;
+	global $vfystr;
+
 	$data = array(
-		'type' => $type,
-		'name' => $name,
-		'label' => $label,
+		0 => array(
+			'name' => 'flag',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'max' => 127,
+			'min' => 0,
+		),
+		1 => array(
+			'name' => 'name',
+			'type' => $vfystr::STR_ALPHANUM,
+			'noblank' => true,
+			'max' => 32,
+			'min' => 3,
+		),
+		2 => array(
+			'name' => 'desc',
+			'type' => $vfystr::STR_DESC,
+			'noblank' => false,
+			'max' => 256,
+			'min' => 0,
+		),
 	);
-	if ($size != 0) $data['fsize'] = $size;
-	if ($disabled == true) $data['disable'] = true;
-	if ($default != false)
-	{
-		$data['value'] = $value;
-		$data['default'] = $value;
-	}
-	if (!empty($tooltip)) $data['tooltip'] = $tooltip;
-	return $data;
-}
-
-// Returns the first argument match of a $_POST value.  If no
-// values are found, then returns null.
-function getPostValue(...$list)
-{
-	foreach($list as $param)
-	{
-		if (isset($_POST[$param])) return $_POST[$param];
-	}
-	return NULL;
+	$fieldcheck = json_encode($data);
+	return $fieldcheck;
 }
 
 
