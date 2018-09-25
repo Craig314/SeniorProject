@@ -21,7 +21,7 @@ var hiddenSelect = '';
 
 // This is called from verifyData.verify in verify.js if a field is
 // marked for special handling.
-function customVerifyData(item) {
+function customVerifyData(item, mode) {
 }
 
 // This is called from verifyData.verify in verify.js for any final

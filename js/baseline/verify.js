@@ -159,7 +159,8 @@ var verifyData = ({
 			if (item.type == VFYSTR_CUSTOM) {
 				item.twopass = true;
 				if (typeof customVerifyData == 'function') {
-					result = customVerifyData(item);
+					result = customVerifyData(item, mode);
+					return result;
 				} else {
 					console.warn('Data specification from server indicates ' +
 						'that custom verification is required, but the ' +

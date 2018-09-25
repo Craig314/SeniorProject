@@ -1329,12 +1329,30 @@ function formPage($mode, $rxa)
 			break;
 	}
 
-	// This generate the provider list for OAuth and OpenID.  We may need
-	// this if the edit mode is insert or update because the user's login
-	// method can change during those operations.
+	// In all editing modes, we have to load the profiles from
+	// the database so we can get the profile names.
+	$rxp = $dbconf->queryProfileAll();
+	if ($rxp == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to retrieve required '
+				. $moduleDisplayLower . ' profile data.');
+	}
+	$optlist = array();
+	foreach ($rxp as $kx => $vx)
+	{
+		$profileList[$vx['name']] = $vx['profileid'];
+		$profileIndex[$vx['profileid']] = $vx['name'];
+	}
+
+	// For insert or update mode, we need to query several databases to
+	// build pulldown lists for various options.  Mainly the profiles,
+	// available OAuth and OpenID providers.
 	if ($mode == MODE_INSERT || $mode == MODE_UPDATE)
 	{
-		// OAuth
+		// Load and process OAuth providers.
 		$oaOptlist = array();
 		$rxpa = $dbconf->queryOAuthAll();
 		if ($rxpa == false)
@@ -1354,13 +1372,13 @@ function formPage($mode, $rxa)
 			'label' => 'Provider',
 			'name' => 'oaprovider',
 			'fsize' => 4,
-			'lsize' => 4,
+			'lsize' => 2,
 			'optlist' => $oaOptlist,
 			'tooltip' => 'The OAuth provider name.',
 			'disable' => $disable,
 		);
 
-		// OpenID
+		// Load and process OpenID providers.
 		$opOptlist = array();
 		$rxpo = $dbconf->queryOpenIdAll();
 		if ($rxpo == false)
@@ -1380,20 +1398,69 @@ function formPage($mode, $rxa)
 			'label' => 'Provider',
 			'name' => 'opprovider',
 			'fsize' => 4,
-			'lsize' => 4,
+			'lsize' => 2,
 			'optlist' => $opOptlist,
 			'tooltip' => 'The OAuth provider name.',
 			'disable' => $disable,
 		);
-
+		$profid = array(
+			'type' => html::TYPE_PULLDN,
+			'label' => 'Profile',
+			'default' => $rxa['profileid'],
+			'name' => 'profid',
+			'fsize' => 4,
+			'lsize' => 2,
+			'optlist' => $profileList,
+			'tooltip' => 'The profile that the user is assigned to.',
+			'disable' => $disable,
+		);
+		$method = array(
+			'type' => html::TYPE_PULLDN,
+			'label' => 'Login Method',
+			'default' => $rxa['method'],
+			'name' => 'method',
+			'fsize' => 4,
+			'lsize' => 2,
+			'optlist' => array(
+				'Native' => LOGIN_METHOD_NATIVE,
+				'OAuth' => LOGIN_METHOD_OAUTH,
+				'OpenID' => LOGIN_METHOD_OPENID,
+			),
+			'tooltip' => 'The method that the user uses to login with.',
+			'disable' => $disable,
+			'event' => 'onchange',
+			'action' => 'setHidden()',
+		);
 	}
 	else
 	{
 		$oaProviderList = '';
 		$opProviderList = '';
+		$profid = generateField(html::TYPE_TEXT, 'profid', 'Profile', 4,
+			$profileIndex[$rxa['profileid']], 'The profile the user is assigned to.',
+			$default, $disable);
+		switch ($rxa['method'])
+		{
+			case LOGIN_METHOD_NATIVE:
+				$logMethod = 'Native';
+				break;
+			case LOGIN_METHOD_OAUTH:
+				$logMethod = 'OAuth';
+				break;
+			case LOGIN_METHOD_OPENID:
+				$logMethod = 'OpenID';
+				break;
+			default:
+				break;
+		}
+		$method = generateField(html::TYPE_TEXT, 'method', 'Login Method',
+			2, $logMethod, 'The method that the user uses to login with.',
+			$default, $disable);
+		unset($logMethod);
 	}
 
-	// Load and outfit the form based on login method.
+	// Load default form data based on login method
+	// and editing mode.
 	switch ($rxa['method'])
 	{
 		case LOGIN_METHOD_NATIVE:
@@ -1591,24 +1658,6 @@ function formPage($mode, $rxa)
 		}
 	}
 
-	// Load profiles from database.
-	$rxp = $dbconf->queryProfileAll();
-	if ($rxp == false)
-	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
-		else
-			handleError('Database Error: Unable to retrieve required '
-				. $moduleDisplayLower . ' profile data.');
-	}
-
-	// Process profile information into option list format.
-	$optlist = array();
-	foreach ($rxp as $kx => $vx)
-	{
-		$optlist[$vx['name']] = $vx['profileid'];
-	}
-
 	// Hidden field to pass key data
 	if (isset($hideValue))
 	{
@@ -1643,34 +1692,6 @@ function formPage($mode, $rxa)
 		'The numeric user id which uniquely identifies the user.', $default, $key);
 	$uname = generateField(html::TYPE_TEXT, 'username', 'User Name', 6,
 		$rxa['username'], 'The name the user logs in with.', $default, $disable);
-	$profid = array(
-		'type' => html::TYPE_PULLDN,
-		'label' => 'Profile',
-		'default' => $rxa['profileid'],
-		'name' => 'profid',
-		'fsize' => 4,
-		'lsize' => 4,
-		'optlist' => $optlist,
-		'tooltip' => 'The profile that the user is assigned to.',
-		'disable' => $disable,
-	);
-	$method = array(
-		'type' => html::TYPE_PULLDN,
-		'label' => 'Login Method',
-		'default' => $rxa['method'],
-		'name' => 'method',
-		'fsize' => 4,
-		'lsize' => 4,
-		'optlist' => array(
-			'Native' => LOGIN_METHOD_NATIVE,
-			'OAuth' => LOGIN_METHOD_OAUTH,
-			'OpenID' => LOGIN_METHOD_OPENID,
-		),
-		'tooltip' => 'The method that the user uses to login with.',
-		'disable' => $disable,
-		'event' => 'onchange',
-		'action' => 'setHidden()',
-		);
 	$active = generateField(html::TYPE_CHECK, 'active', 'Account Active', 1,
 		$rxa['active'], 'Indicates if the account is active or not.',
 		$default, $disable);

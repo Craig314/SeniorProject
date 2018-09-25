@@ -21,7 +21,7 @@ var hiddenList = [
 var hiddenSelect = 'datatype';
 
 // Performs custom data varification.
-function customVerifyData(item) {
+function customVerifyData(item, mode) {
 	var select;
 	var result;
 

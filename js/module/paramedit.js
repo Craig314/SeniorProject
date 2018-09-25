@@ -8,7 +8,7 @@ Parameter Edit JavaScript File
 */
 
 // Performs custom data varification.
-function customVerifyData(item) {
+function customVerifyData(item, mode) {
 	var select;
 	var result;
 

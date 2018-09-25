@@ -20,7 +20,7 @@ var hiddenSelect = 'method';
 
 // This is called by the verify class in verify.js when the datatype
 // specified is custom.
-function customVerifyData(item) {
+function customVerifyData(item, mode) {
 	var select;
 	var result;
 
@@ -29,11 +29,19 @@ function customVerifyData(item) {
 		case 'Native':
 			switch (item.name) {
 				case 'newpass1':
-					item.noblank = true;
+					if (mode == VERIFY_MODE_INSERT) {
+						item.noblank = true;
+					} else {
+						item.noblank = false;
+					}
 					result = verifyData.customVerify(item);
 					break;
 				case 'newpass2':
-					item.noblank = true;
+					if (mode == VERIFY_MODE_INSERT) {
+						item.noblank = true;
+					} else {
+						item.noblank = false;
+					}
 					result = verifyData.customVerify(item);
 					break;
 				default:
