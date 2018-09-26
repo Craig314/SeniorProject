@@ -36,7 +36,7 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(2, 2, 'server_secure', 'Use HTTPS', '1', 'The flag which indicates that the encrypted HTTPS protocol is to be used.', 1),
 	(3, 1, 'server_http_port', 'HTTP Port Number', '22080', 'The network port number that the application is to use\r\nwhen using the unencrypted HTTP protocol.  Default is\r\n80.', 1),
 	(4, 1, 'server_https_port', 'HTTPS Port Number', '443', 'The network port number that the application is to use\r\nwhen using the encrypted HTTPS protocol. Default is\r\n443.', 1),
-	(10, 1, 'html_default_label_size', 'Default HTML Label Size', '2', 'Default size of field text labels on web forms.', 0),
+	(10, 1, 'html_default_label_size', 'Default HTML Label Size', '3', 'Default size of field text labels on web forms.', 0),
 	(11, 1, 'html_default_field_size', 'Default HTML Field Size', '4', 'Default size of fields on web forms.', 0),
 	(12, 0, 'html_login_page', 'Application Login Page', 'login.php', 'The main login page of the application.  All\r\nunauthenticated users are redirected here.', 0),
 	(13, 0, 'html_banner_page', 'Application Banner Page', 'banner.php', 'The page that is displayed right after the user\r\nis authenticated on the main login page.', 0),
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `flagdesc_core` (
   PRIMARY KEY (`flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the names and descriptions of core system flags from the userdata.profile table.  The flag attribute is the bit position of the flag.';
 
--- Dumping data for table configuration.flagdesc_core: ~6 rows (approximately)
+-- Dumping data for table configuration.flagdesc_core: ~7 rows (approximately)
 /*!40000 ALTER TABLE `flagdesc_core` DISABLE KEYS */;
 INSERT INTO `flagdesc_core` (`flag`, `name`, `description`) VALUES
 	(0, 'Test Flag S1', 'This flag is for testing purposes only&period;'),
@@ -142,22 +142,23 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~11 rows (approximately)
+-- Dumping data for table configuration.module: ~14 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
 	(1, 'Grid Portal', 'Views the available modules in grid format.', 'gridportal.php', 'icon_grid', 1, 1, 1, 0),
 	(2, 'Link Portal', 'Views the available modules in link format.', 'linkportal.php', 'icon_chain2', 1, 1, 1, 0),
 	(3, 'Module Data Editor', 'Edits module data in the database.', 'modedit.php', 'icon_gears', 1, 0, 1, 1),
 	(4, 'Configuration Editor', 'Edits the application configuration parameters&period;&NewLine;This allows inserting and deleting of configuration&NewLine;items in the database&period;', 'configedit.php', 'icon_tools3', 1, 0, 1, 1),
-	(5, 'Parameter Editor', 'Edits the configuration parameter values for the application&period;&NewLine;This only allows changing the configuration parameter values&period;', 'paramedit.php', 'icon_tools4', 1, 0, 1, 0),
-	(6, 'System Flags', 'This module edits the system flags which&NewLine;are used by the various user profiles&period;', 'sysflag.php', 'icon_checklist', 1, 0, 1, 1),
-	(7, 'Application Flags', 'This module edits the application flags which are used by the various user profiles&period;', 'appflag.php', 'icon_checklist', 1, 0, 1, 1),
-	(8, 'File Finder', 'Allows access to the server file system&period;', 'file.php', 'icon_harddisk', 1, 0, 1, 1),
-	(10, 'Change Password', 'Allows a user to change their login password&period;', 'passwd.php', 'icon_padlock', 1, 1, 1, 0),
+	(5, 'System Flags', 'This module edits the system flags which&NewLine;are used by the various user profiles&period;', 'sysflag.php', 'icon_checklist', 1, 0, 1, 1),
+	(6, 'Application Flags', 'This module edits the application flags which are used by the various user profiles&period;', 'appflag.php', 'icon_checklist', 1, 0, 1, 1),
+	(7, 'File Finder', 'Allows access to the server file system&period;', 'file.php', 'icon_harddisk', 1, 0, 1, 1),
+	(10, 'Parameter Editor', 'Edits the configuration parameter values for the application&period;&NewLine;This only allows changing the configuration parameter values&period;', 'paramedit.php', 'icon_tools4', 1, 0, 1, 0),
 	(11, 'Profile Editor', 'Edits the available profiles that defines&NewLine;what access rights a user has&period;', 'profedit.php', 'icon_keys', 1, 0, 1, 0),
 	(12, 'OAuth Provider Edit', 'Edits the known list of external OAuth authentication providers&period;', 'oauthedit.php', 'icon_oauth', 1, 0, 1, 0),
 	(13, 'OpenID Provider Edit', 'Edits the known list of external OpenID authentication providers&period;', 'openidedit.php', 'icon_openid', 1, 0, 1, 0),
-	(14, 'User Editor', 'Edits the user database', 'useredit.php', 'icon_users2', 1, 0, 1, 0);
+	(14, 'User Editor', 'Edits the user database', 'useredit.php', 'icon_users2', 1, 0, 1, 0),
+	(20, 'Change Password', 'Allows a user to change their login password&period;', 'passwd.php', 'icon_padlock', 1, 1, 1, 0),
+	(21, 'User Data Editor', 'Allows the user to edit some of their own information&period;', 'userdata.php', 'icon_user', 1, 1, 1, 0);
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.oauth
@@ -248,10 +249,9 @@ CREATE TABLE IF NOT EXISTS `contact` (
 -- Dumping data for table userdata.contact: ~3 rows (approximately)
 /*!40000 ALTER TABLE `contact` DISABLE KEYS */;
 INSERT INTO `contact` (`userid`, `name`, `haddr`, `maddr`, `email`, `hphone`, `cphone`, `wphone`) VALUES
-	(1, 'Application Vendor', 'SEA-CORE International LTD.', NULL, 'seacoregroup@gmail.com', '', '', ''),
+	(1, 'Application Vendor', 'SEA-CORE International LTD&period;', '', 'seacoregroup&commat;gmail&period;com', '', '', ''),
 	(2, 'Application Admin', 'SEA-CORE International LTD&period;', 'SEA-CORE International LTD&period;', 'seacoregroup&commat;gmail&period;com', '', '', ''),
-	(34, 'Test User', 'Test user for developmental purposes only&period;', 'Test user for developmental purposes only&period;', 'testuser&commat;localhost&period;com', '707-555-3343', '916-555-1212', '916-278-6000'),
-	(324, 'Test User Two', '', '', '', '', '', '');
+	(34, 'Test User', 'Test user for developmental purposes only&period;', 'Test user for developmental purposes only&period;', 'testuser&commat;localhost&period;com', '707-555-3343', '916-555-1212', '916-278-6000');
 /*!40000 ALTER TABLE `contact` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.login
@@ -270,13 +270,12 @@ CREATE TABLE IF NOT EXISTS `login` (
   CONSTRAINT `FK_login_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the user''s login data.';
 
--- Dumping data for table userdata.login: ~4 rows (approximately)
+-- Dumping data for table userdata.login: ~3 rows (approximately)
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
-	(1, 0, 1532714506, 1537516014, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 0, 1532714506, 1537994923, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, NULL, 0, 1536731231, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
-	(34, 0, 1532817751, 1537509577, 0, 1545285599, 'SHA256', 100, 'de8392b2e9263d1e9bee3a93db10da0bf7ce5e4c8c365a9b6acd3c0c02de5f33', '36c24f59957f3a980a837b6daea6522677454bd06e90b20cc51ce93155eba347'),
-	(324, 0, 0, 0, 0, 0, 'SHA256', 100, '59590d7e1f679dde2bc7a373ba5f25f60bf4060540fb50a2841b98a322cd1f71', 'e5bc3e1b91b086fda581afb04f16d32cbd89797adebd2b4b118cbff86675f2e0');
+	(34, 0, 1532817751, 1537509577, 0, 1545285599, 'SHA256', 100, 'de8392b2e9263d1e9bee3a93db10da0bf7ce5e4c8c365a9b6acd3c0c02de5f33', '36c24f59957f3a980a837b6daea6522677454bd06e90b20cc51ce93155eba347');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
 
 -- Dumping structure for table userdata.oauth
@@ -335,13 +334,12 @@ CREATE TABLE IF NOT EXISTS `users` (
   CONSTRAINT `FK_users_profile` FOREIGN KEY (`profileid`) REFERENCES `configuration`.`profile` (`profileid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table maps the user''s login name to their User ID and Profile ID.';
 
--- Dumping data for table userdata.users: ~4 rows (approximately)
+-- Dumping data for table userdata.users: ~3 rows (approximately)
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` (`userid`, `username`, `profileid`, `method`, `active`, `orgid`) VALUES
 	(1, 'vendor', 1, 0, 1, NULL),
 	(2, 'admin', 2, 0, 1, NULL),
-	(34, 'testuser', 435, 0, 1, 'TestUserDeveloper3854755'),
-	(324, 'test2', 435, 0, 1, NULL);
+	(34, 'testuser', 435, 0, 1, 'TestUserDeveloper3854755');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
