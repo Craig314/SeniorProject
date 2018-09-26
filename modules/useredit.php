@@ -59,6 +59,10 @@ const MODE_UPDATE	= 1;
 const MODE_INSERT	= 2;
 const MODE_DELETE	= 3;
 
+// Field check generation data formats.
+const FIELDCHK_JSON		= 0;
+const FIELDCHK_ARRAY	= 1;
+
 // These are flags to indicate what is in the database and what tables
 // are being changed for an update operation.  The following values
 // have the given meanings.
@@ -434,6 +438,10 @@ function updateRecordAction()
 	global $dbuser;
 	global $dbconf;
 
+	// Get the field check data.
+	$fieldCheck = generateFieldCheck(FIELDCHK_ARRAY);
+
+	// Set initial database modes.
 	$dbChangeNative = DBCHG_NONE;
 	$dbChangeOAuth = DBCHG_NONE;
 	$dbChangeOpenId = DBCHG_NONE;
@@ -456,8 +464,7 @@ function updateRecordAction()
 		true, 2147483647, 1);
 	if ($vfystr->errstat())
 		handleError($herr->errorGetMessage());
-	$vfystr->strchk($userid, 'User ID', 'userid', verifyString::STR_PINTEGER,
-		true, 2147483647, 1);
+	$vfystr->fieldchk($fieldCheck, 0, $userid);
 	if ($vfystr->errstat())
 	{
 		$rxe = $herr->errorGetData();
@@ -468,15 +475,10 @@ function updateRecordAction()
 		handleError('Database key mismatch.');
 	
 	// Check the rest of the data.
-	$vfystr->strchk($username, 'Username', 'username', verifyString::STR_USERID,
-		true, $CONFIGVAR['security_username_maxlen']['value'],
-		$CONFIGVAR['security_username_minlen']['value']);
-	$vfystr->strchk($profid, 'Profile ID', 'profid', verifyString::STR_PINTEGER,
-		true, 2147483647, 1);
-	$vfystr->strchk($method, 'Login Method', 'method', verifyString::STR_PINTEGER,
-		true, 2, 0);
-	$vfystr->strchk($username, 'Organization ID', 'orgid', verifyString::STR_USERID,
-		false, 32, 0);
+	$vfystr->fieldchk($fieldCheck, 1, $username);
+	$vfystr->fieldchk($fieldCheck, 3, $profid);
+	$vfystr->fieldchk($fieldCheck, 4, $method);
+	$vfystr->fieldchk($fieldCheck, 2, $orgid);
 	if (!empty($active)) $active = true; else $active = false;
 	if ($vfystr->errstat())
 	{
@@ -515,14 +517,8 @@ function updateRecordAction()
 				}
 				if ($pwdflag != 2)
 				{
-					$res1 = $vfystr->strchk($newpass1, 'New Password', 'newpass1',
-						verifyString::STR_PASSWD, true,
-						$CONFIGVAR['security_passwd_maxlen']['value'],
-						$CONFIGVAR['security_passwd_minlen']['value']);
-					$res2 = $vfystr->strchk($newpass2, 'New Password Again', 'newpass2',
-						verifyString::STR_PASSWD, true,
-						$CONFIGVAR['security_passwd_maxlen']['value'],
-						$CONFIGVAR['security_passwd_minlen']['value']);
+					$res1 = $vfystr->fieldchk($fieldChk, 6, $newpass1);
+					$res2 = $vfystr->fieldchk($fieldChk, 7, $newpass2);
 					if ($res1 == false || $res2 == false) $pwdflag = 2;
 					unset($res1, $res2);
 				}
@@ -544,8 +540,7 @@ function updateRecordAction()
 			break;
 		case LOGIN_METHOD_OAUTH:
 			$provider = getPostValue('oaprovider');
-			$result = $vfystr->strchk($provider, 'Provider', 'oaprovider',
-				verifyString::STR_PINTEGER, true, 2147483647, 1);
+			$result = $vfystr->fieldchk($fieldChk, 8, $provider);
 			if ($result)
 			{
 				// We have to do a database read to make sure the provider
@@ -556,8 +551,7 @@ function updateRecordAction()
 			break;
 		case LOGIN_METHOD_OPENID:
 			$provider = getPostValue('opprovider');
-			$result = $vfystr->strchk($provider, 'Provider', 'opprovider',
-				verifyString::STR_PINTEGER, true, 2147483647, 1);
+			$result = $vfystr->fieldchk($fieldChk, 9, $provider);
 			if ($result)
 			{
 				// We have to do a database read to make sure the provider
@@ -565,8 +559,7 @@ function updateRecordAction()
 				checkOpenIdProvider($provider);
 			}
 			$opident = getPostValue('opident');
-			$vfystr->strchk($opident, 'OpenID Identifier', 'opident',
-				verifyString::STR_URI, true, 512, 1);
+			$vfystr->fieldchk($fieldChk, 10, $opident);
 			$dbChangeOpenId = DBCHG_UPD;
 			break;
 		default:
@@ -586,13 +579,13 @@ function updateRecordAction()
 	$wphone = getPostValue('wphone');
 
 	// Check contact data fields.
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, false, 50, 0);
-	$vfystr->strchk($haddr, 'Home Address', 'haddr', verifyString::STR_ADDR, false, 100, 0);
-	$vfystr->strchk($maddr, 'Mailing Address', 'maddr', verifyString::STR_ADDR, false, 100, 0);
-	$vfystr->strchk($email, 'EMail Address', 'email', verifyString::STR_EMAIL, false, 50, 0);
-	$vfystr->strchk($hphone, 'Home Phone', 'hphone', verifyString::STR_PHONE, false, 30, 0);
-	$vfystr->strchk($cphone, 'Cell Phone', 'cphone', verifyString::STR_PHONE, false, 30, 0);
-	$vfystr->strchk($wphone, 'Work Phone', 'wphone', verifyString::STR_PHONE, false, 30, 0);
+	$vfystr->fieldchk($fieldCheck, 11, $name);
+	$vfystr->fieldchk($fieldCheck, 12, $haddr);
+	$vfystr->fieldchk($fieldCheck, 13, $maddr);
+	$vfystr->fieldchk($fieldCheck, 14, $email);
+	$vfystr->fieldchk($fieldCheck, 15, $hphone);
+	$vfystr->fieldchk($fieldCheck, 16, $cphone);
+	$vfystr->fieldchk($fieldCheck, 17, $wphone);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -885,6 +878,8 @@ function insertRecordAction()
 	global $dbuser;
 	global $dbcore;
 
+	$fieldCheck = generateFieldCheck(FIELDCHK_ARRAY);
+
 	// Get identiy data...
 	$userid = getPostValue('userid');
 	$username = getPostValue('username');
@@ -894,19 +889,12 @@ function insertRecordAction()
 	$active = getPostValue('active');
 
 	// ...and check it.
-	$vfystr->strchk($userid, 'User ID', 'userid', verifyString::STR_PINTEGER,
-		true, 2147483647, 1);
-	$vfystr->strchk($username, 'Username', 'username', verifyString::STR_USERID,
-		true, $CONFIGVAR['security_username_maxlen']['value'],
-		$CONFIGVAR['security_username_minlen']['value']);
-	$vfystr->strchk($profid, 'Profile ID', 'profid', verifyString::STR_PINTEGER,
-		true, 2147483647, 1);
-	$vfystr->strchk($method, 'Login Method', 'method', verifyString::STR_PINTEGER,
-		true, 2, 0);
-	$vfystr->strchk($username, 'Organization ID', 'orgid', verifyString::STR_USERID,
-		false, 32, 0);
+	$vfystr->fieldchk($fieldCheck, 0, $userid);
+	$vfystr->fieldchk($fieldCheck, 1, $username);
+	$vfystr->fieldchk($fieldCheck, 3, $profid);
+	$vfystr->fieldchk($fieldCheck, 4, $method);
+	$vfystr->fieldchk($fieldCheck, 2, $orgid);
 	if (!empty($active)) $active = true; else $active = false;
-
 	
 	// We need to make sure that we have a valid profile Id.
 	checkProfileId($profid);
@@ -935,14 +923,8 @@ function insertRecordAction()
 			}
 			if ($pwdflag != 2)
 			{
-				$res1 = $vfystr->strchk($newpass1, 'New Password', 'newpass1',
-					verifyString::STR_PASSWD, true,
-					$CONFIGVAR['security_passwd_maxlen']['value'],
-					$CONFIGVAR['security_passwd_minlen']['value']);
-				$res2 = $vfystr->strchk($newpass2, 'New Password Again', 'newpass2',
-					verifyString::STR_PASSWD, true,
-					$CONFIGVAR['security_passwd_maxlen']['value'],
-					$CONFIGVAR['security_passwd_minlen']['value']);
+				$res1 = $vfystr->fieldchk($fieldCheck, 6, $newpass1);
+				$res2 = $vfystr->fieldchk($fieldCheck, 7, $newpass2);
 				if ($res1 == false || $res2 == false) $pwdflag = 2;
 				unset($res1, $res2);
 			}
@@ -980,8 +962,7 @@ function insertRecordAction()
 		case LOGIN_METHOD_OAUTH:
 			// OAuth Provider
 			$provider = getPostValue('oaprovider');
-			$result = $vfystr->strchk($provider, 'Provider', 'oaprovider',
-				verifyString::STR_PINTEGER, true, 2147483647, 0);
+			$result = $vfystr->fieldchk($fieldCheck, 8, $provider);
 			if ($result)
 			{
 				// We have to do a database read to make sure the provider
@@ -1002,8 +983,7 @@ function insertRecordAction()
 		case LOGIN_METHOD_OPENID:
 			// OpenID Provider
 			$provider = getPostValue('opprovider');
-			$result = $vfystr->strchk($provider, 'Provider', 'opprovider',
-				verifyString::STR_PINTEGER, true, 2147483647, 1);
+			$result = $vfystr->fieldchk($fieldCheck, 9, $provider);
 			if ($result)
 			{
 				// We have to do a database read to make sure the provider
@@ -1013,8 +993,7 @@ function insertRecordAction()
 
 			// OpenID Identity
 			$opident = getPostValue('opident');
-			$vfystr->strchk($opident, 'OpenID Identifier', 'opident',
-				verifyString::STR_URI, true, 512, 1);
+			$vfystr->fieldchk($fieldCheck, 10, $opident);
 
 			// Default Values
 			$opissue = 0;
@@ -1037,13 +1016,13 @@ function insertRecordAction()
 	$wphone = getPostValue('wphone');
 
 	// Check contact data fields.
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, false, 50, 0);
-	$vfystr->strchk($haddr, 'Home Address', 'haddr', verifyString::STR_ADDR, false, 100, 0);
-	$vfystr->strchk($maddr, 'Mailing Address', 'maddr', verifyString::STR_ADDR, false, 100, 0);
-	$vfystr->strchk($email, 'EMail Address', 'email', verifyString::STR_EMAIL, false, 50, 0);
-	$vfystr->strchk($hphone, 'Home Phone', 'hphone', verifyString::STR_PHONE, false, 30, 0);
-	$vfystr->strchk($cphone, 'Cell Phone', 'cphone', verifyString::STR_PHONE, false, 30, 0);
-	$vfystr->strchk($wphone, 'Work Phone', 'wphone', verifyString::STR_PHONE, false, 30, 0);
+	$vfystr->fieldchk($fieldCheck, 11, $name);
+	$vfystr->fieldchk($fieldCheck, 12, $haddr);
+	$vfystr->fieldchk($fieldCheck, 13, $maddr);
+	$vfystr->fieldchk($fieldCheck, 14, $email);
+	$vfystr->fieldchk($fieldCheck, 15, $hphone);
+	$vfystr->fieldchk($fieldCheck, 16, $cphone);
+	$vfystr->fieldchk($fieldCheck, 17, $wphone);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -1156,7 +1135,7 @@ function deleteRecordAction()
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
-	global $database;
+	global $dbcore;
 	global $dbuser;
 
 	// Gather data...
@@ -1201,6 +1180,9 @@ function deleteRecordAction()
 	if ($rxLogin !== false) $dbPresentNative = true; else $dbPresentNative = false;
 	if ($rxOAuth !== false) $dbPresentOAuth = true; else $dbPresentOAuth = false;
 	if ($rxOpenId !== false) $dbPresentOpenId = true; else $dbPresentOpenId = false;
+	if ($rxContact !== false) $dbPresentContact = true; else $dbPresentContact = false;
+	if ($rxUsers !== false) $dbPresentUsers = true; else $dbPresentUsers = false;
+
 
 	// This must be done as a transaction because we are updating
 	// multiple tables
@@ -1214,21 +1196,38 @@ function deleteRecordAction()
 	}
 	$result = true;
 
+	// Removes native login information, if present...
 	if ($dbPresentNative)
 	{
 		$res = $dbuser->deleteLogin($userid);
 		$result = ($res) ? $result : false;
 	}
 
+	// Removes OAuth login information, if present...
 	if ($dbPresentOAuth)
 	{
 		$res = $dbuser->deleteOAuth($userid);
 		$result = ($res) ? $result : false;
 	}
 
+	// Removes OpenID login information, if present...
 	if ($dbPresentOpenId)
 	{
 		$res = $dbuser->deleteOpenId($userid);
+		$result = ($res) ? $result : false;
+	}
+
+	// Removes contact information, if present...
+	if ($dbPresentContact)
+	{
+		$res = $dbuser->deleteContact($userid);
+		$result = ($res) ? $result : false;
+	}
+
+	// Remove user login information, if present...
+	if ($dbPresentUsers)
+	{
+		$res = $dbuser->deleteUsers($userid);
 		$result = ($res) ? $result : false;
 	}
 
@@ -1372,7 +1371,6 @@ function formPage($mode, $rxa)
 			'label' => 'Provider',
 			'name' => 'oaprovider',
 			'fsize' => 4,
-			'lsize' => 2,
 			'optlist' => $oaOptlist,
 			'tooltip' => 'The OAuth provider name.',
 			'disable' => $disable,
@@ -1390,7 +1388,7 @@ function formPage($mode, $rxa)
 		{
 			foreach($rxpo as $kx => $vx)
 			{
-				$opPotlist[$vx['name']] = $vx['provider'];
+				$opOptlist[$vx['name']] = $vx['provider'];
 			}
 		}
 		$opProviderList = array(
@@ -1398,7 +1396,6 @@ function formPage($mode, $rxa)
 			'label' => 'Provider',
 			'name' => 'opprovider',
 			'fsize' => 4,
-			'lsize' => 2,
 			'optlist' => $opOptlist,
 			'tooltip' => 'The OAuth provider name.',
 			'disable' => $disable,
@@ -1409,7 +1406,6 @@ function formPage($mode, $rxa)
 			'default' => $rxa['profileid'],
 			'name' => 'profid',
 			'fsize' => 4,
-			'lsize' => 2,
 			'optlist' => $profileList,
 			'tooltip' => 'The profile that the user is assigned to.',
 			'disable' => $disable,
@@ -1420,7 +1416,6 @@ function formPage($mode, $rxa)
 			'default' => $rxa['method'],
 			'name' => 'method',
 			'fsize' => 4,
-			'lsize' => 2,
 			'optlist' => array(
 				'Native' => LOGIN_METHOD_NATIVE,
 				'OAuth' => LOGIN_METHOD_OAUTH,
@@ -2003,13 +1998,14 @@ function checkProfileId($profid)
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck()
+function generateFieldCheck($returnType = 0)
 {
 	global $CONFIGVAR;
 	global $vfystr;
 
 	$data = array(
 		0 => array(
+			'dispname' => 'User ID',
 			'name' => 'userid',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
@@ -2017,6 +2013,7 @@ function generateFieldCheck()
 			'min' => 1,
 		),
 		1 => array(
+			'dispname' => 'Username',
 			'name' => 'username',
 			'type' => $vfystr::STR_USERID,
 			'noblank' => true,
@@ -2024,6 +2021,7 @@ function generateFieldCheck()
 			'min' => $CONFIGVAR['security_username_minlen']['value'],
 		),
 		2 => array(
+			'dispname' => 'Organization ID',
 			'name' => 'orgid',
 			'type' => $vfystr::STR_USERID,
 			'noblank' => false,
@@ -2031,6 +2029,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		3 => array(
+			'dispname' => 'Profile ID',
 			'name' => 'profid',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
@@ -2038,6 +2037,7 @@ function generateFieldCheck()
 			'min' => 1,
 		),
 		4 => array(
+			'dispname' => 'Login Method',
 			'name' => 'method',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
@@ -2045,6 +2045,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		5 => array(
+			'dispname' => 'Account Active',
 			'name' => 'active',
 			'type' => $vfystr::STR_NONE,
 			'noblank' => false,
@@ -2052,6 +2053,7 @@ function generateFieldCheck()
 			'min' => 1,
 		),
 		6 => array(
+			'dispname' => 'New Password',
 			'name' => 'newpass1',
 			'type' => $vfystr::STR_CUSTOM,
 			'ctype' => $vfystr::STR_PASSWD,
@@ -2060,6 +2062,7 @@ function generateFieldCheck()
 			'min' => $CONFIGVAR['security_passwd_minlen']['value'],
 		),
 		7 => array(
+			'dispname' => 'New Password Again',
 			'name' => 'newpass2',
 			'type' => $vfystr::STR_CUSTOM,
 			'ctype' => $vfystr::STR_PASSWD,
@@ -2068,6 +2071,7 @@ function generateFieldCheck()
 			'min' => $CONFIGVAR['security_passwd_minlen']['value'],
 		),
 		8 => array(
+			'dispname' => 'Provider',
 			'name' => 'oaprovider',
 			'type' => $vfystr::STR_CUSTOM,
 			'ctype' => $vfystr::STR_PINTEGER,
@@ -2076,6 +2080,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		9 => array(
+			'dispname' => 'Provider',
 			'name' => 'opprovider',
 			'type' => $vfystr::STR_CUSTOM,
 			'ctype' => $vfystr::STR_PINTEGER,
@@ -2084,6 +2089,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		10 => array(
+			'dispname' => 'OpenID Identifier',
 			'name' => 'opident',
 			'type' => $vfystr::STR_CUSTOM,
 			'ctype' => $vfystr::STR_URI,
@@ -2092,6 +2098,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		11 => array(
+			'dispname' => 'Name',
 			'name' => 'name',
 			'type' => $vfystr::STR_NAME,
 			'noblank' => true,
@@ -2099,6 +2106,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		12 => array(
+			'dispname' => 'Home Address',
 			'name' => 'haddr',
 			'type' => $vfystr::STR_ADDR,
 			'noblank' => false,
@@ -2106,6 +2114,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		13 => array(
+			'dispname' => 'Mailing Address',
 			'name' => 'maddr',
 			'type' => $vfystr::STR_ADDR,
 			'noblank' => false,
@@ -2113,6 +2122,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		14 => array(
+			'dispname' => 'EMail Address',
 			'name' => 'email',
 			'type' => $vfystr::STR_EMAIL,
 			'noblank' => false,
@@ -2120,6 +2130,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		15 => array(
+			'dispname' => 'Home Phone',
 			'name' => 'hphone',
 			'type' => $vfystr::STR_PHONE,
 			'noblank' => false,
@@ -2127,6 +2138,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		16 => array(
+			'dispname' => 'Cell Phone',
 			'name' => 'cphone',
 			'type' => $vfystr::STR_PHONE,
 			'noblank' => false,
@@ -2134,6 +2146,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		17 => array(
+			'dispname' => 'Work Phone',
 			'name' => 'wphone',
 			'type' => $vfystr::STR_PHONE,
 			'noblank' => false,
@@ -2141,7 +2154,19 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 	);
-	$fieldcheck = json_encode($data);
+	switch ($returnType)
+	{
+		case FIELDCHK_JSON:
+			$fieldcheck = json_encode($data);
+			break;
+		case FIELDCHK_ARRAY:
+			$fieldcheck = $data;
+			break;
+		default:
+			handleError('Internal Programming Error: CODE XY039223<br>' .
+				'Contact your administrator.');
+			break;
+	}
 	return $fieldcheck;
 }
 

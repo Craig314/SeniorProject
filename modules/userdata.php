@@ -4,10 +4,7 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application Parameter Editor
-
-This edits the configuration parameters that controls application
-function.
+PHP Web Application Module User Data Editor
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -28,24 +25,24 @@ the features/abilities they represent are being used:
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = 'paramedit.php';
+$moduleFilename = 'userdata.php';
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
-$moduleTitle = 'Parameter Editor';
+$moduleTitle = 'User Data Editor';
 
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 10;
+$moduleId = 21;
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
-$moduleDisplayUpper = 'Parameter';
+$moduleDisplayUpper = 'User';
 
 // The lowercase short display name of the module.  This shows up in
 // various messages.
-$moduleDisplayLower = 'parameter';
+$moduleDisplayLower = 'user';
 
 // Set to true if this is a system module.
 $moduleSystem = true;
@@ -57,20 +54,14 @@ $modulePermissions = array();
 
 
 // These are the data editing modes.
-const MODE_VIEW		= 0;
+const MODE_VIEW	= 0;
 const MODE_UPDATE	= 1;
 const MODE_INSERT	= 2;
 const MODE_DELETE	= 3;
 
-// These are the configuration data types in the database.
-const DBTYPE_STRING		= 0;
-const DBTYPE_INTEGER	= 1;
-const DBTYPE_BOOLEAN	= 2;
-const DBTYPE_LONGSTR	= 3;
-const DBTYPE_TIMEDISP	= 10;
-
-// Other misculanious constants.
-const DBSTR_LENGTH		= 20;
+// Field check generation data formats.
+const FIELDCHK_JSON		= 0;
+const FIELDCHK_ARRAY	= 1;
 
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
@@ -80,6 +71,7 @@ $htmlInjectFile = false;
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
+require_once BASEDIR . 'dbaseuser.php';
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -117,11 +109,8 @@ function loadInitialContent()
 		// use nested associtive arrays to group buttons together.
 		// $funcBar = array();
 		$funcBar = array(
-			array(
-				'Update' => 'updateDataItem',
-			),
+			'Update' => 'updateDataItem',
 			'View' => 'viewDataItem',
-			'List' => 'listDataItems',
 		);
 
 		// jsfiles is an associtive array which contains additional
@@ -129,7 +118,6 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/baseline/common.js',
-			'/js/module/paramedit.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -139,18 +127,20 @@ function loadInitialContent()
 
 		// The final option, htmlFlags, is an array that holds the names
 		// of supported options.  Currently, those options are checkbox,
-		// datepick, and tooltip.
+		// datepick, tooltip, and type2.
 		// $htmlFlags= array(
 		// 	'checkbox',
 		// 	'datepick',
 		// 	'tooltip',
+		//	'type2',
 		// );
 		$htmlFlags = array(
 			'tooltip',
 		);
 
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
-		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
+		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags,
+		//	$funcbar2, $funcbar3);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
 			$left, '', $funcBar, $jsFiles, '', $htmlFlags);
 	}
@@ -171,78 +161,8 @@ function loadInitialContent()
 function loadAdditionalContent()
 {
 	global $baseUrl;
-	global $dbconf;
-	global $vendor;
 
-	// Get data from database.
-	$rxa = $dbconf->queryConfigAll();
-	if ($rxa == false)
-	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
-		else
-			handleError('There are no ' . $moduleDisplayLower . 's in the database to edit.');
-	}
-
-	// Generate Selection Table.
-	$list = array(
-		'type' => html::TYPE_RADTABLE,
-		'name' => 'select_item',
-		'clickset' => true,
-		'condense' => true,
-		'hover' => true,
-		'titles' => array(
-			'Name',
-			'ID',
-			'Type',
-			'Value',
-		),
-		'tdata' => array(),
-		'tooltip' => array(),
-	);
-	foreach ($rxa as $kx => $vx)
-	{
-		if (!$vendor)
-		{
-			// The administrator does not have access to all settings.
-			if ($vx['admin'] == 0) continue;
-		}
-		$tdata = array(
-			$vx['setting'],
-			$vx['dispname'],
-			$vx['setting'],
-			convertType($vx['type']),
-			convertLongString($vx['type'], $vx['value']),
-		);
-		array_push($list['tdata'], $tdata);
-		array_push($list['tooltip'], $vx['description']);
-	}
-
-	// Generate rest of page.
-	$data = array(
-		array(
-			'type' => html::TYPE_HEADING,
-			'message1' => 'Parameter Editor',
-			'warning' => 'Changing values here can render the<br>application unusable.',
-		),
-		array('type' => html::TYPE_TOPB1),
-		array('type' => html::TYPE_WD75OPEN),
-		array(
-			'type' => html::TYPE_FORMOPEN,
-			'name' => 'select_table',
-		),
-
-		// Enter custom data here.
-		$list,
-
-		array('type' => html::TYPE_FORMCLOSE),
-		array('type' => html::TYPE_WDCLOSE),
-		array('type' => html::TYPE_BOTB1)
-	);
-
-	// Render
-	echo html::pageAutoGenerate($data);
-
+	viewRecordView();
 	exit(0);
 }
 
@@ -273,16 +193,18 @@ function commandProcessor($commandId)
 
 // Helper function for the view functions below that loads information
 // from the database and check for errors.
+// XXX: Requires customization.
 function databaseLoad()
 {
 	global $herr;
 	global $moduleDisplayLower;
-	global $dbconf;
+	global $dbuser;
 
-	$key = getPostValue('select_item', 'hidden');
-	if ($key == NULL)
-		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
-	$rxa = $dbconf->queryConfig($key);
+	// Get current userid.
+	$key = $_SESSION['userId'];
+
+	// Query database.
+	$rxa = $dbuser->queryContact($key);
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
@@ -291,6 +213,21 @@ function databaseLoad()
 			handleError('Database Error: Unable to retrieve required ' .
 				$moduleDisplayLower . ' data.');
 	}
+	$rxb = $dbuser->queryUsersUserId($key);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessages());
+		else
+			handleError('Database Error: Unable to retrieve required ' .
+				$moduleDisplayLower . ' data.');
+	}
+
+	// Merge results.
+	$rxa['userid'] = $key;
+	$rxa['username'] = $rxb['username'];
+	$rxa['orgid'] = $rxb['orgid'];
+
 	return $rxa;
 }
 
@@ -309,6 +246,7 @@ function updateRecordView()
 }
 
 // Updates the record in the database.
+// XXX: Requires customization.
 function updateRecordAction()
 {
 	global $ajax;
@@ -317,60 +255,39 @@ function updateRecordAction()
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
-	global $dbconf;
+	global $dbuser;
 
-	// Get data
-	$key = getPostValue('hidden');
-	$id = getPostValue('setting');
+	// Get field data.
+	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
 
-	// Check key data.
-	if ($key == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
-	if ($id == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
-	if (!is_numeric($key))
-		handleError('Malformed key sequence.');
-	if (!is_numeric($id))
-		handleError('Malformed key sequence.');
-	if ($key != $id)
-		handleError('Database key mismatch.');
+	// Get key data
+	$key = $_SESSION['userId'];
 
-	// Launch database query.
-	$rxa = $dbconf->queryConfig($key);
+	// Get user information from database.
+	$rxa = $dbuser->queryContact($key);
 	if ($rxa == false)
 	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+		if ($herr->checkState() == true)
+			handleError($herr->errorGetMessage());
 		else
-			handleError('Database Error: Unable to read configuration ' .
-				'setting. Key = ' . $key);
+			handleError('Stored Data Conflict: Missing user contact record.');
 	}
 
-	// Get value data.
-	$value = getPostValue('datavalue');
+	$name = $rxa['name'];
+	$haddr = getPostValue('haddr');
+	$maddr = getPostValue('maddr');
+	$email = getPostValue('email');
+	$hphone = getPostValue('hphone');
+	$cphone = getPostValue('cphone');
+	$wphone = getPostValue('wphone');
 
-	// Check mandatory fields.
-	switch ($rxa['type'])
-	{
-		case DBTYPE_STRING:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_ASCII, true, 512, 1);
-			break;
-		case DBTYPE_INTEGER:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_INTEGER, true);
-			break;
-		case DBTYPE_BOOLEAN:
-			if (!empty($value)) $value = 1; else $value = 0;
-			break;
-		case DBTYPE_LONGSTR:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_ASCII, true, 512, 1);
-			break;
-		case DBTYPE_TIMEDISP:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_TIMEDISP, true, 6, 5);
-			break;
-		default:
-			handleError('Invalid datatype from database detected.');
-			break;
-	}
+	// Check field data.
+	$vfystr->fieldchk($fieldData, 0, $haddr);
+	$vfystr->fieldchk($fieldData, 1, $maddr);
+	$vfystr->fieldchk($fieldData, 2, $email);
+	$vfystr->fieldchk($fieldData, 3, $hphone);
+	$vfystr->fieldchk($fieldData, 4, $cphone);
+	$vfystr->fieldchk($fieldData, 5, $wphone);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -382,9 +299,18 @@ function updateRecordAction()
 			exit(1);
 		}
 	}
+
+	// Safely encode all strings to prevent XSS attacks.
+	$haddr = safeEncodeString($haddr);
+	$maddr = safeEncodeString($maddr);
+	$email = safeEncodeString($email);
+	$hphone = safeEncodeString($hphone);
+	$cphone = safeEncodeString($cphone);
+	$wphone = safeEncodeString($wphone);
 	
 	// We are good, update the record
-	$result = $dbconf->updateConfigValue($key, $value);
+	$result = $dbuser->updateContact($key, $name, $haddr, $maddr, $email,
+		$hphone, $wphone, $cphone);
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -393,10 +319,6 @@ function updateRecordAction()
 			handleError('Database: Record update failed. Key = ' . $key);
 	}
 	sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
-
-	// Reload the shared memory for configuration.
-	processSharedMemoryReload();
-
 	exit(0);
 }
 
@@ -413,22 +335,20 @@ function formPage($mode, $rxa)
 	{
 		case MODE_VIEW:			// View
 			$msg1 = 'Viewing ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['dispname'];
+			$msg2 = $rxa['username'];
 			$warn = '';
-			$btnset = html::BTNTYP_VIEW;
+			$btnset = html::BTNTYP_NONE;
 			$action = '';
-			$hideValue = $rxa['setting'];
 			$disable = true;
 			$default = true;
 			$key = true;
 			break;
 		case MODE_UPDATE:		// Update
 			$msg1 = 'Updating ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['dispname'];
-			$warn = 'Changing a setting can make the application unusable.';
+			$msg2 = $rxa['username'];
+			$warn = '';
 			$btnset = html::BTNTYP_UPDATE;
 			$action = 'submitUpdate()';
-			$hideValue = $rxa['setting'];
 			$disable = false;
 			$default = true;
 			$key = true;
@@ -438,61 +358,34 @@ function formPage($mode, $rxa)
 			break;
 	}
 
-	// Hidden field to pass key data
-	if (!empty($hideValue))
-	{
-		$hidden = array(
-			'type' => html::TYPE_HIDE,
-			'fname'=> 'hiddenForm',
-			'name' => 'hidden',
-			'data' => $hideValue,
-		);
-	}
-	else $hidden = array();
-
-	// Load $rxa with dummy values for insert mode.
-	if ($mode == MODE_INSERT)
-	{
-		// Variable $rxa is null when the exit mode is insert.
-		// Datafill this array with dummy values to prevent PHP
-		// from issuing errors.
-		$rxa = array(
-			'' => '',
-		);
-	}
-
 	// Custom field rendering code
-	$setting = generateField(html::TYPE_TEXT, 'setting', 'Setting Number', 2,
-		$rxa['setting'], 'The setting ID index.', true, true);
-	$intname = generateField(html::TYPE_TEXT, 'intname', 'Internal Name', 6,
-		$rxa['name'], 'The internal name of the setting.', true, true);
-	$dispname = generateField(html::TYPE_TEXT, 'dispname', 'Display Name', 6,
-		$rxa['dispname'], 'The display name of the setting.', true, true);
-	$description = generateField(html::TYPE_AREA, 'description', 'Description', 6,
-		$rxa['description'], 'The long description of the setting.', true, true);
-	$description['rows'] = 5;
-	$datatype = generateField(html::TYPE_TEXT, 'datatype', 'Value Type', 4,
-		convertType($rxa['type']), 'The value data type.', true, true);
-	switch ($rxa['type'])
-	{
-		case DBTYPE_LONGSTR:
-			$value = generateField(html::TYPE_AREA, 'datavalue', 'Value', 6,
-				$rxa['value'], 'The setting\'s value.', $default, $disable);
-			$value['rows'] = 5;
-			break;
-		case DBTYPE_BOOLEAN:
-			$value = generateField(html::TYPE_CHECK, 'datavalue', 'Value', 1,
-				$rxa['value'], 'The setting\'s value.', $default, $disable);
-			break;
-		default:
-			$value = generateField(html::TYPE_TEXT, 'datavalue', 'Value', 6,
-				$rxa['value'], 'The setting\'s value.', $default, $disable);
-			break;
-	}
+	$userid = generateField(html::TYPE_TEXT, 'userid', 'User ID', 3, $rxa['userid'],
+		'The numeric user id which uniquely identifies the user.', true, true);
+	$uname = generateField(html::TYPE_TEXT, 'username', 'User Name', 6,
+		$rxa['username'], 'The name the user logs in with.', true, true);
+	$orgid = generateField(html::TYPE_TEXT, 'orgid', 'Organization ID', 6,
+		$rxa['orgid'], 'The organizational ID the user has been assigned.' .
+		'<br>This is different from the user ID.', true, true);
+	$name = generateField(html::TYPE_TEXT, 'name', 'Name', 6, $rxa['name'],
+		'The user\'s real name.', true, true);
+	$haddr = generateField(html::TYPE_AREA, 'haddr', 'Home Address', 6,
+		$rxa['haddr'], 'The user\'s home address.', $default, $disable);
+	$haddr['rows'] = 5;
+	$maddr = generateField(html::TYPE_AREA, 'maddr', 'Mailing Address', 6,
+		$rxa['maddr'], 'The user\'s mailing address.', $default, $disable);
+	$maddr['rows'] = 5;
+	$email = generateField(html::TYPE_TEXT, 'email', 'E-Mail Address', 6,
+		$rxa['email'], 'The user\'s e-mail address.', $default, $disable);
+	$hphone = generateField(html::TYPE_TEXT, 'hphone', 'Home Phone Number', 4,
+		$rxa['hphone'], 'The user\'s home phone number', $default, $disable);
+	$cphone = generateField(html::TYPE_TEXT, 'cphone', 'Mobile Phone Number', 4,
+		$rxa['cphone'], 'The user\'s mobile phone number', $default, $disable);
+	$wphone = generateField(html::TYPE_TEXT, 'wphone', 'Work Phone Number', 4,
+		$rxa['wphone'], 'The user\'s work phone number', $default, $disable);
+
 
 	// Build out the form array.
 	$data = array(
-		$hidden,
 		array(
 			'type' => html::TYPE_HEADING,
 			'message1' => $msg1,
@@ -509,28 +402,25 @@ function formPage($mode, $rxa)
 		// Enter custom field data here.
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Key',
+			'name' => 'Identification',
 		),
-		$setting,
+		$userid,
+		$uname,
+		$orgid,
 		array(
 			'type' => html::TYPE_FSETCLOSE,
 		),
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Description',
+			'name' => 'Contact',
 		),
-		$dispname,
-		$intname,
-		$description,
-		array(
-			'type' => html::TYPE_FSETCLOSE,
-		),
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Data',
-		),
-		$datatype,
-		$value,
+		$name,
+		$haddr,
+		$maddr,
+		$email,
+		$hphone,
+		$cphone,
+		$wphone,
 		array(
 			'type' => html::TYPE_FSETCLOSE,
 		),
@@ -549,74 +439,78 @@ function formPage($mode, $rxa)
 
 	// Render
 	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
-		generateFieldCheck($rxa['type']));
-}
-
-// Converts type numbers into names.
-function convertType($type)
-{
-	switch ($type)
-	{
-		case DBTYPE_STRING:
-			return 'String';
-			break;
-		case DBTYPE_INTEGER:
-			return 'Integer';
-			break;
-		case DBTYPE_BOOLEAN:
-			return 'Boolean';
-			break;
-		case DBTYPE_LONGSTR:
-			return 'Long String';
-			break;
-		case DBTYPE_TIMEDISP:
-			return 'Time Displacement';
-			break;
-		default:
-			return 'Unknown';
-			break;
-	}
-}
-
-// Converts long string values to shorter strings for display.
-function convertLongString($type, $value)
-{
-	if ($type == DBTYPE_LONGSTR)
-	{
-		$len = strlen($value);
-		$data = '';
-		if ($len > DBSTR_LENGTH)
-		{
-			for ($i = 0; $i < DBSTR_LENGTH; $i++)
-			{
-				$data .= $value[$i];
-			}
-			$data .= '...';
-		}
-		else $data = $value;
-		return $data;
-	}
-	return $value;
+		generateFieldCheck());
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck($datatype)
+function generateFieldCheck($returnType = 0)
 {
 	global $CONFIGVAR;
 	global $vfystr;
 
 	$data = array(
 		0 => array(
-			'name' => 'datavalue',
-			'type' => $vfystr::STR_CUSTOM,
-			'ctype' => $vfystr::STR_NONE,
+			'dispname' => 'Home Address',
+			'name' => 'haddr',
+			'type' => $vfystr::STR_ADDR,
 			'noblank' => false,
-			'max' => 0,
-			'min' => 1,
-			'dtype' => $datatype,	// Custom for this module only.
+			'max' => 100,
+			'min' => 0,
+		),
+		1 => array(
+			'dispname' => 'Mailing Address',
+			'name' => 'maddr',
+			'type' => $vfystr::STR_ADDR,
+			'noblank' => false,
+			'max' => 100,
+			'min' => 0,
+		),
+		2 => array(
+			'dispname' => 'EMail Address',
+			'name' => 'email',
+			'type' => $vfystr::STR_EMAIL,
+			'noblank' => false,
+			'max' => 50,
+			'min' => 0,
+		),
+		3 => array(
+			'dispname' => 'Home Phone',
+			'name' => 'hphone',
+			'type' => $vfystr::STR_PHONE,
+			'noblank' => false,
+			'max' => 30,
+			'min' => 0,
+		),
+		4 => array(
+			'dispname' => 'Cell Phone',
+			'name' => 'cphone',
+			'type' => $vfystr::STR_PHONE,
+			'noblank' => false,
+			'max' => 30,
+			'min' => 0,
+		),
+		5 => array(
+			'dispname' => 'Work Phone',
+			'name' => 'wphone',
+			'type' => $vfystr::STR_PHONE,
+			'noblank' => false,
+			'max' => 30,
+			'min' => 0,
 		),
 	);
-	$fieldcheck = json_encode($data);
+	switch ($returnType)
+	{
+		case FIELDCHK_JSON:
+			$fieldcheck = json_encode($data);
+			break;
+		case FIELDCHK_ARRAY:
+			$fieldcheck = $data;
+			break;
+		default:
+			handleError('Internal Programming Error: CODE XY039223<br>' .
+				'Contact your administrator.');
+			break;
+	}
 	return $fieldcheck;
 }
 

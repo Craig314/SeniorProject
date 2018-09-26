@@ -711,7 +711,6 @@ function formPage($mode, $rxa)
 			'default' => $rxa['module'],
 			'name' => 'module',
 			'fsize' => 4,
-			'lsize' => 3,
 			'optlist' => $fileList,
 			'tooltip' => 'The module that the provider communicates with.',
 			'disable' => $disable,
@@ -733,7 +732,6 @@ function formPage($mode, $rxa)
 			'default' => $rxa['authtype'],
 			'name' => 'authtype',
 			'fsize' => 3,
-			'lsize' => 3,
 			'optlist' => array(
 				'Auth Code' => OAUTH_AUTHCODE,
 				'Implicit' => OAUTH_IMPLICIT,
@@ -760,7 +758,6 @@ function formPage($mode, $rxa)
 			'default' => $rxa['pkcemethod'],
 			'name' => 'pkcemethod',
 			'fsize' => 3,
-			'lsize' => 3,
 			'optlist' => array(
 				'None' => 0,
 				'SHA-256' => 1,

@@ -44,10 +44,11 @@ interface html_interface
 	const STAT_GENERAL		= 4;
 
 	// Predefined button set types for insertActionButtons.
-	const BTNTYP_VIEW		= 0;
-	const BTNTYP_UPDATE		= 1;
-	const BTNTYP_INSERT		= 2;
-	const BTNTYP_DELETE		= 3;
+	const BTNTYP_NONE		= 0;
+	const BTNTYP_VIEW		= 1;
+	const BTNTYP_UPDATE		= 2;
+	const BTNTYP_INSERT		= 3;
+	const BTNTYP_DELETE		= 4;
 
 	// Field type definitions used by pageAutoGenerate.
 	const TYPE_HIDE			= 0;	// Hidden input field
@@ -84,6 +85,9 @@ interface html_interface
 
 	// Utility
 	static public function initialize();
+	static public function setLFDefaultSize($label, $field);
+	static public function getLabelDefaultSize();
+	static public function getFieldDefaultSize();
 	static public function redirect($filename);
 	static public function ishttps();
 	static public function buildURL($filename);
@@ -563,6 +567,25 @@ class html implements html_interface
 		// Set default sizes
 		self::$lsize_default = $CONFIGVAR['html_default_label_size']['value'];
 		self::$fsize_default = $CONFIGVAR['html_default_field_size']['value'];
+	}
+
+	// Sets default Label/Field sizes.
+	static public function setLFDefaultSize($label, $field)
+	{
+		if (!empty($label)) self::$lsize_default = $label;
+		if (!empty($field)) self::$fsize_default = $field;
+	}
+
+	// Returns the default Label size.
+	static public function getLabelDefaultSize()
+	{
+		return self::$lsize_default;
+	}
+
+	// Returns the default Field size.
+	static public function getFieldDefaultSize()
+	{
+		return self::$fsize_default;
 	}
 
 	// Redirects the client web browser to the specified file name.
@@ -1338,6 +1361,9 @@ class html implements html_interface
 		{
 			switch($data['btnset'])
 			{
+				case self::BTNTYP_NONE:
+					$html = "";
+					break;
 				case self::BTNTYP_VIEW:
 					$html = "
 		<div class=\"row\">

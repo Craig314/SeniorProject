@@ -653,7 +653,6 @@ function formPage($mode, $rxa)
 			'default' => $rxa['module'],
 			'name' => 'module',
 			'fsize' => 4,
-			'lsize' => 3,
 			'optlist' => $fileList,
 			'tooltip' => 'The module that the provider communicates with.',
 			'disable' => $disable,

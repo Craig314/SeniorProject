@@ -66,7 +66,7 @@ interface database_userdata_interface
 	public function updateUsers($username, $userid, $profid, $method, $active, $orgid);
 	public function updateUsersActive($userid, $active);
 	public function insertUsers($username, $userid, $profid, $method, $active, $orgid);
-	public function deleteUsers($username);
+	public function deleteUsers($userid);
 }
 
 
@@ -141,8 +141,7 @@ class database_user implements database_userdata_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.contact';
-		$qxk = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
-		return($dbcore->launchDeleteSingle($table, $qxk));
+		return($dbcore->launchDeleteSingle($table, 'userid', $userid, databaseCore::PTINT));
 	}
 
 
@@ -247,7 +246,7 @@ class database_user implements database_userdata_interface
 	public function deleteLogin($userid)
 	{
 		global $dbcore;
-		$table = $this->tablebase . 'login';
+		$table = $this->tablebase . '.login';
 		return($dbcore->launchDeleteSingle($table, 'userid', $userid, databaseCore::PTINT));
 	}
 
@@ -534,7 +533,7 @@ class database_user implements database_userdata_interface
 	}	
 
 	// Deletes a user.
-	public function deleteUsers($username)
+	public function deleteUsers($userid)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.users';
