@@ -176,6 +176,8 @@ var ajaxServerCommand = {
 // This directly handles communications to/from the server.
 var ajaxServerSend = {
 
+	'featureFlag': false,
+
 	// Initiates an Ajax POST call to the server.  This operates in async mode
 	// only which means that this happens in the background in a seperate
 	// browser thread.  This accepts a variable number of arguments.
@@ -257,36 +259,26 @@ var ajaxServerSend = {
 				switch(string) {
 					case "CODE":	// Status Code
 						ajaxProcessData.parseCode(link.responseText);
-						return;
+						break;
 					case "CMD":		// Command with/without data
 						ajaxProcessData.parseCommand(link.responseText);
-						return;
+						break;
 					case "STAT":	// JSON formatted form field error data.
 						ajaxProcessData.parseStatus(link.responseText);
-						return;
+						break;
 					case "JSON":	// JSON formatted data
 						ajaxProcessData.parseJSON(link.responseText);
-						return;
+						break;
 					case "MULTI":	// Multiformat in JSON (uses loop)
 						ajaxProcessData.parseMultiformat(link.responseText);
-						return;
+						break;
 					default:
 						document.getElementById(dataObject.getTargetMain()).innerHTML = link.responseText;
 						writeError("");
 						writeResponse("");
-						// Feature Activations
-						if (typeof featureCheckbox === 'function') {
-							featureCheckbox();
-						}
-						if (typeof featureTooltip === 'function') {
-							featureTooltip();
-						}
 				}
-
 				// Feature Activations
-				if (typeof featureCheckbox === 'function') {
-					featureCheckbox();
-				}
+				this.featureActivation();
 			}
 			else {
 				if (link.status == 0) {
@@ -295,6 +287,20 @@ var ajaxServerSend = {
 					writeError("ERROR: " + link.status + " - " + link.statusText);
 				}
 			}
+		}
+	},
+
+	featureActivation: function() {
+		if (this.featureFlag == true) return;
+		this.featureFlag = true;
+		if (typeof featureCheckbox === 'function') {
+			featureCheckbox();
+		}
+		if (typeof featureTooltip === 'function') {
+			featureTooltip();
+		}
+		if (typeof featureDatepicker === 'function') {
+			featureDatepicker();
 		}
 	},
 };

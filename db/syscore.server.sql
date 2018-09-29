@@ -151,7 +151,7 @@ INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`,
 	(4, 'Configuration Editor', 'Edits the application configuration parameters&period;&NewLine;This allows inserting and deleting of configuration&NewLine;items in the database&period;', 'configedit.php', 'icon_tools3', 1, 0, 1, 1),
 	(5, 'System Flags', 'This module edits the system flags which&NewLine;are used by the various user profiles&period;', 'sysflag.php', 'icon_checklist', 1, 0, 1, 1),
 	(6, 'Application Flags', 'This module edits the application flags which are used by the various user profiles&period;', 'appflag.php', 'icon_checklist', 1, 0, 1, 1),
-	(7, 'File Finder', 'Allows access to the server file system&period;', 'file.php', 'icon_harddisk', 1, 0, 1, 1),
+	(7, 'File Finder', 'Allows access to the server file system&period;', 'filefinder.php', 'icon_harddisk', 1, 0, 1, 1),
 	(10, 'Parameter Editor', 'Edits the configuration parameter values for the application&period;&NewLine;This only allows changing the configuration parameter values&period;', 'paramedit.php', 'icon_tools4', 1, 0, 1, 0),
 	(11, 'Profile Editor', 'Edits the available profiles that defines&NewLine;what access rights a user has&period;', 'profedit.php', 'icon_keys', 1, 0, 1, 0),
 	(12, 'OAuth Provider Edit', 'Edits the known list of external OAuth authentication providers&period;', 'oauthedit.php', 'icon_oauth', 1, 0, 1, 0),
@@ -273,7 +273,7 @@ CREATE TABLE IF NOT EXISTS `login` (
 -- Dumping data for table userdata.login: ~3 rows (approximately)
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
-	(1, 0, 1532714506, 1537994923, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 0, 1532714506, 1538264756, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, NULL, 0, 1536731231, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
 	(34, 0, 1532817751, 1537509577, 0, 1545285599, 'SHA256', 100, 'de8392b2e9263d1e9bee3a93db10da0bf7ce5e4c8c365a9b6acd3c0c02de5f33', '36c24f59957f3a980a837b6daea6522677454bd06e90b20cc51ce93155eba347');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;

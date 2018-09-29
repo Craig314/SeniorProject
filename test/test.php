@@ -35,10 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
 	$flags = array(
 		'checkbox' => true,
 		'tooltip' => true,
+		'datepick' => true,
 	);
 	$jsfiles = array(
-		'/js/common.js',
-		'/js/test.js',
+		'/js/baseline/common.js',
+		'/test/test.js',
 	);
 
 	html::loadTemplatePage($title, $url, $fname, $left, '', $fbar, $jsfiles, '', $flags);
@@ -153,9 +154,24 @@ function content()
 			'tooltip' => 'Enter Password',
 		),
 		array(
+			// Date Picker Test
+			'type' => html::TYPE_DATE,
+			'label' => 'Test Field 3',
+			'name' => 'field3',
+			'lsize' => 2,
+			'fsize' => 6,
+			'icon' => 'calendar',
+			'tooltip' => 'Enter a date.  Datepicker will popup.',
+			'date_highlight' => true,
+			'date_autoclose' => true,
+			'date_todaybtn' => true,
+			'date_clearbtn' => true,
+			'date_format' => 'dd/mm/yyyy',
+		),
+		array(
 			// Pulldown Menu
 			'type' => html::TYPE_PULLDN,
-			'label' => 'Test Field 3',
+			'label' => 'Test Field 4',
 			'default' => 3,
 			'name' => 'list1',
 			'icon' => 'check',
@@ -179,7 +195,7 @@ function content()
 		array(
 			// Text Area
 			'type' => html::TYPE_AREA,
-			'label' => 'Test Field 4',
+			'label' => 'Test Field 5',
 			'default' => 'Default field value',
 			'name' => 'field4',
 			'icon' => 'user',

@@ -9,11 +9,11 @@ function customCmdProc(command, txt) {
 			$('#calendar').fullCalendar({
 				defaultView: 'month',
 			});
-			return true;
 			break;
 		default:
 			return false;
 			break;
 	}
+	return true;
 }
 

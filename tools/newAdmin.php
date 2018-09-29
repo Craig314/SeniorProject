@@ -70,13 +70,13 @@ function dbaseTableLogin($userid, $passwd)
 
 	if ($result != false && is_array($result))
 	{
-		$result = $dbuser->updateLogin($userid, true, false, 0, 0, -1, -1,
+		$result = $dbuser->updateLogin($userid, false, 0, 0, -1, -1,
 			$digest, $count, $hexsalt, $hexpass);
 		if ($result == false) printErrorImmediate('Login table update record failed.');
 	}
 	else
 	{
-		$result = $dbuser->insertLogin($userid, true, false, 0, 0, -1, -1,
+		$result = $dbuser->insertLogin($userid, false, 0, 0, -1, -1,
 			$digest, $count, $hexsalt, $hexpass);
 		if ($result == false) printErrorImmediate('Login table insert record failed.');
 	}
@@ -89,12 +89,14 @@ function dbaseTableUsers($userid, $profid, $username)
 	$result = $dbuser->queryUsers($username);
 	if ($result != false && is_array($result))
 	{
-		$result = $dbuser->updateUsers($username, $userid, $profid, LOGIN_METHOD_NATIVE);
+		$result = $dbuser->updateUsers($username, $userid, $profid, LOGIN_METHOD_NATIVE,
+			true, PROFILE_NAME . 'Account');
 		if ($result == false) printErrorImmediate('Users table update record failed.');
 	}
 	else
 	{
-		$result = $dbuser->insertUsers($username, $userid, $profid, LOGIN_METHOD_NATIVE);
+		$result = $dbuser->insertUsers($username, $userid, $profid, LOGIN_METHOD_NATIVE,
+			true, PROFILE_NAME . 'Account');
 		if ($result == false) printErrorImmediate('Users table insert record failed.');
 	}
 }

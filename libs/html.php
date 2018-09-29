@@ -54,34 +54,35 @@ interface html_interface
 	const TYPE_HIDE			= 0;	// Hidden input field
 	const TYPE_TEXT			= 1;	// Text input field
 	const TYPE_PASS			= 2;	// Password input field
-	const TYPE_FILE			= 3;	// File input field
-	const TYPE_AREA			= 4;	// Textarea tag input field
-	const TYPE_CHECK		= 5;	// Checkbox
-	const TYPE_RADIO		= 6;	// Radio button group
-	const TYPE_PULLDN		= 7;	// Pulldown selection menu/list
-	const TYPE_BLIST		= 8;	// Standard nested list
-	const TYPE_BUTTON		= 9;	// Button group
-	const TYPE_SBUTTON		= 10;	// Single button
-	const TYPE_ACTBTN		= 11;	// Action button set
-	const TYPE_RADTABLE		= 12;	// Radio button item selection table
-	const TYPE_HEADING		= 13;	// Banner headings
-	const TYPE_CHECKLIST	= 14;	// Checkbox Lists
-	const TYPE_IMAGE		= 15;	// Image File
-	const TYPE_FORMOPEN		= 20;	// Open form with name
-	const TYPE_FORMCLOSE	= 21;	// Close form
-	const TYPE_FSETOPEN		= 22;	// Open field set with title
-	const TYPE_FSETCLOSE	= 23;	// Close field set
-	const TYPE_HIDEOPEN		= 24;	// Opens a named hidden block
-	const TYPE_HIDECLOSE	= 25;	// Close named hidden block
-	const TYPE_TOPB1		= 30;	// Top border type 1
-	const TYPE_TOPB2		= 31;	// Top border type 2
-	const TYPE_BOTB1		= 32;	// Bottom border type 1
-	const TYPE_BOTB2		= 33;	// Bottom border type 2
-	const TYPE_WD75OPEN		= 40;	// Open a area of 75% width
-	const TYPE_WD50OPEN		= 41;	// Open a area of 50% width
-	const TYPE_WDCLOSE		= 49;	// Close width area
-	const TYPE_VTAB5		= 50;	// Vertical tab 5%
-	const TYPE_VTAB10		= 51;	// Vertical tab 10%
+	const TYPE_DATE			= 3;	// Date input field (datepicker plugin)
+	const TYPE_FILE			= 4;	// File input field
+	const TYPE_AREA			= 5;	// Textarea tag input field
+	const TYPE_CHECK		= 6;	// Checkbox
+	const TYPE_RADIO		= 7;	// Radio button group
+	const TYPE_PULLDN		= 8;	// Pulldown selection menu/list
+	const TYPE_BLIST		= 9;	// Standard nested list
+	const TYPE_BUTTON		= 10;	// Button group
+	const TYPE_SBUTTON		= 11;	// Single button
+	const TYPE_ACTBTN		= 12;	// Action button set
+	const TYPE_RADTABLE		= 13;	// Radio button item selection table
+	const TYPE_HEADING		= 14;	// Banner headings
+	const TYPE_CHECKLIST	= 15;	// Checkbox Lists
+	const TYPE_IMAGE		= 16;	// Image File
+	const TYPE_FORMOPEN		= 30;	// Open form with name
+	const TYPE_FORMCLOSE	= 31;	// Close form
+	const TYPE_FSETOPEN		= 32;	// Open field set with title
+	const TYPE_FSETCLOSE	= 33;	// Close field set
+	const TYPE_HIDEOPEN		= 34;	// Opens a named hidden block
+	const TYPE_HIDECLOSE	= 35;	// Close named hidden block
+	const TYPE_TOPB1		= 40;	// Top border type 1
+	const TYPE_TOPB2		= 41;	// Top border type 2
+	const TYPE_BOTB1		= 42;	// Bottom border type 1
+	const TYPE_BOTB2		= 43;	// Bottom border type 2
+	const TYPE_WD75OPEN		= 50;	// Open a area of 75% width
+	const TYPE_WD50OPEN		= 51;	// Open a area of 50% width
+	const TYPE_WDCLOSE		= 59;	// Close width area
+	const TYPE_VTAB5		= 60;	// Vertical tab 5%
+	const TYPE_VTAB10		= 61;	// Vertical tab 10%
 
 	// Utility
 	static public function initialize();
@@ -100,6 +101,7 @@ interface html_interface
 	static public function insertFieldHidden($data);
 	static public function insertFieldText($data);
 	static public function insertFieldPassword($data);
+	static public function insertFieldDate($data);
 	static public function insertFieldFile($data);
 	static public function insertFieldTextArea($data);
 	static public function insertFieldCheckbox($data);
@@ -513,7 +515,9 @@ class html implements html_interface
 		$printout = $name . $value . $default . $event . $tooltip . $disabled;
 
 		// Render
-		$html = "
+		if (empty($data['date']))
+		{
+			$html = "
 		<div class=\"row\">
 			<div $dcmST class=\"form-group $stx\">
 				<label $lclass $forx>$label</label>
@@ -525,6 +529,34 @@ class html implements html_interface
 				</div>
 			</div>
 		</div>";
+		}
+		else
+		{
+			$datePickOptions = 'data-provide="datepicker"';
+			if (!empty($data['date_format'])) $datePickOptions .= ' data-date-format="' . $data['date_format'] . '"';
+				else $datePickOptions .= ' data-date-format="mm/dd/yyyy"';
+			if (!empty($data['date_highlight'])) $datePickOptions .= ' data-date-today-highlight="true"';
+			if (!empty($data['date_autoclose'])) $datePickOptions .= ' data-date-autoclose="true"';
+			if (!empty($data['date_todaybtn'])) $datePickOptions .= ' data-date-today-btn="true"';
+			if (!empty($data['date_clearbtn'])) $datePickOptions .= ' data-date-clear-btn="true"';
+			$html = "
+		<div class=\"row\">
+			<div $dcmST class=\"form-group $stx\">
+				<label $lclass $forx>$label</label>
+				<div $fclass>
+					<div class=\"input-group date\" $datePickOptions>
+						<span $icons><i $icond></i></span>
+						<input type=\"$type\" class=\"form-control\" $printout>
+						<span class=\"input-group-addon\">
+							<i class=\"glyphicon glyphicon-th\"></i>
+						</span>
+						<span $dcmGL class=\"glyphicon $gix form-control-feedback\"></span>
+						<span $dcmMS></span>
+					</div>
+				</div>
+			</div>
+		</div>";
+		}
 		return $html;
 	}
 
@@ -704,6 +736,13 @@ class html implements html_interface
 	static public function insertFieldPassword($data)
 	{
 		return self::insertFieldTextCommon('password', $data);
+	}
+
+	// Inserts a date field
+	static public function insertFieldDate($data)
+	{
+		$data['date'] = true;
+		return self::insertFieldTextCommon('text', $data);
 	}
 
 	// Inserts a file picker field
@@ -1920,6 +1959,9 @@ class html implements html_interface
 					case self::TYPE_PASS:
 						$htmlCollection .= self::insertFieldPassword($vx);
 						break;
+					case self::TYPE_DATE:
+						$htmlCollection .= self::insertFieldDate($vx);
+						break;
 					case self::TYPE_FILE:
 						$htmlCollection .= self::insertFieldFile($vx);
 						break;
@@ -2043,13 +2085,13 @@ class html implements html_interface
 			$flag_datepick = in_array('datepick', $html_flags);
 			$flag_tooltip = in_array('tooltip', $html_flags);
 			$flag_type2 = in_array('type2', $html_flags);
-			$flag_calendar = in_array('calendar', $html_flags);
 		}
 		else
 		{
 			$flag_checkbox = false;
 			$flag_datepick = false;
 			$flag_tooltip = false;
+			$flag_type2 = false;
 		}
 
 ?>
@@ -2079,6 +2121,14 @@ class html implements html_interface
 		<link rel="stylesheet" type="text/css" href="<?php echo $url . $kx; ?>">
 <?php
 			}
+		}
+		// Features: Bootstrap Date Picker
+		if ($flag_datepick)
+		{
+?>
+		<!-- Install Bootstrap Datepicker -->
+		<link rel="stylesheet" type="text/css" href="<?php echo $url; ?>/APIs/datepicker/css/bootstrap-datepicker3.min.css">
+<?php
 		}
 ?>
 	</head>
@@ -2290,11 +2340,20 @@ class html implements html_interface
 		<!-- Install Bootstrap -->
 		<script type="text/javascript" src="<?php echo $url; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
 <?php
+		// Features: Checkbox
 		if ($flag_checkbox == true)
 		{
 ?>
 		<!-- Install Custom Checkbox -->
 		<script src="<?php echo $url; ?>/APIs/checkbox/dist/js/bootstrap-checkbox.min.js"></script>
+<?php
+		}
+		// Features: Bootstrap Date Picker
+		if ($flag_datepick)
+		{
+?>
+		<!-- Install Datepicker -->
+		<script src="<?php echo $url; ?>/APIs/datepicker/js/bootstrap-datepicker.min.js"></script>
 <?php
 		}
 ?>
@@ -2324,9 +2383,21 @@ class html implements html_interface
 		if ($flag_tooltip == true)
 		{
 ?>
+		<!-- Tooltip Boot Script -->
 		<script type="text/javascript">
 			function featureTooltip() {
 				$('[data-toggle="tooltip"]').tooltip();
+			}
+		</script>
+<?php
+		}
+		if ($flag_tooltip == true)
+		{
+?>
+		<!-- Datepicker Boot Script -->
+		<script type="text/javascript">
+			function featureDatepicker() {
+				$('.datepicker').datepicker();
 			}
 		</script>
 <?php

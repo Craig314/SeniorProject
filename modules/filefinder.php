@@ -25,7 +25,7 @@ the features/abilities they represent are being used:
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = 'file.php';
+$moduleFilename = 'filefinder.php';
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
