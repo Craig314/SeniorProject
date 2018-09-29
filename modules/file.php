@@ -1075,17 +1075,6 @@ function fileDownload()
 	$ajax->sendCommand(46, $url);
 }
 
-// Returns the first argument match of a $_POST value.  If no
-// values are found, then returns null.
-function getPostValue(...$list)
-{
-	foreach($list as $param)
-	{
-		if (isset($_POST[$param])) return $_POST[$param];
-	}
-	return NULL;
-}
-
 // Checks if the given path is outside the web server document
 // root directory.  Returns false if it is, true if not.
 function checkDirectory($path)

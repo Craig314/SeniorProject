@@ -437,6 +437,8 @@ function updateRecordAction()
 	global $dbcore;
 	global $dbuser;
 	global $dbconf;
+	global $vendor;
+	global $admin;
 
 	// Get the field check data.
 	$fieldCheck = generateFieldCheck(FIELDCHK_ARRAY);
@@ -480,6 +482,7 @@ function updateRecordAction()
 	$vfystr->fieldchk($fieldCheck, 4, $method);
 	$vfystr->fieldchk($fieldCheck, 2, $orgid);
 	if (!empty($active)) $active = true; else $active = false;
+	if ($vendor || $admin) $active = true;
 	if ($vfystr->errstat())
 	{
 		$rxe = $herr->errorGetData();
@@ -895,7 +898,8 @@ function insertRecordAction()
 	$vfystr->fieldchk($fieldCheck, 4, $method);
 	$vfystr->fieldchk($fieldCheck, 2, $orgid);
 	if (!empty($active)) $active = true; else $active = false;
-	
+	if ($vendor || $admin) $active = true;	
+
 	// We need to make sure that we have a valid profile Id.
 	checkProfileId($profid);
 
