@@ -78,10 +78,10 @@ interface ajaxInterface
 
 class ajaxClass implements ajaxInterface
 {
-	private $queue = NULL;
+	private $queue = array();
 	private $codeStatus = false;
 
-	function __contstruct()
+	function _contstruct()
 	{
 		$this->queue = array();
 		$this->codeStatus = false;
@@ -176,7 +176,7 @@ class ajaxClass implements ajaxInterface
 	// Sends the queue to the client.
 	public function sendQueue()
 	{
-		if (length($this->queue) == 0) return;
+		if (count($this->queue) == 0) return;
 		$str = json_encode($this->queue);
 		if ($str === false)
 		{

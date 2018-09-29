@@ -28,6 +28,7 @@ interface linkPanelInterface
 {
 	public function getLinks();
 	public function getStatus();
+	public function getMain();
 }
 
 
@@ -147,6 +148,18 @@ class linkPanel implements linkPanelInterface
 	// Generates and returns the HTML for the status panel.
 	public function getStatus()
 	{
+	}
+
+	public function getMain()
+	{
+		$url = html::getBaseURL();
+		$data = "<div id=\"calendar\"></div>
+<script type=\"text/javascript\">
+	$('#calendar').fullCalendar({
+		defaultView: 'month',
+	});
+</script>";
+		return $data;
 	}
 }
 

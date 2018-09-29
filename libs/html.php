@@ -2043,6 +2043,7 @@ class html implements html_interface
 			$flag_datepick = in_array('datepick', $html_flags);
 			$flag_tooltip = in_array('tooltip', $html_flags);
 			$flag_type2 = in_array('type2', $html_flags);
+			$flag_calendar = in_array('calendar', $html_flags);
 		}
 		else
 		{

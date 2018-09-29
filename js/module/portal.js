@@ -16,3 +16,4 @@ function loadModule(module)
 	param = "MODULE=" + module;
 	ajaxServerCommand.sendCommand(5, param);
 }
+

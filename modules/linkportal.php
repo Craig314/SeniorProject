@@ -4,7 +4,7 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application Module Template
+PHP Web Application Link Portal
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -16,6 +16,12 @@ the features/abilities they represent are being used:
 	$htmlInjectFile
 		Specifies a HTML file to use as the template instead of the
 		default page.
+
+Notes:
+
+Although this page is part of the system core, it is the landing
+page that most users will see after the banner.  So this needs to
+be customized for each application.
 
 */
 
@@ -104,6 +110,9 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/module/portal.js',
+			'/js/application/landing.js',
+			'/APIs/fullcalendar/lib/moment.min.js',
+			'/APIs/fullcalendar/fullcalendar.min.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -112,15 +121,15 @@ function loadInitialContent()
 		// $cssFiles = array();
 		$cssFiles = array(
 			'/css/portal.css',
+			'/APIs/fullcalendar/fullcalendar.min.css',
 		);
 
 		// The final option, htmlFlags, is an array that holds the names
-		// of supported options.  Currently, those options are checkbox,
-		// datepick, and tooltip.
+		// of supported options.  Currently, those options are datepick
+		// and tooltip.
 		// $htmlFlags= array(
-		// 	'checkbox',
-		// 	'datepick',
 		// 	'tooltip',
+		//	'type2',
 		// );
 		$htmlFlags = array(
 			'tooltip',
@@ -160,13 +169,19 @@ function loadAdditionalContent()
 
 	$navContent = $panels->getLinks();
 	$statusContent = $panels->getStatus();
+	$mainContent = $panels->getMain();
 
 	// XXX Development
 	$statusContent = 'Status Panel';
 	
 	// Write the panels.
-	$ajax->writePanelsImmediate($navContent, $statusContent,
-		'<b>Select an item to the left.</b>');
+	// $ajax->writePanelsImmediate($navContent, $statusContent,
+	// 	$mainContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
+	$ajax->loadQueueCommand(121);
+	$ajax->sendQueue();
 }
 
 // Called when the initial command processor doesn't have the
