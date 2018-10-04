@@ -1,6 +1,6 @@
 -- --------------------------------------------------------
 -- Host:                         127.0.0.1
--- Server version:               5.7.17-log - MySQL Community Server (GPL)
+-- Server version:               5.7.22-log - MySQL Community Server (GPL)
 -- Server OS:                    Win64
 -- HeidiSQL Version:             9.5.0.5280
 -- --------------------------------------------------------
@@ -21,11 +21,14 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   `assignment` int(11) NOT NULL AUTO_INCREMENT COMMENT 'The assignment number for the course.',
   `courseid` int(11) NOT NULL COMMENT 'The unique course ID number.',
   `desc` varchar(512) DEFAULT NULL COMMENT 'A type in description for the assignment.',
-  `descfile` mediumblob COMMENT 'A description file for the assignment that the ',
+  `descfile` varchar(50) DEFAULT NULL COMMENT 'A description file for the assignment that the ',
   `duedate` bigint(20) NOT NULL COMMENT 'Assignment due date.',
   `lockdate` bigint(20) DEFAULT NULL COMMENT 'The date where students can no longer submit assignments.',
   `gradeweight` int(11) DEFAULT NULL COMMENT 'The total grade weight of the assignment.',
   `gwgroup` int(11) DEFAULT '0' COMMENT 'The grade weight group if the course has one.',
+  `curve` int(11) DEFAULT NULL COMMENT 'Any curve that the instructor sets for the assignment.',
+  `points` int(11) DEFAULT NULL COMMENT 'The numbere of points the assignment is worth.',
+  `exempt` int(11) DEFAULT NULL COMMENT 'Indicates if this assignment is exempt from the total grade.',
   PRIMARY KEY (`assignment`),
   KEY `assignment` (`assignment`),
   KEY `FK1_asssignment_courseid_course_courseid` (`courseid`),
@@ -101,12 +104,15 @@ CREATE TABLE IF NOT EXISTS `filename` (
 CREATE TABLE IF NOT EXISTS `grades` (
   `studentid` int(11) NOT NULL COMMENT 'The student''s userid.',
   `assignment` int(11) NOT NULL COMMENT 'The assignment.',
+  `course` int(11) NOT NULL COMMENT 'The course the assignment is associated with.',
   `comment` varchar(512) DEFAULT NULL COMMENT 'Instructor''s comments',
   `grade` int(11) DEFAULT NULL COMMENT 'The grade.',
   PRIMARY KEY (`studentid`,`assignment`),
   KEY `FK3_grades_assignment_assignment_assignment` (`assignment`),
+  KEY `FK3_grades_course_course_courseid` (`course`),
   CONSTRAINT `FK1_grades_studentid_users_userid` FOREIGN KEY (`studentid`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE,
-  CONSTRAINT `FK2_grades_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE
+  CONSTRAINT `FK2_grades_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE,
+  CONSTRAINT `FK3_grades_course_course_courseid` FOREIGN KEY (`course`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Student grades table';
 
 -- Dumping data for table application.grades: ~0 rows (approximately)
@@ -160,14 +166,17 @@ CREATE TABLE IF NOT EXISTS `turnin` (
   `assignment` int(11) NOT NULL COMMENT 'The assignment number',
   `step` int(11) NOT NULL COMMENT 'Indicates what step of the assignment was turned in.',
   `subcount` int(11) NOT NULL COMMENT 'The index of how many times the student turned the assignment in.',
+  `course` int(11) NOT NULL COMMENT 'The course the assignment is associated with.',
   `timedate` bigint(20) NOT NULL COMMENT 'The time/date of the turnin.',
-  `complete` int(11) NOT NULL COMMENT 'Indicates if the assignment was completed or not.',
   PRIMARY KEY (`studentid`,`assignment`,`subcount`,`step`),
   KEY `FK2_turnin_assignment_assignment_assignment` (`assignment`),
   KEY `step` (`step`),
   KEY `subcount` (`subcount`),
+  KEY `FK3_turnin_course` (`course`),
   CONSTRAINT `FK1_turnin_studentid_users_userid` FOREIGN KEY (`studentid`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE,
-  CONSTRAINT `FK2_turnin_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE
+  CONSTRAINT `FK2_turnin_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE,
+  CONSTRAINT `FK3_turnin_course` FOREIGN KEY (`course`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE,
+  CONSTRAINT `FK4_turnin_step_assignstep_step` FOREIGN KEY (`step`) REFERENCES `assignstep` (`step`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Maintains a log of assignments that the student has turned in.';
 
 -- Dumping data for table application.turnin: ~0 rows (approximately)
@@ -189,6 +198,50 @@ CREATE TABLE IF NOT EXISTS `weightgroup` (
 -- Dumping data for table application.weightgroup: ~0 rows (approximately)
 /*!40000 ALTER TABLE `weightgroup` DISABLE KEYS */;
 /*!40000 ALTER TABLE `weightgroup` ENABLE KEYS */;
+
+-- Dumping structure for trigger application.trig_assignstep_step
+SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+DELIMITER //
+CREATE TRIGGER `trig_assignstep_step` BEFORE INSERT ON `assignstep` FOR EACH ROW BEGIN
+		SET NEW.step = (
+			SELECT IFNULL(MAX(step), 0) + 1
+			FROM assignstep
+			WHERE assignment = NEW.assignment
+			);
+end//
+DELIMITER ;
+SET SQL_MODE=@OLDTMP_SQL_MODE;
+
+-- Dumping structure for trigger application.trig_filename_filenumber
+SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+DELIMITER //
+CREATE TRIGGER `trig_filename_filenumber` BEFORE INSERT ON `filename` FOR EACH ROW BEGIN
+		SET NEW.filenumber = (
+			SELECT IFNULL(MAX(filenumber), 0) + 1
+			FROM filename
+			WHERE studentid = NEW.studentid
+			AND assignment = NEW.assignment
+			AND step = NEW.step
+			AND subcount = NEW.subcount
+			);
+end//
+DELIMITER ;
+SET SQL_MODE=@OLDTMP_SQL_MODE;
+
+-- Dumping structure for trigger application.trig_turnin_subcount
+SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+DELIMITER //
+CREATE TRIGGER `trig_turnin_subcount` BEFORE INSERT ON `turnin` FOR EACH ROW BEGIN
+		SET NEW.subcount= (
+			SELECT IFNULL(MAX(subcount), 0) + 1
+			FROM turnin
+			WHERE studentid = NEW.studentid
+			AND assignment = NEW.assignment
+			AND step = NEW.step
+			);
+end//
+DELIMITER ;
+SET SQL_MODE=@OLDTMP_SQL_MODE;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
