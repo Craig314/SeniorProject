@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS `assignstep` (
   `date` bigint(20) NOT NULL COMMENT 'The date the step should be completed.',
   `desc` varchar(512) NOT NULL COMMENT 'A description of the step.',
   PRIMARY KEY (`assignment`,`step`),
+  KEY `step` (`step`),
   CONSTRAINT `FK1_assignstep_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Steps or milestones the assignment requires for completetion.';
 
@@ -73,19 +74,39 @@ CREATE TABLE IF NOT EXISTS `course` (
 /*!40000 ALTER TABLE `course` DISABLE KEYS */;
 /*!40000 ALTER TABLE `course` ENABLE KEYS */;
 
+-- Dumping structure for table application.filename
+CREATE TABLE IF NOT EXISTS `filename` (
+  `studentid` int(11) NOT NULL COMMENT 'The student''s user ID.',
+  `assignment` int(11) NOT NULL COMMENT 'The assignment this file belongs to.',
+  `step` int(11) NOT NULL COMMENT 'The assignment step this file belongs to.',
+  `subcount` int(11) NOT NULL COMMENT 'The assignment turnin number this file belongs to.',
+  `filenumber` int(11) NOT NULL COMMENT 'The filenumber the file is.',
+  `studentfile` varchar(256) NOT NULL COMMENT 'The filename that the student submitted.',
+  `sysfile` varchar(256) NOT NULL COMMENT 'The system assigned filename.',
+  PRIMARY KEY (`studentid`,`assignment`,`step`,`subcount`,`filenumber`),
+  KEY `FK2_filename_assignment_assignment_assignment` (`assignment`),
+  KEY `FK3_filename_step_assignstep_step` (`step`),
+  KEY `FK4_filename_subcount_turnin_subcount` (`subcount`),
+  CONSTRAINT `FK1_filename_studentid_users_userid` FOREIGN KEY (`studentid`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE,
+  CONSTRAINT `FK2_filename_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE,
+  CONSTRAINT `FK3_filename_step_assignstep_step` FOREIGN KEY (`step`) REFERENCES `assignstep` (`step`) ON UPDATE CASCADE,
+  CONSTRAINT `FK4_filename_subcount_turnin_subcount` FOREIGN KEY (`subcount`) REFERENCES `turnin` (`subcount`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains the filenames of files that the student submits.';
+
+-- Dumping data for table application.filename: ~0 rows (approximately)
+/*!40000 ALTER TABLE `filename` DISABLE KEYS */;
+/*!40000 ALTER TABLE `filename` ENABLE KEYS */;
+
 -- Dumping structure for table application.grades
 CREATE TABLE IF NOT EXISTS `grades` (
   `studentid` int(11) NOT NULL COMMENT 'The student''s userid.',
-  `courseid` int(11) NOT NULL COMMENT 'The course that the student is enrolled in.',
   `assignment` int(11) NOT NULL COMMENT 'The assignment.',
   `comment` varchar(512) DEFAULT NULL COMMENT 'Instructor''s comments',
   `grade` int(11) DEFAULT NULL COMMENT 'The grade.',
-  PRIMARY KEY (`studentid`,`courseid`,`assignment`),
-  KEY `FK2_grades_courseid_course_courseid` (`courseid`),
+  PRIMARY KEY (`studentid`,`assignment`),
   KEY `FK3_grades_assignment_assignment_assignment` (`assignment`),
   CONSTRAINT `FK1_grades_studentid_users_userid` FOREIGN KEY (`studentid`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE,
-  CONSTRAINT `FK2_grades_courseid_course_courseid` FOREIGN KEY (`courseid`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE,
-  CONSTRAINT `FK3_grades_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE
+  CONSTRAINT `FK2_grades_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Student grades table';
 
 -- Dumping data for table application.grades: ~0 rows (approximately)
@@ -132,6 +153,26 @@ CREATE TABLE IF NOT EXISTS `studentclass` (
 -- Dumping data for table application.studentclass: ~0 rows (approximately)
 /*!40000 ALTER TABLE `studentclass` DISABLE KEYS */;
 /*!40000 ALTER TABLE `studentclass` ENABLE KEYS */;
+
+-- Dumping structure for table application.turnin
+CREATE TABLE IF NOT EXISTS `turnin` (
+  `studentid` int(11) NOT NULL COMMENT 'The student''s user ID.',
+  `assignment` int(11) NOT NULL COMMENT 'The assignment number',
+  `step` int(11) NOT NULL COMMENT 'Indicates what step of the assignment was turned in.',
+  `subcount` int(11) NOT NULL COMMENT 'The index of how many times the student turned the assignment in.',
+  `timedate` bigint(20) NOT NULL COMMENT 'The time/date of the turnin.',
+  `complete` int(11) NOT NULL COMMENT 'Indicates if the assignment was completed or not.',
+  PRIMARY KEY (`studentid`,`assignment`,`subcount`,`step`),
+  KEY `FK2_turnin_assignment_assignment_assignment` (`assignment`),
+  KEY `step` (`step`),
+  KEY `subcount` (`subcount`),
+  CONSTRAINT `FK1_turnin_studentid_users_userid` FOREIGN KEY (`studentid`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE,
+  CONSTRAINT `FK2_turnin_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Maintains a log of assignments that the student has turned in.';
+
+-- Dumping data for table application.turnin: ~0 rows (approximately)
+/*!40000 ALTER TABLE `turnin` DISABLE KEYS */;
+/*!40000 ALTER TABLE `turnin` ENABLE KEYS */;
 
 -- Dumping structure for table application.weightgroup
 CREATE TABLE IF NOT EXISTS `weightgroup` (
