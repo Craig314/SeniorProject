@@ -135,7 +135,6 @@ class database_config implements database_config_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.config';
-		$column = '*';
 		$qxa = $dbcore->buildArray('value', $value, databaseCore::PTSTR);
 		return($dbcore->launchUpdateSingle($table, 'setting', $setting,
 			databaseCore::PTINT, $qxa));
