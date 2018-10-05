@@ -93,6 +93,7 @@ require_once BASEDIR . 'modhead.php';
 function loadInitialContent()
 {
 	global $htmlInjectFile;
+	global $inject_html_file;
 
 	if ($htmlInjectFile === false)
 	{
@@ -165,11 +166,11 @@ function loadInitialContent()
 	else
 	{
 		// Load file from disk and transmit it to client.
-		if (file_exists($htmlInjectFile))
+		if (file_exists($inject_html_file))
 		{
-			$result = readfile($htmlInjectFile);
+			$result = readfile($inject_html_file);
 		}
-		else printErrorImmediately('Internal System Error: ' . $htmlInjectFile .
+		else printErrorImmediate('Internal System Error: ' . $inject_html_file .
 			' was not found.<br>Contact your system administrator.  XX34226');
 	}
 }
