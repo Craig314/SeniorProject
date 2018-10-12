@@ -74,7 +74,12 @@ $htmlInjectFile = false;
 
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
+// Freeform execute stops at modhead.php
 const BASEDIR = '../libs/';
+const BASEAPP = '../applibs/';
+require_once BASEAPP . 'panels.php';
+require_once BASEAPP . 'loadmodule.php';
+require_once BASEAPP . 'dbaseapp.php';
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -127,13 +132,16 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/baseline/common.js',
+			'/js/modules/portal.js',
 			'/js/application/.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
 		// cascading style sheets that should be included in the head
 		// section of the HTML page.
-		// $cssFiles = array();
+		$cssFiles = array(
+			'/css/portal.js',
+		);
 
 		// The final option, htmlFlags, is an array that holds the names
 		// of supported options.  Currently, those options are checkbox,
@@ -172,6 +180,9 @@ function loadInitialContent()
 function loadAdditionalContent()
 {
 	global $baseUrl;
+	global $panels;
+	global $ajax;
+	global $dbapp;
 
 	// Get data from database.
 	$rxa = $DATABASE_QUERY_ALL();	// XXX Set This
@@ -235,8 +246,18 @@ function loadAdditionalContent()
 		array('type' => html::TYPE_BOTB1)
 	);
 
+	// Get panel content
+	$navContent = $panels->getLinks();
+	$statusContent = $panels->getStatus();
+	$mainContent = html::pageAutoGenerate($data);
+
+	// Queue content in ajax transmit buffer.
+	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
+
 	// Render
-	echo html::pageAutoGenerate($data);
+	$ajax->sendQueue();
 
 	exit(0);
 }
@@ -258,6 +279,9 @@ function commandProcessor($commandId)
 			break;
 		case 4:		// Delete
 			deleteRecordView();
+			break;
+		case 5:		// Load Module
+			loadModule();
 			break;
 		case 12:	// Submit Update
 			updateRecordAction();

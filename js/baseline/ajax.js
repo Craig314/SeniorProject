@@ -293,14 +293,23 @@ var ajaxServerSend = {
 	featureActivation: function() {
 		if (this.featureFlag == true) return;
 		this.featureFlag = true;
-		if (typeof featureCheckbox === 'function') {
-			featureCheckbox();
+		try {
+			if (typeof featureCheckbox === 'function') {
+				featureCheckbox();
+			}
+		} catch (e) {
 		}
-		if (typeof featureTooltip === 'function') {
-			featureTooltip();
+		try {
+			if (typeof featureTooltip === 'function') {
+				featureTooltip();
+			}
+		} catch (e) {
 		}
-		if (typeof featureDatepicker === 'function') {
-			featureDatepicker();
+		try {
+			if (typeof featureDatepicker === 'function') {
+				featureDatepicker();
+			}
+		} catch (e) {
 		}
 	},
 };

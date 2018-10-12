@@ -120,6 +120,10 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 					case 1:
 						$ajax->redirect('/modules' . '/' . $CONFIGVAR['html_linkportal_page']['value']);
 						break;
+					case 2:
+						//$ajax->redirect('/application' . '/' . $CONFIGVAR['html_landportal_page']['value']);
+						$ajax->redirect('/application/portal.php');
+						break;
 					default:
 						error_exit('Invalid redirect.  Contact your administrator.');
 						break;

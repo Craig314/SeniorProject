@@ -63,6 +63,10 @@ const MODE_DELETE	= 3;
 const BMFS_COUNT	= 256;		// # of system bitmap flags
 const BMFA_COUNT	= 256;		// # of application bitmap flags
 
+// Field check generation data formats.
+const FIELDCHK_JSON		= 0;
+const FIELDCHK_ARRAY	= 1;
+
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
@@ -333,13 +337,8 @@ function updateRecordAction()
 	global $CONFIGVAR;
 	global $vendor;
 
-	// Set the field list.
-	$fieldlist = array(
-		'profid',
-		'profname',
-		'profdesc',
-		'profport',
-	);
+	// Get field data.
+	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
 
 	// Get data
 	$key = getPostValue('hidden');
@@ -360,13 +359,11 @@ function updateRecordAction()
 	if ($key != $id)
 		handleError('Database key mismatch.');
 
-	// Check mandatory fields.
-	$vfystr->strchk($id, 'Profile ID', 'profid', verifyString::STR_PINTEGER, true, 2147483647, 0);
-	$vfystr->strchk($name, 'Name', 'profname', verifyString::STR_ALPHA, true, 32, 1);
-	$vfystr->strchk($port, 'Portal', 'profport', verifyString::STR_PINTEGER, true, 1, 0);
-
-	// Check optional fields.
-	$vfystr->strchk($desc, 'Description', 'profdesc', verifyString::STR_ASCII, true, 256, 1);
+	// Check field data.
+	$vfystr->fieldchk($fieldData, 0, $id);
+	$vfystr->fieldchk($fieldData, 1, $name);
+	$vfystr->fieldchk($fieldData, 3, $desc);
+	$vfystr->fieldchk($fieldData, 2, $port);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -515,19 +512,20 @@ function insertRecordAction()
 	global $dbconf;
 	global $CONFIGVAR;
 
+	// Get field data.
+	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
+
 	// Get data
 	$id = getPostValue('profid');
 	$name = getPostValue('profname');
 	$desc = getPostValue('profdesc');
 	$port = getPostValue('profport');
 
-	// Check mandatory fields.
-	$vfystr->strchk($id, 'Profile ID', 'profid', verifyString::STR_PINTEGER, true, 2147483647, 0);
-	$vfystr->strchk($name, 'Name', 'profname', verifyString::STR_ALPHA, true, 32, 3);
-	$vfystr->strchk($port, 'Portal', 'profport', verifyString::STR_PINTEGER, true, 1, 0);
-	$vfystr->strchk($desc, 'Description', 'profdesc', verifyString::STR_ASCII, true, 256, 3);
-
-	// Check optional fields.
+	// Check field data.
+	$vfystr->fieldchk($fieldData, 0, $id);
+	$vfystr->fieldchk($fieldData, 1, $name);
+	$vfystr->fieldchk($fieldData, 3, $desc);
+	$vfystr->fieldchk($fieldData, 2, $port);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -775,6 +773,7 @@ function formPage($mode, $rxa)
 		'optlist' => array(
 			'Grid Portal' => 0,
 			'Link Portal' => 1,
+			'Land Portal' => 2,
 		),
 	);
 
@@ -1007,13 +1006,14 @@ function formPage($mode, $rxa)
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck()
+function generateFieldCheck($returnType = 0)
 {
 	global $CONFIGVAR;
 	global $vfystr;
 
 	$data = array(
 		0 => array(
+			'dispname' => 'Profile ID',
 			'name' => 'profid',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
@@ -1021,6 +1021,7 @@ function generateFieldCheck()
 			'min' => 0,
 		),
 		1 => array(
+			'dispname' => 'Profile Name',
 			'name' => 'profname',
 			'type' => $vfystr::STR_ALPHA,
 			'noblank' => true,
@@ -1028,13 +1029,15 @@ function generateFieldCheck()
 			'min' => 1,
 		),
 		2 => array(
+			'dispname' => 'Portal Type',
 			'name' => 'profport',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
-			'max' => 1,
+			'max' => 2,
 			'min' => 0,
 		),
 		3 => array(
+			'dispname' => 'Description',
 			'name' => 'profdesc',
 			'type' => $vfystr::STR_ASCII,
 			'noblank' => true,
@@ -1042,7 +1045,19 @@ function generateFieldCheck()
 			'min' => 1,
 		),
 	);
-	$fieldcheck = json_encode($data);
+	switch ($returnType)
+	{
+		case FIELDCHK_JSON:
+			$fieldcheck = json_encode($data);
+			break;
+		case FIELDCHK_ARRAY:
+			$fieldcheck = $data;
+			break;
+		default:
+			handleError('Internal Programming Error: CODE XY039223<br>' .
+				'Contact your administrator.');
+			break;
+	}
 	return $fieldcheck;
 }
 

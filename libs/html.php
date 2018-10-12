@@ -2336,7 +2336,7 @@ class html implements html_interface
 		<!-- Install Timer -->
 		<script type="text/javascript" src="<?php echo $url; ?>/js/baseline/timer.js"></script>
 		<!-- Install regular jQuery -->
-		<script type="text/javascript" src="<?php echo $url; ?>/APIs/JQuery/BaseJQuery/jquery-3.1.0.min.js"></script>
+		<script type="text/javascript" src="<?php echo $url; ?>/APIs/JQuery/BaseJQuery/jquery-3.3.1.min.js"></script>
 		<!-- Install Bootstrap -->
 		<script type="text/javascript" src="<?php echo $url; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
 <?php
