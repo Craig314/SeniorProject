@@ -29,24 +29,24 @@ the module directory taking precidence.
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = '';
+$moduleFilename = '';		// XXX Set This
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
-$moduleTitle = '';
+$moduleTitle = '';		// XXX Set This
 
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 0;
+$moduleId = 0;		// XXX Set This
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
-$moduleDisplayUpper = '';
+$moduleDisplayUpper = '';		// XXX Set This
 
 // The lowercase short display name of the module.  This shows up in
 // various messages.
-$moduleDisplayLower = '';
+$moduleDisplayLower = '';		// XXX Set This
 
 // Set to true if this is a system module.
 $moduleSystem = false;
@@ -58,7 +58,7 @@ $modulePermissions = array();
 
 
 // These are the data editing modes.
-const MODE_VIEW	= 0;
+const MODE_VIEW		= 0;
 const MODE_UPDATE	= 1;
 const MODE_INSERT	= 2;
 const MODE_DELETE	= 3;
@@ -314,7 +314,7 @@ function databaseLoad()
 	if ($key == NULL)
 		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
 	// The below line requires customization for database loading.	
-	$rxa = $DATABASE_QUERY_OPERATION($key);	// XXX: Set This
+	$rxa = $DATABASE_QUERY_OPERATION($key);		// XXX Set This
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
@@ -403,7 +403,7 @@ function updateRecordAction()
 	// $ = safeEncodeString($);
 	
 	// We are good, update the record
-	$result = $DATABASE_UPDATE_OPERATION($key);	// XXX: Set This
+	$result = $DATABASE_UPDATE_OPERATION($key);		// XXX Set This
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -453,7 +453,7 @@ function insertRecordAction()
 	// $ = safeEncodeString($);
 	
 	// We are good, insert the record
-	$result = $DATABASE_INSERT_OPERATION($id);	// XXX: Set This
+	$result = $DATABASE_INSERT_OPERATION($id);		// XXX Set This
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -479,7 +479,7 @@ function deleteRecordAction()
 
 	// Gather data...
 	$key = getPostValue('hidden');
-	$id = getPostValue('');		// XXX: Set This
+	$id = getPostValue('');		// XXX Set This
 
 	// ...and check it.
 	if ($key == NULL)
@@ -494,7 +494,7 @@ function deleteRecordAction()
 		handleError('Database key mismatch.');
 	
 	// Now remove the record from the database.
-	$result = $DATABASE_DELETE_OPERATION($key);	// XXX: Set This
+	$result = $DATABASE_DELETE_OPERATION($key);		// XXX Set This
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -508,6 +508,7 @@ function deleteRecordAction()
 }
 
 // Generate generic form page.
+// XXX Requires customization
 function formPage($mode, $rxa)
 {
 	global $CONFIGVAR;
@@ -589,7 +590,7 @@ function formPage($mode, $rxa)
 		);
 	}
 
-	// Custom field rendering code
+	// XXX Custom field rendering code
 
 
 	// Build out the form array.
@@ -608,7 +609,7 @@ function formPage($mode, $rxa)
 			'name' => 'dataForm',
 		),
 
-		// Enter custom field data here.
+		// XXX Enter custom field data here.
 
 
 		array(
