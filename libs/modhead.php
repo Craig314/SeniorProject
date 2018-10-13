@@ -199,10 +199,17 @@ function redirectPortal()
 	global $dbconf;
 	global $herr;
 
-	if ($_SESSION['portalType'] == 1)
-		html::redirect('/modules/' . $CONFIGVAR['html_linkportal_page']['value']);
-	else
-		html::redirect('/modules/' . $CONFIGVAR['html_gridportal_page']['value']);
+	switch ($_SESSION['portalType'])
+	{
+		case 0:
+			html::redirect('/modules/' . $CONFIGVAR['html_gridportal_page']['value']);
+			break;
+		case 1:
+			html::redirect('/modules/' . $CONFIGVAR['html_linkportal_page']['value']);
+			break;
+		case 2:
+			html::redirect('/application/' . $CONFIGVAR['html_appportal_page']['value']);
+	}
 	exit;
 }
 

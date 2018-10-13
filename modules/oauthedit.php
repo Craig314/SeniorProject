@@ -34,7 +34,7 @@ $moduleTitle = 'OAuth Provider Editor';
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 12;
+$moduleId = 22;
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.

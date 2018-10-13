@@ -44,9 +44,12 @@ class session implements sessionInterface
 		if (!$result) printErrorImmediate('Security Error: Session start failed');
 
 		// Rewrites the sessions cookie with updated parameters.
-		$result = setcookie(ini_get('session.name'), session_id(), time() + $timeout, "/",
-			$hostname, $secured, true);
-		if (!$result) printErrorImmediate('Security Error: Set Cookie Failed');
+		if ($CONFIGVAR['session_regen_enable']['value'] != 0)
+		{
+			$result = setcookie(ini_get('session.name'), session_id(), time() + $timeout, "/",
+				$hostname, $secured, true);
+			if (!$result) printErrorImmediate('Security Error: Set Cookie Failed');
+		}
 		
 		// These are to ensure the user is logged into the system.
 
@@ -75,9 +78,12 @@ class session implements sessionInterface
 		if (!$result) printErrorImmediate('Security Error: Session start failed');
 
 		// Rewrites the session cookie with updated parameters.
-		$result = setcookie(session_name(), session_id(), time() + $timeout, "/",
-			$hostname, $secured, true);
-		if (!$result) printErrorImmediate('Security Error: Set Cookie Failed');
+		if ($CONFIGVAR['session_regen_enable']['value'] != 0)
+		{
+			$result = setcookie(session_name(), session_id(), time() + $timeout, "/",
+				$hostname, $secured, true);
+			if (!$result) printErrorImmediate('Security Error: Set Cookie Failed');
+		}
 	}
 
 	// Regenerates the session ID to thwart attacks caused by
@@ -86,6 +92,9 @@ class session implements sessionInterface
 	public function regenerateId()
 	{
 		global $CONFIGVAR;
+
+		// If session regeneration is not enabled, the just return.
+		if ($CONFIGVAR['session_regen_enable']['value'] == 0) return;
 
 		$currentTime = time();
 		if ($currentTime > $_SESSION['regenTimeLast'])

@@ -67,8 +67,6 @@ $htmlInjectFile = false;
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
-const BASEAPP = '../applibs/';
-require_once BASEAPP . 'panels.php';
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -112,9 +110,6 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/module/portal.js',
-			'/js/application/landing.js',
-			'/APIs/fullcalendar/lib/moment.min.js',
-			'/APIs/fullcalendar/fullcalendar.min.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -123,7 +118,6 @@ function loadInitialContent()
 		// $cssFiles = array();
 		$cssFiles = array(
 			'/css/portal.css',
-			'/APIs/fullcalendar/fullcalendar.min.css',
 		);
 
 		// The final option, htmlFlags, is an array that holds the names
@@ -166,30 +160,16 @@ function loadAdditionalContent()
 	of the script.  New insert methods for various HTML controls
 	and constructs are being added on a regular basis.
 	*/
-	global $panels;
 	global $ajax;
 
 	$url = html::getBaseURL();
-	$navContent = $panels->getLinks();
-	$statusContent = $panels->getStatus();
-	$mainContent = "<div id=\"calendar\"></div>
-<script type=\"text/javascript\">
-	$('#calendar').fullCalendar({
-		defaultView: 'month',
-	});
-</script>";
-
-	// XXX Development
+	$navContent = getModuleList();
 	$statusContent = 'Status Panel';
+	$mainContent = '<-- Click a link to continue.';
 	
 	// Write the panels.
-	// $ajax->writePanelsImmediate($navContent, $statusContent,
-	// 	$mainContent);
-	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
-	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
-	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
-	$ajax->loadQueueCommand(121);
-	$ajax->sendQueue();
+	$ajax->writePanelsImmediate($navContent, $statusContent,
+		$mainContent);
 }
 
 // Called when the initial command processor doesn't have the
@@ -211,6 +191,109 @@ function commandProcessor($commandId)
 			exit(1);
 			break;
 	}
+}
+
+// Generates and returns the HTML for the links panel.
+function getModuleList()
+{
+	global $baseUrl;
+	global $account;
+	global $dbconf;
+	global $herr;
+	global $admin;
+	global $vendor;
+	global $special;
+	global $moduleId;
+
+	// Get the current user's profile Id.
+	$profId = $_SESSION['profileId'];
+
+	// Load the modaccess table.
+	$rxa = $dbconf->queryModaccessProfile($profId);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+	}
+
+	// Load the module table.
+	$rxm = $dbconf->queryModuleAll();
+	if ($rxm == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('There are currently no modules to access.');
+	}
+
+	// Now we run the module list and check permissions and
+	// active status on each one. 
+	$access = false;
+	$navContent = '';
+	foreach($rxm as $kxa => $vxa)
+	{
+		// Check if the module is active.
+		if ($vxa['active'] == 0) continue;
+
+		// Get what we need from the database array.
+		$modId = $vxa['moduleid'];
+		$modName = $vxa['name'];
+		$modDesc = $vxa['description'];
+		$modIcon = $vxa['iconname'] . '.png';
+
+		// Check to see if the current module ID is the same as the
+		// executing module ID.  If it is, then skip.
+		if ($moduleId == $modId) continue;
+
+		// Don't change the order of these checks.
+		// Order Matters.
+
+		// The vendor account always has access.
+		if ($vendor != 0)
+		{
+			$access = true;
+			$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
+			continue;
+		}
+
+		// Some modules are only for the vendor.
+		if ($vxa['vendor'] != 0) continue;
+
+		// The admin account has access to everything that is not vendor
+		// only.  So we need to check if the user account is the admin
+		// account.
+		if ($admin != 0)
+		{
+			$access = true;
+			$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
+			continue;
+		}
+
+		// Modules with allusers set can be accessed by anyone.
+		if ($vxa['allusers'] != 0)
+		{
+			$access = true;
+			$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
+			continue;
+		}
+
+		// Now we have to bash the module id against the modaccess list.
+		// If the module id is not on the modaccess list, then that module
+		// is not displayed.
+		if (!empty($rxa))
+		{
+			foreach($rxa as $kxb => $vxb)
+			{
+				if ($modId == $vxb['moduleid'] && $profId == $vxb['profileid'])
+				{
+					$access = true;
+					$navContent .= writeModuleIcon($baseUrl, $modId, $modIcon, $modName, $modDesc);
+					break;
+				}
+			}
+		}
+	}
+	return $navContent;
 }
 
 // Loads the selected module.
@@ -267,6 +350,14 @@ function loadModule()
 
 	// Redirect.
 	redirect($rxa['filename']);
+}
+
+// This is the function that writes the HTML to the client.
+function writeModuleIcon($url, $id, $iname, $dname, $desc)
+{
+	$tooltip = 'data-toggle="tooltip" data-html="true" title="' . $desc . '"';
+	$content = "	<div class=\"linkicon iconfont\" onclick=\"loadModule($id)\" $tooltip>$dname</div>";
+	return $content;
 }
 
 // Redirect

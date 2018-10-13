@@ -361,7 +361,7 @@ function redirect($filename)
 	else
 	{
 		$result = file_exists($docRoot . '/application/' . $filename);
-		if ($result) $ajax->redirect('/applicatiion/' . $filename);
+		if ($result) $ajax->redirect('/application/' . $filename);
 		else
 			handleError('Configured module/application file is missing' .
 				'<br>Contact your administrator.');

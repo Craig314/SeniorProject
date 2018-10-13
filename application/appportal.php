@@ -31,11 +31,11 @@ be customized for each application.
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = 'linkportal.php';
+$moduleFilename = 'appportal.php';
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
-$moduleTitle = 'Portal';
+$moduleTitle = 'Application Portal';
 
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
