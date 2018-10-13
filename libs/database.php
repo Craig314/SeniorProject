@@ -63,39 +63,39 @@ class databaseCore implements databaseCoreInterface
 	private $sqlconn;
 
 	// Object Constructor
-	function __construct($dbinfo = "")
+	function __construct($dbinfo = '')
 	{
 		// Perform setup for each specific database type
 		switch (APP_DATABASE_TYPE)
 		{
 			case 'mysql':
-				$dsn = APP_DATABASE_TYPE . ":";
+				$dsn = APP_DATABASE_TYPE . ':';
 				if (APP_DATABASE_CONNECT == 'inet')
 				{
-					$dsn .= "host=" . APP_DATABASE_HOST;
-					if (APP_DATABASE_PORT != NULL) $dsn .= ";port=" . APP_DATABASE_PORT;
+					$dsn .= 'host=' . APP_DATABASE_HOST;
+					if (APP_DATABASE_PORT != NULL) $dsn .= ';port=' . APP_DATABASE_PORT;
 						else printErrorImmediate(
-							"Inet connection type requires both hostname or IP address, and a port.");
+							'Inet connection type requires both hostname or IP address, and a port.');
 				}
 				elseif (APP_DATABASE_CONNECT == 'sock')
 				{
-					if (!empty(APP_DATABASE_SOCKET)) $dsn .= "unix_socket=" . APP_DATABASE_SOCKET;
+					if (!empty(APP_DATABASE_SOCKET)) $dsn .= 'unix_socket=' . APP_DATABASE_SOCKET;
 						else printErrorImmediate(
-							"Socket connection type requires a socket filename.");
+							'Socket connection type requires a socket filename.');
 				}
 				elseif (APP_DATABASE_CONNECT == 'default')
 				{
 					if (!empty(APP_DATABASE_HOST)) $dsn .= 'hostname=' . APP_DATABASE_HOST;
 						else printErrorImmediate(
-							"Default connection type requires a hostname");
+							'Default connection type requires a hostname');
 				}
-				else printErrorImmediate("Unknown database connection type.");
-				if (!empty($dbinfo)) $dsn .= ";dbname=" . $dbinfo;
+				else printErrorImmediate('Unknown database connection type.');
+				if (!empty($dbinfo)) $dsn .= ';dbname=' . $dbinfo;
 				if (APP_DATABASE_CHARSET != NULL || APP_DATABASE_CHARSET != 'default')
-					$dsn .= ";charset=" . APP_DATABASE_CHARSET;
+					$dsn .= ';charset=' . APP_DATABASE_CHARSET;
 				break;
 			default:
-				printErrorImmediate("Database type must be defined and valid.");
+				printErrorImmediate('Database type must be defined and valid.');
 				break;
 		}
 
@@ -108,7 +108,7 @@ class databaseCore implements databaseCoreInterface
 		}
 		catch (PDOException $e)
 		{
-			printErrorImmediate("Failed to connect to database: "
+			printErrorImmediate('Failed to connect to database: '
 				. $e->getMessage());
 		}
 	}
@@ -190,7 +190,7 @@ class databaseCore implements databaseCoreInterface
 	public function launchQuerySingle($tab, $col, $qxa)
 	{
 		// Check Input
-		if (!is_array($qxa)) return($this->handleError("Query data not an array."));
+		if (!is_array($qxa)) return($this->handleError('Query data not an array.'));
 
 		// Setup
 		$request = "SELECT $col FROM $tab WHERE ";
@@ -199,11 +199,11 @@ class databaseCore implements databaseCoreInterface
 		// Build Query
 		foreach($qxa as $fx => $vx)
 		{
-			if ($flag) $request .= " AND ";
-			$request .= $vx['field'] . " = ?";
+			if ($flag) $request .= ' AND ';
+			$request .= '`' . $vx['field'] . '` = ?';
 			$flag = true;
 		}
-		$request .= " LIMIT 1";  
+		$request .= ' LIMIT 1';  
 
 		// Prepare Statements
 		$stmt = $this->sqlconn->prepare($request);		
@@ -236,13 +236,13 @@ class databaseCore implements databaseCoreInterface
 	// associative array.
 	public function launchQueryMultiple($tab, $col, $qxa)
 	{
-		if (!is_array($qxa)) return($this->handleError("Query data not an array."));
+		if (!is_array($qxa)) return($this->handleError('Query data not an array.'));
 		$request = "SELECT $col FROM $tab WHERE ";
 		$flag = false;
 		foreach($qxa as $fx => $vx)
 		{
-			if ($flag) $request .= " AND ";
-			$request .= $vx['field'] . " = ?";
+			if ($flag) $request .= ' AND ';
+			$request .= '`' . $vx['field'] . '` = ?';
 			$flag = true;
 		}
 		$stmt = $this->sqlconn->prepare($request);
@@ -293,17 +293,17 @@ class databaseCore implements databaseCoreInterface
 	{
 		// Check Input
 		if (!is_array($dxa))
-			return($this->handleError("Program error, 5th param is not array."));
+			return($this->handleError('Program error, 5th param is not array.'));
 
-		$str = "";
+		$str = '';
 		$flag = false;
 		foreach($dxa as $fx => $vx)
 		{
-			if ($flag) $str .= ",";
-			$str .= $vx['field'] . "=?";
+			if ($flag) $str .= ',';
+			$str .= '`' . $vx['field'] . '`=?';
 			$flag = true;
 		}
-		$request = "UPDATE $tab SET $str WHERE $kfld = ? LIMIT 1";
+		$request = "UPDATE $tab SET $str WHERE \`$kfld\` = ? LIMIT 1";
 		$stmt = $this->sqlconn->prepare($request);
 		if ($stmt == false) return($this->handleError($this->sqlconn));
 		$count = 1;
@@ -325,25 +325,25 @@ class databaseCore implements databaseCoreInterface
 	public function launchUpdateMultiple($tab, $dxk, $dxa)
 	{
 		if (!is_array($dxk))
-			return($this->handleError("Program error, 2nd param is not array."));
+			return($this->handleError('Program error, 2nd param is not array.'));
 		if (!is_array($dxa))
-			return($this->handleError("Program error, 3th param is not array."));
+			return($this->handleError('Program error, 3th param is not array.'));
 
-		$strdat = "";
-		$strkey = "";
+		$strdat = '';
+		$strkey = '';
 		$flag = false;
 		foreach($dxa as $fx => $vx)
 		{
-			if ($flag) $strdat .= ",";
-			$strdat .= $vx['field'] . "=?";
+			if ($flag) $strdat .= ',';
+			$strdat .= '`' . $vx['field'] . '`=?';
 			$flag = true;
 		}
 
 		$flag = false;
 		foreach($dxk as $fx => $vx)
 		{
-			if ($flag) $strkey .= " AND ";
-			$strkey .= $vx['field'] . "=?";
+			if ($flag) $strkey .= ' AND ';
+			$strkey .= '`' . $vx['field'] . '`=?';
 			$flag = true;
 		}
 
@@ -375,18 +375,18 @@ class databaseCore implements databaseCoreInterface
 	// Inserts a record into the database.  Multifield enabled.
 	public function launchInsert($tab, $qxa)
 	{
-		$str1 = "";
-		$str2 = "";
+		$str1 = '';
+		$str2 = '';
 		$flag = false;
 		foreach($qxa as $fx => $vx)
 		{
 			if ($flag)
 			{
-				$str1 .= ",";
-				$str2 .= ",";
+				$str1 .= ',';
+				$str2 .= ',';
 			}
-			$str1 .= $vx['field'];
-			$str2 .= "?";
+			$str1 .= '`' . $vx['field'] . '`';
+			$str2 .= '?';
 			$flag = true;
 		}
 		$request = "INSERT INTO $tab ($str1) VALUES ($str2)";
@@ -411,7 +411,7 @@ class databaseCore implements databaseCoreInterface
 	// Deletes a record from the database.
 	public function launchDeleteSingle($tab, $kfld, $kval, $ktyp)
 	{
-		$request = "DELETE FROM $tab WHERE $kfld=?";
+		$request = "DELETE FROM $tab WHERE \`$kfld\`=?";
 		$stmt = $this->sqlconn->prepare($request);
 		if ($stmt == false) return($this->handleError($this->sqlconn));
 		$result = $stmt->bindParam(1, $kval, $ktyp);
@@ -428,9 +428,9 @@ class databaseCore implements databaseCoreInterface
 		$str = "";
 		foreach($qxa as $fx => $vx)
 		{
-			if ($flag) $str .= " AND ";
+			if ($flag) $str .= ' AND ';
 			else $flag = true;
-			$str .= $vx['field'] . "=?";
+			$str .= '`' . $vx['field'] . '`=?';
 		}
 		$request = "DELETE FROM $tab WHERE $str";
 		$stmt = $this->sqlconn->prepare($request);
