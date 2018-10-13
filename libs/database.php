@@ -303,7 +303,7 @@ class databaseCore implements databaseCoreInterface
 			$str .= '`' . $vx['field'] . '`=?';
 			$flag = true;
 		}
-		$request = "UPDATE $tab SET $str WHERE \`$kfld\` = ? LIMIT 1";
+		$request = "UPDATE $tab SET $str WHERE `$kfld` = ? LIMIT 1";
 		$stmt = $this->sqlconn->prepare($request);
 		if ($stmt == false) return($this->handleError($this->sqlconn));
 		$count = 1;
@@ -411,7 +411,7 @@ class databaseCore implements databaseCoreInterface
 	// Deletes a record from the database.
 	public function launchDeleteSingle($tab, $kfld, $kval, $ktyp)
 	{
-		$request = "DELETE FROM $tab WHERE \`$kfld\`=?";
+		$request = "DELETE FROM $tab WHERE `$kfld`=?";
 		$stmt = $this->sqlconn->prepare($request);
 		if ($stmt == false) return($this->handleError($this->sqlconn));
 		$result = $stmt->bindParam(1, $kval, $ktyp);
