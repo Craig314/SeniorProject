@@ -6,6 +6,10 @@ SEA-CORE Development Group
 
 PHP Web Application Application Database Driver
 
+Note: Student ID and Instructor ID are the User ID from userdata.users table.
+
+$instruct = Instructor ID
+$student = Student ID
 
 */
 
@@ -97,6 +101,7 @@ interface database_application_interface
 	public function deleteWeightgroup($group, $instruct);
 
 	// Meta Functions
+	public function deleteUser($userid);
 	
 }
 
@@ -848,6 +853,127 @@ class database_application implements database_application_interface
 		return($dbcore->launchDeleteMultiple($table, $qxa));
 	}
 
+
+
+	/* ******** META FUNCTIONS ******** */
+
+	/*  */
+
+	// This function is called from useredit.php when a user is to
+	// be deleted from all tables.
+	public function metaDeleteUser($userid)
+	{
+		global $dbcore;
+		global $herr;
+		global $CONFIGVAR;
+
+		$result = $dbcore->transOpen();
+		if ($result == false) return false;
+		$result = true;
+
+		// If the user is an instructor, then we have to remove the instructor
+		// from the course, remove the instructor's grading scale from the
+		// course, then remove the instructor's grade weights and grade weight
+		// groups from the assignments.
+		$rxa = $this->queryCourseInstructAll($userid);
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+			{
+				$dbcore->transRollback();
+				handleError($herr->errorGetMessage());
+			}
+		}
+		else
+		{
+			foreach ($rxa as $kxa => $vxa)
+			{
+				// Take the instructor off the course.
+				$result = ($this->updateCourseAdmin($vxa['courseid'], $vxa['class'],
+					$vxa['section'], $vxa['name'], $CONFIGVAR['account_id_none']
+					['value'], 0, $vxa['curve']) == true) ? $result : false;
+				$rxb = $this->queryAssignmentCourseAll($vxa['courseid']);
+				if ($rxb == false)
+				{
+					if ($herr->checkState())
+					{
+						$dbcore->transRollback();
+						handleError($herr->errorGetMessage());
+					}
+				}
+				else
+				{
+					foreach ($rxb as $kxb => $vxb)
+					{
+						// Then take the instructor's weight group off each
+						// assignment for each course.
+						$result = ($this->update());
+					}
+				}
+			}
+			$rxb = $this->queryGradescaleAll($userid);
+			if ($rxb == false)
+			{
+				if ($herr->checkState())
+				{
+					$dbcore->transRollback();
+					handleError($herr->errorGetMessage());
+				}
+			}
+			else
+			{
+				// Remove the instructor's grade weight scale.
+			}
+			$rxb = $this->queryWeightgroupInstructAll($userid);
+			if ($rxb == false)
+			{
+				if ($herr->checkState())
+				{
+					$dbcore->transRollback();
+					handleError($herr->errorGetMessage());
+				}
+			}
+			else
+			{
+				// Remove the instructor's grade weight scale group.
+			}
+		}
+
+		// For a student, we delete their turnins, files, grades, and course
+		// associations.
+		$result = ($this->deleteFilenameStudent($userid) == true) ? $result : false;
+		$result = ($this->deleteTurninStudentAll($userid) == true) ? $reuslt : false;
+		$result = ($this->deleteGradesStudent($userid) == true) ? $result : false;
+		$result = ($this->deleteStudentclassStudent($userid) == true) ? $result : false;
+
+		// If all the above operations passed, then we commit the transaction
+		// to the database.  Otherwise, we roll everything back and return an
+		// error.
+		if ($result == true)
+		{
+			$result = $dbcore->transCommit();
+			if ($result == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				else
+					handleError('');
+			}
+			return true;
+		}
+		else
+		{
+			$result = $dbcore->transRollback();
+			if ($result == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				else
+					handleError('');
+			}
+			return false;
+		}
+	}
 
 
 }

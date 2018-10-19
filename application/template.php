@@ -132,7 +132,7 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/baseline/common.js',
-			'/js/modules/portal.js',
+			'/js/module/portal.js',
 			'/js/application/.js',
 		);
 

@@ -37,7 +37,7 @@ class linkPanel implements linkPanelInterface
 	private function writeModuleIcon($url, $id, $iname, $dname, $desc)
 	{
 		$tooltip = 'data-toggle="tooltip" data-html="true" title="' . $desc . '"';
-		$content = "	<div class=\"linkicon iconfont\" onclick=\"loadModule($id)\" $tooltip>$dname</div>";
+		$content = "	<div class=\"linkitem iconfont\" onclick=\"loadModule($id)\" $tooltip>$dname</div>";
 		return $content;
 	}
 
@@ -147,6 +147,7 @@ class linkPanel implements linkPanelInterface
 	// Generates and returns the HTML for the status panel.
 	public function getStatus()
 	{
+		return 'Status Panel';
 	}
 
 }

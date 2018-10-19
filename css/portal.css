@@ -40,3 +40,7 @@ Cascading Style Sheet for Application Portal
 	margin: 10px 5px;
 	padding: 2px;
 }
+
+.linkitem {
+    cursor: pointer;
+}
