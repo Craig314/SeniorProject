@@ -881,6 +881,8 @@ function insertRecordAction()
 	global $moduleDisplayLower;
 	global $dbuser;
 	global $dbcore;
+	global $admin;
+	global $vendor;
 
 	$fieldCheck = generateFieldCheck(FIELDCHK_ARRAY);
 
