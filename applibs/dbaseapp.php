@@ -38,6 +38,7 @@ interface database_application_interface
 	
 	// Course Table
 	public function queryCourse($course);
+	public function queryCourseAll();
 	public function queryCourseInstructAll($instruct);
 	public function updateCourseAdmin($course, $class, $sect, $name,
 		$instruct, $scale, $curve);
@@ -272,6 +273,15 @@ class database_application implements database_application_interface
 		$column = '*';
 		$qxa = $dbcore->buildArray('courseid', $course, databaseCore::PTINT);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	// Query all courses
+	public function queryCourseAll()
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.course';
+		$column = '*';
+		return($dbcore->launchQueryDumpTable($table, $column));
 	}
 
 	// Queries all courses taught by an instructor.
