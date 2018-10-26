@@ -41,7 +41,7 @@ interface database_application_interface
 	public function queryCourseInstructAll($instruct);
 	public function updateCourseAdmin($course, $class, $sect, $name,
 		$instruct, $scale, $curve);
-	public function updateCourseInstruct($course, $instruct);
+	public function updateCourseInstruct($course, $instruct, $scale);
 	public function updateCourse($course, $scale, $curve);
 	public function deleteCourse($course);
 
@@ -101,7 +101,7 @@ interface database_application_interface
 	public function deleteWeightgroup($group, $instruct);
 
 	// Meta Functions
-	public function deleteUser($userid);
+	public function metaDeleteUser($userid);
 	
 }
 
@@ -301,11 +301,12 @@ class database_application implements database_application_interface
 	}
 
 	// Updates the instructor for a course (Admin).
-	public function updateCourseInstruct($course, $instruct)
+	public function updateCourseInstruct($course, $instruct, $scale)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.course';
 		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('scale', $scale, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'courseid', $course,
 			databaseCore::PTINT, $qxa));
 	}
@@ -889,9 +890,9 @@ class database_application implements database_application_interface
 			foreach ($rxa as $kxa => $vxa)
 			{
 				// Take the instructor off the course.
-				$result = ($this->updateCourseAdmin($vxa['courseid'], $vxa['class'],
-					$vxa['section'], $vxa['name'], $CONFIGVAR['account_id_none']
-					['value'], 0, $vxa['curve']) == true) ? $result : false;
+				$result = ($this->updateCourseInstruct($vxa['courseid'],
+					$CONFIGVAR['account_id_none'] ['value'], 0) == true)
+					? $result : false;
 				$rxb = $this->queryAssignmentCourseAll($vxa['courseid']);
 				if ($rxb == false)
 				{

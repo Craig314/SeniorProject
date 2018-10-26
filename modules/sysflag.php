@@ -180,7 +180,7 @@ function loadAdditionalContent()
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 	}
 	else
 	{
@@ -301,7 +301,7 @@ function databaseLoad()
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			$rxa = array(
 				'flag' => $key,
@@ -452,7 +452,7 @@ function deleteRecordAction()
 	if ($result == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
 				' data. Key = ' . $key);

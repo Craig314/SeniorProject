@@ -193,7 +193,7 @@ function loadAdditionalContent()
 	if ($rxu === false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to read users table.');
 	}
@@ -201,7 +201,7 @@ function loadAdditionalContent()
 	if ($rxc === false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to read contact table.');
 	}
@@ -209,7 +209,7 @@ function loadAdditionalContent()
 	if ($rxpa === false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to read OAuth providers table.');
 	}
@@ -217,7 +217,7 @@ function loadAdditionalContent()
 	if ($rxpo === false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to read OpenID providers table.');
 	}
@@ -391,7 +391,7 @@ function databaseLoad()
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to retrieve required ' .
 				$moduleDisplayLower . ' data.');
@@ -1114,7 +1114,7 @@ function insertRecordAction()
 		if ($res == false)
 		{
 			if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to insert ' . $moduleDisplayLower .
 				' data. Key = ' . $key);
@@ -1125,7 +1125,7 @@ function insertRecordAction()
 	{
 		$dbcore->transRollback();
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to insert ' . $moduleDisplayLower .
 				' data. Key = ' . $userid);
@@ -1247,7 +1247,7 @@ function deleteRecordAction()
 		if ($res == false)
 		{
 			if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
 				' data. Key = ' . $key);
@@ -1258,7 +1258,7 @@ function deleteRecordAction()
 	{
 		$dbcore->transRollback();
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
 				' data. Key = ' . $key);
@@ -1341,7 +1341,7 @@ function formPage($mode, $rxa)
 	if ($rxp == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to retrieve required '
 				. $moduleDisplayLower . ' profile data.');
@@ -1364,7 +1364,7 @@ function formPage($mode, $rxa)
 		if ($rxpa == false)
 		{
 			if ($herr->checkState())
-				handleError($herr->errorGetMessages());
+				handleError($herr->errorGetMessage());
 		}
 		else
 		{
@@ -1389,7 +1389,7 @@ function formPage($mode, $rxa)
 		if ($rxpo == false)
 		{
 			if ($herr->checkState())
-				handleError($herr->errorGetMessages());
+				handleError($herr->errorGetMessage());
 		}
 		else
 		{
@@ -1481,7 +1481,7 @@ function formPage($mode, $rxa)
 				if ($rxl == false)
 				{
 					if ($herr->checkState())
-						handleError($herr->errorGetMessages());
+						handleError($herr->errorGetMessage());
 					else
 						handleError('Database Error: Unable to retrieve required '
 							. $moduleDisplayLower . ' login data.');
@@ -1539,7 +1539,7 @@ function formPage($mode, $rxa)
 				if ($rxl == false)
 				{
 					if ($herr->checkState())
-						handleError($herr->errorGetMessages());
+						handleError($herr->errorGetMessage());
 					else
 						handleError('Database Error: Unable to retrieve required OAuth '
 							. ' user data.');
@@ -1593,7 +1593,7 @@ function formPage($mode, $rxa)
 				if ($rxl == false)
 				{
 					if ($herr->checkState())
-						handleError($herr->errorGetMessages());
+						handleError($herr->errorGetMessage());
 					else
 						handleError('Database Error: Unable to retrieve required OpenID '
 							. ' user data.');
@@ -1653,7 +1653,7 @@ function formPage($mode, $rxa)
 		if ($rxc == false)
 		{
 			if ($herr->checkState())
-				handleError($herr->errorGetMessages());
+				handleError($herr->errorGetMessage());
 			else
 				handleError('Database Error: Unable to retrieve required '
 					. $moduleDisplayLower . ' contact data.');

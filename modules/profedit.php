@@ -178,7 +178,7 @@ function loadAdditionalContent()
 	if ($rxm == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('There are no ' . $moduleDisplayLower . 's in the database to edit.');
 	}
@@ -291,7 +291,7 @@ function databaseLoad()
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to retrieve required ' . $moduleDisplayLower . ' data.');
 	}
@@ -423,7 +423,7 @@ function updateRecordAction()
 	if ($rxm == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages);
+			handleError($herr->errorGetMessage);
 		else
 			handleError('Database Error: Unable to retrieve module list.');
 	}
@@ -453,13 +453,13 @@ function updateRecordAction()
 			if ($result == false)
 			{
 				if ($herr->checkState())
-					handleError($herr->errorGetMessages . '<br>PROF='
+					handleError($herr->errorGetMessage . '<br>PROF='
 						. $id . '; MOD=' . $vx['moduleid']);
 				$result = $dbconf->insertModaccess($id, $vx['moduleid']);
 				if ($result == false)
 				{
 					if ($herr->checkState())
-						handleError($herr->errorGetMessages . '<br>PROF='
+						handleError($herr->errorGetMessage . '<br>PROF='
 							. $id . '; MOD=' . $vx['moduleid']);
 					else
 						handleError('Database Error: Unable to insert module ' .
@@ -476,7 +476,7 @@ function updateRecordAction()
 			if ($result == false)
 			{
 				if ($herr->checkState())
-					handleError($herr->errorGetMessages . '<br>PROF='
+					handleError($herr->errorGetMessage . '<br>PROF='
 						. $id . '; MOD=' . $vx['moduleid']);
 			}
 			else
@@ -485,7 +485,7 @@ function updateRecordAction()
 				if ($result == false)
 				{
 					if ($herr->checkState())
-						handleError($herr->errorGetMessages . '<br>PROF='
+						handleError($herr->errorGetMessage . '<br>PROF='
 							. $id . '; MOD=' . $vx['moduleid']);
 					else
 						handleError('Database Error: Unable to delete module ' .
@@ -574,7 +574,7 @@ function insertRecordAction()
 	if ($rxm == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages);
+			handleError($herr->errorGetMessage);
 		else
 			handleError('Database Error: Unable to retrieve module list.');
 	}
@@ -602,7 +602,7 @@ function insertRecordAction()
 			if ($result == false)
 			{
 				if ($herr->checkState())
-					handleError($herr->errorGetMessages);
+					handleError($herr->errorGetMessage);
 				else
 					handleError('Database Error: Unable to insert module ' .
 						'access record.<br>' . 'PROF=' . $id . '; MOD=' .
@@ -659,7 +659,7 @@ function deleteRecordAction()
 	if ($result == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
 				' data. Key = ' . $key);
@@ -861,7 +861,7 @@ function formPage($mode, $rxa)
 		if ($rxb == false)
 		{
 			if ($herr->checkState())
-				handleError($herr->errorGetMessages);
+				handleError($herr->errorGetMessage);
 			else
 				handleError('Database Error: Unable to retrieve module list.');
 		}
@@ -871,7 +871,7 @@ function formPage($mode, $rxa)
 			if ($rxc == false)
 			{
 				if ($herr->checkState())
-					handleError($herr->errorGetMessages);
+					handleError($herr->errorGetMessage);
 				else $rxc = NULL;
 			}
 		}

@@ -209,7 +209,7 @@ function databaseLoad()
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to retrieve required ' .
 				$moduleDisplayLower . ' data.');
@@ -218,7 +218,7 @@ function databaseLoad()
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+			handleError($herr->errorGetMessage());
 		else
 			handleError('Database Error: Unable to retrieve required ' .
 				$moduleDisplayLower . ' data.');
