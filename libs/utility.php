@@ -100,5 +100,12 @@ function getPostValue(...$list)
 	return NULL;
 }
 
+// Converts a boolean value into Yes/No.
+function convBooleanValue($value)
+{
+	if ($value == 0) return 'No';
+	return 'Yes';
+}
+
 
 ?>

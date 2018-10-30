@@ -73,6 +73,7 @@ interface ajaxInterface
 	public function sendQueue();
 	public function writePanelsImmediate($nav, $stat, $main, $fields = NULL);
 	public function writeMainPanelImmediate($main, $fields);
+	public function writeStatusPanelImmediate($status);
 }
 
 
@@ -205,12 +206,24 @@ class ajaxClass implements ajaxInterface
 
 	public function writeMainPanelImmediate($main, $fields)
 	{
-		$data = array(
-			0 => self::TYPE_COMMAND . self::CMD_WMAINPANEL . ' ' . $main,
-			1 => self::TYPE_COMMAND . self::CMD_LDFLDATA . ' ' . $fields,
-		);
-		$sendData = json_encode($data);
-		echo self::TYPE_MULTI . $sendData;
+		if (isarray($fields))
+		{
+			$data = array(
+				0 => self::TYPE_COMMAND . self::CMD_WMAINPANEL . ' ' . $main,
+				1 => self::TYPE_COMMAND . self::CMD_LDFLDATA . ' ' . $fields,
+			);
+			$sendData = json_encode($data);
+			echo self::TYPE_MULTI . $sendData;
+		}
+		else
+		{
+			echo self::TYPE_COMMAND . self::CMD_WMAINPANEL . ' ' . $main;
+		}
+	}
+
+	public function writeStatusPanelImmediate($status)
+	{
+		echo self::TYPE_COMMAND . self::CMD_WSTATPANEL . ' ' . $status;
 	}
 
 }

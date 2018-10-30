@@ -27,7 +27,7 @@ interface flagInterface
 }
 
 
-class flag implements flagInterface
+class flagClass implements flagInterface
 {
 	static private $mask = array(
 		0 => 0x01,
@@ -100,5 +100,7 @@ class flag implements flagInterface
 
 }
 
+// Autoinstantiate the class.
+$flag = new flagClass();
 
 ?>

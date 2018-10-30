@@ -29,6 +29,7 @@ interface databaseCoreInterface
 	// Query
 	public function launchQuerySingle($tab, $col, $qxa);
 	public function launchQueryMultiple($tab, $col, $qxa);
+	public function launchQueryMultipleRange($tab, $col, $qxa, $field, $type, $start, $end);
 	public function launchQueryDumpTable($tab, $col);
 	public function launchQueryMultipleSpec($request);
 
@@ -261,6 +262,43 @@ class databaseCore implements databaseCoreInterface
 		return $rxa;
 	}
 
+	// Same as lauchQueryMultiple above, but returns records that have
+	// the specified field within the specified range.  $start and $end
+	// are included in the returned range.
+	public function launchQueryMultipleRange($tab, $col, $qxa, $field, $type, $start, $end)
+	{
+		if (!is_array($qxa)) return($this->handleError('Query data not an array.'));
+		$request = "SELECT $col FROM $tab WHERE `$field` => ? AND `$field` <= ? AND ";
+		$flag = false;
+		if (isarray($qxa))
+		{
+			foreach($qxa as $fx => $vx)
+			{
+				if ($flag) $request .= ' AND ';
+				$request .= '`' . $vx['field'] . '` = ?';
+				$flag = true;
+			}
+		}
+		$stmt = $this->sqlconn->prepare($request);
+		if ($stmt == false) return($this->handleError($this->sqlconn));
+		$result = $stmt->bindParam(1, $start, $type);
+		$result = $stmt->bindParam(2, $end, $type);
+		if (isarray($qxa))
+		{
+			$count = 3;
+			foreach($qxa as $fx => $vx)
+			{
+				$result = $stmt->bindParam($count, $vx['value'], $vx['type']);
+				if ($result == false) return($this->handleError($stmt));
+				$count++;
+			}
+		}
+		$result = $stmt->execute();
+		if ($result == false) return($this->handleError($stmt));
+		$rxa = $this->multiResult($stmt);
+		$stmt->closeCursor();
+		return $rxa;
+	}
 
 	// This dumps the entire table and returns the data in a 3D
 	// associative array.
