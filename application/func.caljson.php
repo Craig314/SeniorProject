@@ -129,7 +129,8 @@ function performDataAction()
 			if ($herr->checkState())
 				handleError($herr->errorGetMessage());
 			else
-				return;
+				$ajax->sendJSON(152, '[]');
+			return;
 		}
 	}
 	else
@@ -142,6 +143,8 @@ function performDataAction()
 			{
 				if ($herr->checkState())
 					handleError($herr->errorGetMessage());
+				else
+					$ajax->sendJSON(152, '[]');
 				return;
 			}
 			else array_push($rxb, $rxc);
