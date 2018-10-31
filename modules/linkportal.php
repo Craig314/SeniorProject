@@ -94,9 +94,6 @@ function loadInitialContent()
 		// It uses an associtive array to pass the contents to the HTML
 		// template.  The key is the display name.  The value is the function
 		// to be called.  Note that this uses the jQuery function call format.
-		$left = array(
-			'Home' => 'returnHome',
-		);
 		//$right = array(
 		//);
 
@@ -135,7 +132,7 @@ function loadInitialContent()
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
-			$left, '', '', $jsFiles, $cssFiles, $htmlFlags);
+			'', '', '', $jsFiles, $cssFiles, $htmlFlags);
 	}
 	else
 	{
