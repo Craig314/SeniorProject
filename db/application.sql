@@ -37,15 +37,16 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   KEY `duedate` (`duedate`),
   CONSTRAINT `FK1_asssignment_courseid_course_courseid` FOREIGN KEY (`courseid`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE,
   CONSTRAINT `FK2_assignment_gwgroup_weightgroup_group` FOREIGN KEY (`gwgroup`) REFERENCES `weightgroup` (`group`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COMMENT='The assignments that the instructor assigns to students.';
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COMMENT='The assignments that the instructor assigns to students.';
 
--- Dumping data for table application.assignment: ~1 rows (approximately)
+-- Dumping data for table application.assignment: ~4 rows (approximately)
 /*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
 INSERT INTO `assignment` (`assignment`, `courseid`, `name`, `desc`, `descfile`, `duedate`, `lockdate`, `gradeweight`, `gwgroup`, `curve`, `points`, `exempt`) VALUES
 	(1, 20284, 'Assignment 1', 'Assignment 1', NULL, 1540763960, NULL, 10, 0, NULL, 10, 0),
 	(2, 14298, 'Assignment 1', 'Assignment 1', NULL, 1540763960, NULL, 10, 0, NULL, 10, 0),
 	(3, 21924, 'Assignment 1', 'Assignment 1', NULL, 1540995920, NULL, 10, 0, NULL, 10, 0),
-	(4, 21924, 'Assignment 2', 'Assignment 2', NULL, 1541427920, NULL, 10, 0, NULL, 10, 0);
+	(4, 21924, 'Assignment 2', 'Assignment 2', NULL, 1541427920, NULL, 10, 0, NULL, 10, 0),
+	(5, 14298, 'Assignment 2', 'Assignment 2', NULL, 1541687190, NULL, 10, 0, NULL, 10, NULL);
 /*!40000 ALTER TABLE `assignment` ENABLE KEYS */;
 
 -- Dumping structure for table application.assignstep
@@ -61,6 +62,11 @@ CREATE TABLE IF NOT EXISTS `assignstep` (
 
 -- Dumping data for table application.assignstep: ~0 rows (approximately)
 /*!40000 ALTER TABLE `assignstep` DISABLE KEYS */;
+INSERT INTO `assignstep` (`assignment`, `step`, `date`, `desc`) VALUES
+	(5, 1, 1541108753, 'Assignment 2 Step 1'),
+	(5, 2, 1541195453, 'Assignment 2 Step 2'),
+	(5, 3, 1541282153, 'Assignment 2 Step 3'),
+	(5, 4, 1541368853, 'Assignment 2 Step 4');
 /*!40000 ALTER TABLE `assignstep` ENABLE KEYS */;
 
 -- Dumping structure for table application.course
@@ -80,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `course` (
   CONSTRAINT `FK2_course_scale_gradescale_scale` FOREIGN KEY (`scale`) REFERENCES `gradescale` (`scale`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the course that a student takes.';
 
--- Dumping data for table application.course: ~1 rows (approximately)
+-- Dumping data for table application.course: ~7 rows (approximately)
 /*!40000 ALTER TABLE `course` DISABLE KEYS */;
 INSERT INTO `course` (`courseid`, `class`, `section`, `name`, `instructor`, `scale`, `curve`) VALUES
 	(14298, 'CSC-152', 1, 'Cryptography', 1000, 0, NULL),
@@ -173,10 +179,10 @@ CREATE TABLE IF NOT EXISTS `studentclass` (
   CONSTRAINT `FK2_studentclass_courseid_course_courseid` FOREIGN KEY (`courseid`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Mapping table to map students to their classes.';
 
--- Dumping data for table application.studentclass: ~0 rows (approximately)
+-- Dumping data for table application.studentclass: ~2 rows (approximately)
 /*!40000 ALTER TABLE `studentclass` DISABLE KEYS */;
 INSERT INTO `studentclass` (`studentid`, `courseid`) VALUES
-	(2000, 20284),
+	(2000, 14298),
 	(2000, 21924);
 /*!40000 ALTER TABLE `studentclass` ENABLE KEYS */;
 

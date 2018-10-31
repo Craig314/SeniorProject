@@ -155,7 +155,6 @@ function performDataAction()
 	$priorityHigh = $CONFIGVAR['assign_priority_high']['value'] + $time;
 	$priorityMed = $CONFIGVAR['assign_priority_medium']['value'] + $time;
 	$priorityLow = $CONFIGVAR['assign_priority_low']['value'] + $time;
-
 	foreach($rxb as $kx => $vx)
 	{
 		$rxa = $dbapp->queryAssignmentRangeDue($vx['courseid'], $min, $max);
@@ -171,12 +170,11 @@ function performDataAction()
 			$event = array(
 				'title' => $vxa['name'],
 				'start' => timedate::unix2moment($vxa['duedate']),
-				//'end' => timedate::unix2moment($vxa['duedate']),
 				'editable' => false,
 				'assignment' => $vxa['assignment'],
 			);
 
-			// Priority Coloring
+			// Priority coloring for assignments
 			if ($time > $vxa['duedate'])
 			{
 				// Past due
@@ -213,8 +211,67 @@ function performDataAction()
 				$event['textColor'] = 'white';
 			}
 
-			// Push onto the data array.
+			// Push assignment event onto the data array.
 			array_push($data, $event);
+
+			// Assignment Step
+			$rxc = $dbapp->queryAssignstepAssignAll($vxa['assignment']);
+			if ($rxc == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				continue;
+			}
+			foreach ($rxc as $kxb => $vxb)
+			{
+				// Mandatory eventObject data.
+				$event = array(
+					'title' => $vxa['name'] . ' Step ' . $vxb['step'],
+					'start' => timedate::unix2moment($vxb['date']),
+					'editable' => false,
+					'assignment' => $vxa['assignment'],
+				);
+	
+				// Priority coloring for assignment steps.
+				if ($time > $vxb['date'])
+				{
+					// Past due
+					$event['backgroundColor'] = 'black';
+					$event['borderColor'] = 'yellow';
+					$event['textColor'] = 'yellow';
+				}
+				else if ($vxb['date'] < $priorityHigh)
+				{
+					// High Priority
+					$event['backgroundColor'] = 'red';
+					$event['borderColor'] = 'yellow';
+					$event['textColor'] = 'yellow';
+				}
+				else if ($vxb['date'] < $priorityMed)
+				{
+					// Medium Priority
+					$event['backgroundColor'] = '#ff9900';
+					$event['borderColor'] = 'yellow';
+					$event['textColor'] = 'black';
+				}
+				else if ($vxb['date'] < $priorityLow)
+				{
+					// Low Priority
+					$event['backgroundColor'] = '#006600';
+					$event['borderColor'] = 'yellow';
+					$event['textColor'] = 'yellow';
+				}
+				else
+				{
+					// Low-Low Priority
+					$event['backgroundColor'] = 'blue';
+					$event['borderColor'] = 'yellow';
+					$event['textColor'] = 'yellow';
+				}
+
+				// Push assignment step event onto the data array.
+				array_push($data, $event);
+			}
 		}
 	}
 
