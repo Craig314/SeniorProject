@@ -463,7 +463,7 @@ function insertRecordAction()
 			break;
 		case DBTYPE_INTEGER:
 			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_INTEGER, true);
+			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_INTEGER, true, 0, 1);
 			break;
 		case DBTYPE_BOOLEAN:
 			$value = getPostValue('datavalue2');
@@ -875,7 +875,7 @@ function generateFieldCheck()
 	$data = array(
 		0 => array(
 			'name' => 'setting',
-			'type' => $vfystr::STR_INTEGER,
+			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
 			'max' => 0,
 			'min' => 1,

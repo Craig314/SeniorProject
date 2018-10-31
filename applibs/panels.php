@@ -17,9 +17,11 @@ in the status panel of the library.
 
 const LIBSDIR = '../libs/';
 require_once LIBSDIR . 'confload.php';
+require_once LIBSDIR . 'timedate.php';
 require_once LIBSDIR . 'account.php';
 require_once LIBSDIR . 'dbaseconf.php';
 require_once LIBSDIR . 'dbaseuser.php';
+require_once 'dbaseapp.php';
 require_once LIBSDIR . 'error.php';
 // require_once LIBSDIR . '.php';
 
@@ -147,7 +149,124 @@ class linkPanel implements linkPanelInterface
 	// Generates and returns the HTML for the status panel.
 	public function getStatus()
 	{
-		return 'Status Panel';
+		global $CONFIGVAR;
+		global $dbapp;
+		global $herr;
+
+
+		// Courses
+		$rxa = $dbapp->queryStudentclassStudentAll($_SESSION['userId']);
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			$rxb = $dbapp->queryCourseInstructAll($_SESSION['userId']);
+			if ($rxb == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				else
+					return 'No course data found.';
+			}
+		}
+		else
+		{
+			$rxb = array();
+			foreach($rxa as $kx => $vx)
+			{
+				$rxc = $dbapp->queryCourse($vx['courseid']);
+				if ($rxc == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+					return 'No course data found.';
+				}
+				else array_push($rxb, $rxc);
+			}
+		}
+
+		// Past Due
+		$pastDue = '<h4><b>Assignments<br>Past Due<b></h4><br>';
+		$pastFlag = false;
+		$max = time();
+		$min = $max - $CONFIGVAR['assign_past_due_time']['value'];
+		if ($min < 0) $min = 0;
+		foreach($rxb as $kx => $vx)
+		{
+			$rxa = $dbapp->queryAssignmentRangeDue($vx['courseid'], $min, $max);
+			if ($rxa == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				continue;
+			}
+			$pastFlag = true;
+			foreach($rxa as $kxa => $vxa)
+			{
+				if ($vxa['lockdate'] > 0)
+				{
+					if ($vxa['lockdate'] < $max) continue;
+				}
+				$rxc = $dbapp->queryTurninStudentAssignAll($_SESSION['userId'],
+					$vxa['assignment']);
+				if ($rxc == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+				}
+				else continue;
+				$pastDue .= '<span class="cursor-pointer" onclick="loadAssignment('
+					. $vxa['assignment'] . ')">';
+				$pastDue .= '<b>' . $vx['class'] . ': ' . $vx['name'] . '</b></br>';
+				$pastDue .= '<i>' . $vxa['name'] . '</i></br>';
+				$pastDue .= '<span class="bgcolor-black color-red">' .
+					timedate::unix2canonical($vxa['duedate']) . '</span></br><br>';
+				$pastDue .= '</span>';
+			}
+		}
+		if ($pastFlag == true)	$pastDue .= '<br>';
+		else $pastDue = 'No assignments past due.<br><br>';
+
+		// Upcoming
+		$upcoming = '<h4><b>Assignments<br>Upcoming <b></h4><br>';
+		$upcomingFlag = false;
+		$min = time();
+		$max = $min + $CONFIGVAR['assign_duedate_lookahead']['value'];
+		foreach($rxb as $kx => $vx)
+		{
+			$rxa = $dbapp->queryAssignmentRangeDue($vx['courseid'], $min, $max);
+			if ($rxa == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				continue;
+			}
+			$upcomingFlag = true;
+			foreach($rxa as $kxa => $vxa)
+			{
+				$upcoming .= '<span class="cursor-pointer" onclick="loadAssignment('
+					. $vxa['assignment'] . ')">';
+				$upcoming .= '<b>' . $vx['class'] . ': ' . $vx['name'] . '</b></br>';
+				$upcoming .= '<i>' . $vxa['name'] . '</i></br>';
+				$priorityHigh = $CONFIGVAR['assign_priority_high']['value'] + $min;
+				$priorityMed = $CONFIGVAR['assign_priority_medium']['value'] + $min;
+				$priorityLow = $CONFIGVAR['assign_priority_low']['value'] + $min;
+				if ($vxa['duedate'] < $priorityHigh)
+					$upcoming .= '<span class="color-red">';
+				else if ($vxa['duedate'] < $priorityMed)
+					$upcoming .= '<span class="color-orange">';
+				else if ($vxa['duedate'] < $priorityLow)
+					$upcoming .= '<span class="color-green">';
+				else $upcoming .= '<span class="color-blue">';
+				$upcoming .= timedate::unix2canonical($vxa['duedate']) .
+					'</span></br>';
+				$upcoming .= '</span>';
+			}
+		}
+		if ($upcomingFlag == true)	$upcoming .= '<br>';
+		else $upcoming = 'No assignments upcoming.';
+
+		return $pastDue . $upcoming;
 	}
 
 }

@@ -268,9 +268,9 @@ class databaseCore implements databaseCoreInterface
 	public function launchQueryMultipleRange($tab, $col, $qxa, $field, $type, $start, $end)
 	{
 		if (!is_array($qxa)) return($this->handleError('Query data not an array.'));
-		$request = "SELECT $col FROM $tab WHERE `$field` => ? AND `$field` <= ? AND ";
+		$request = "SELECT $col FROM $tab WHERE `$field` >= ? AND `$field` <= ? AND ";
 		$flag = false;
-		if (isarray($qxa))
+		if (is_array($qxa))
 		{
 			foreach($qxa as $fx => $vx)
 			{
@@ -283,7 +283,7 @@ class databaseCore implements databaseCoreInterface
 		if ($stmt == false) return($this->handleError($this->sqlconn));
 		$result = $stmt->bindParam(1, $start, $type);
 		$result = $stmt->bindParam(2, $end, $type);
-		if (isarray($qxa))
+		if (is_array($qxa))
 		{
 			$count = 3;
 			foreach($qxa as $fx => $vx)

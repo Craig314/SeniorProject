@@ -563,9 +563,10 @@ var ajaxProcessData = ({
 			writeError("JSON data format error from server.");
 			return;
 		}
-		jfnum = str.parseInt(str.slice(cst, est));
+		jfnum = parseInt(str.slice(cst, est));
 		jfunc = 'objectJsonPost' + jfnum.toString();
-		if (typeof window[jfunc] == typeof parseJSON) {
+		txt = str.slice(est + 1);
+		if (typeof window[jfunc] === 'function') {
 			try {
 				obj = JSON.parse(txt);
 			}
@@ -574,6 +575,8 @@ var ajaxProcessData = ({
 				return;
 			}
 			window[jfunc](obj);
+		} else {
+			console.warn('JSON format handler ' + jfnum + ' is not defined.');
 		}
 		return;
 	},

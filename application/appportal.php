@@ -112,6 +112,7 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/module/portal.js',
+			'/js/baseline/function.js',
 			'/js/application/landing.js',
 			'/APIs/fullcalendar/lib/moment.min.js',
 			'/APIs/fullcalendar/fullcalendar.min.js',
@@ -179,9 +180,6 @@ function loadAdditionalContent()
 	});
 </script>";
 
-	// XXX Development
-	$statusContent = 'Status Panel';
-	
 	// Write the panels.
 	// $ajax->writePanelsImmediate($navContent, $statusContent,
 	// 	$mainContent);

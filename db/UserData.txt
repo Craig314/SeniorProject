@@ -1,0 +1,10 @@
+Test User Logins
+
+login		password
+----------------------------------------------------
+testuser	test1234
+teacher_one	teach1234
+teacher_two	teach1234
+student_one	student1234
+student_two	student1234
+student_three	student1234

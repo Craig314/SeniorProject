@@ -20,6 +20,7 @@ USE `application`;
 CREATE TABLE IF NOT EXISTS `assignment` (
   `assignment` int(11) NOT NULL AUTO_INCREMENT COMMENT 'The assignment number for the course.',
   `courseid` int(11) NOT NULL COMMENT 'The unique course ID number.',
+  `name` varchar(30) NOT NULL COMMENT 'The name of the assignment.',
   `desc` varchar(512) DEFAULT NULL COMMENT 'A type in description for the assignment.',
   `descfile` varchar(50) DEFAULT NULL COMMENT 'A description file for the assignment that the ',
   `duedate` bigint(20) NOT NULL COMMENT 'Assignment due date.',
@@ -33,12 +34,18 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   KEY `assignment` (`assignment`),
   KEY `FK1_asssignment_courseid_course_courseid` (`courseid`),
   KEY `FK2_assignment_gwgroup_weightgroup_group` (`gwgroup`),
+  KEY `duedate` (`duedate`),
   CONSTRAINT `FK1_asssignment_courseid_course_courseid` FOREIGN KEY (`courseid`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE,
   CONSTRAINT `FK2_assignment_gwgroup_weightgroup_group` FOREIGN KEY (`gwgroup`) REFERENCES `weightgroup` (`group`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='The assignments that the instructor assigns to students.';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COMMENT='The assignments that the instructor assigns to students.';
 
--- Dumping data for table application.assignment: ~0 rows (approximately)
+-- Dumping data for table application.assignment: ~1 rows (approximately)
 /*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
+INSERT INTO `assignment` (`assignment`, `courseid`, `name`, `desc`, `descfile`, `duedate`, `lockdate`, `gradeweight`, `gwgroup`, `curve`, `points`, `exempt`) VALUES
+	(1, 20284, 'Assignment 1', 'Assignment 1', NULL, 1540763960, NULL, 10, 0, NULL, 10, 0),
+	(2, 14298, 'Assignment 1', 'Assignment 1', NULL, 1540763960, NULL, 10, 0, NULL, 10, 0),
+	(3, 21924, 'Assignment 1', 'Assignment 1', NULL, 1540995920, NULL, 10, 0, NULL, 10, 0),
+	(4, 21924, 'Assignment 2', 'Assignment 2', NULL, 1541427920, NULL, 10, 0, NULL, 10, 0);
 /*!40000 ALTER TABLE `assignment` ENABLE KEYS */;
 
 -- Dumping structure for table application.assignstep
@@ -73,8 +80,16 @@ CREATE TABLE IF NOT EXISTS `course` (
   CONSTRAINT `FK2_course_scale_gradescale_scale` FOREIGN KEY (`scale`) REFERENCES `gradescale` (`scale`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the course that a student takes.';
 
--- Dumping data for table application.course: ~0 rows (approximately)
+-- Dumping data for table application.course: ~1 rows (approximately)
 /*!40000 ALTER TABLE `course` DISABLE KEYS */;
+INSERT INTO `course` (`courseid`, `class`, `section`, `name`, `instructor`, `scale`, `curve`) VALUES
+	(14298, 'CSC-152', 1, 'Cryptography', 1000, 0, NULL),
+	(19376, 'CSC-151', 1, 'Compiler Construction', 1001, 0, NULL),
+	(20284, 'CSC-152', 2, 'Cryptography', 1000, 0, NULL),
+	(21924, 'CSC-130', 1, 'Data Structures and Algorithms', 1000, 0, NULL),
+	(21925, 'CSC-130', 2, 'Data Structures and Algorithms', 1000, 0, NULL),
+	(83745, 'CSC-131', 1, 'Software Engineering', 1000, 0, NULL),
+	(83746, 'CSC-131', 2, 'Software Engineering', 1001, 0, NULL);
 /*!40000 ALTER TABLE `course` ENABLE KEYS */;
 
 -- Dumping structure for table application.filename
@@ -142,8 +157,10 @@ CREATE TABLE IF NOT EXISTS `gradescale` (
   CONSTRAINT `FK1_gradescale_instructor_users_userid` FOREIGN KEY (`instructor`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='The instructor''s grade scale.';
 
--- Dumping data for table application.gradescale: ~0 rows (approximately)
+-- Dumping data for table application.gradescale: ~1 rows (approximately)
 /*!40000 ALTER TABLE `gradescale` DISABLE KEYS */;
+INSERT INTO `gradescale` (`scale`, `instructor`, `name`, `desc`, `grade_ap`, `grade_a`, `grade_am`, `grade_bp`, `grade_b`, `grade_bm`, `grade_cp`, `grade_c`, `grade_cm`, `grade_dp`, `grade_d`, `grade_dm`) VALUES
+	(0, 0, 'Default Grade Scale', 'Default grade scale when there is no instructor assigned to a course.', 100, 92, 90, 87, 83, 80, 77, 73, 70, 67, 63, 60);
 /*!40000 ALTER TABLE `gradescale` ENABLE KEYS */;
 
 -- Dumping structure for table application.studentclass
@@ -158,6 +175,9 @@ CREATE TABLE IF NOT EXISTS `studentclass` (
 
 -- Dumping data for table application.studentclass: ~0 rows (approximately)
 /*!40000 ALTER TABLE `studentclass` DISABLE KEYS */;
+INSERT INTO `studentclass` (`studentid`, `courseid`) VALUES
+	(2000, 20284),
+	(2000, 21924);
 /*!40000 ALTER TABLE `studentclass` ENABLE KEYS */;
 
 -- Dumping structure for table application.turnin
@@ -195,8 +215,10 @@ CREATE TABLE IF NOT EXISTS `weightgroup` (
   CONSTRAINT `FK1_weightgroup_instructor_users_userid` FOREIGN KEY (`instructor`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='The grade weight group definition.';
 
--- Dumping data for table application.weightgroup: ~0 rows (approximately)
+-- Dumping data for table application.weightgroup: ~1 rows (approximately)
 /*!40000 ALTER TABLE `weightgroup` DISABLE KEYS */;
+INSERT INTO `weightgroup` (`group`, `instructor`, `weight`, `desc`, `name`) VALUES
+	(0, 0, 0, 'THis grade weight group is used when there is no weight group.', 'No Grade Weight Group');
 /*!40000 ALTER TABLE `weightgroup` ENABLE KEYS */;
 
 -- Dumping structure for trigger application.trig_assignstep_step

@@ -87,16 +87,9 @@ class verifyString implements verifyStringInterface
 	// $field is the name of the field (used in error messages).
 	// $type is one of the type constants.
 	// $min/$max are min and max string lengths.
-	public function strchk($data, $field, $id, $type, $blank = true, $max = 0, $min = 0)
+	public function strchk($data, $field, $id, $type, $blank = true, $max = 0, $min = 1)
 	{
 		global $herr;
-
-		// Check min/max validation
-		if ($min > $max)
-		{
-			$min = 0;
-			$max = 0;
-		}
 
 		// Common Checks
 		if ($blank)
@@ -106,8 +99,11 @@ class verifyString implements verifyStringInterface
 				if ($type != self::STR_NUMERIC && $type != self::STR_PINTEGER
 					&& $type != self::STR_FLOAT && $type != self::STR_INTEGER)
 				{
-					if (!$this->checkLengthMinimum($data, $field, $id, $min)) return false;
-					if (!$this->checkLengthMaximum($data, $field, $id, $max)) return false;
+					if ($max >= $min)
+					{
+						if (!$this->checkLengthMinimum($data, $field, $id, $min)) return false;
+						if (!$this->checkLengthMaximum($data, $field, $id, $max)) return false;
+					}
 				}
 				if ($type != self::STR_PASSWD)
 					if (!$this->checkCharCSSA($data, $field, $id)) return false;
@@ -121,8 +117,11 @@ class verifyString implements verifyStringInterface
 				if ($type != self::STR_NUMERIC && $type != self::STR_PINTEGER
 					&& $type != self::STR_FLOAT)
 				{
-					if (!$this->checkLengthMinimum($data, $field, $id, $min)) return false;
-					if (!$this->checkLengthMaximum($data, $field, $id, $max)) return false;
+					if ($max >= $min)
+					{
+						if (!$this->checkLengthMinimum($data, $field, $id, $min)) return false;
+						if (!$this->checkLengthMaximum($data, $field, $id, $max)) return false;
+					}
 				}
 				if ($type != self::STR_PASSWD)
 					if (!$this->checkCharCSSA($data, $field, $id)) return false;

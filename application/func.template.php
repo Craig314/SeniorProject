@@ -47,11 +47,6 @@ const MODE_DELETE	= 3;
 const FIELDCHK_JSON		= 0;
 const FIELDCHK_ARRAY	= 1;
 
-// This setting indicates that a file will be used instead of the
-// default template.  Set to the name of the file to be used.
-//$inject_html_file = '../dat/somefile.html';
-$htmlInjectFile = false;
-
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
 // Freeform execute stops at modhead.php
@@ -131,7 +126,6 @@ function databaseLoad($key)
 	global $dbuser;
 	global $dbconf;
 
-	$key = getPostValue('select_item', 'hidden');
 	if ($key == NULL)
 		handleError('There is no data that was specified for '
 			. $functionDisplayLower . ' to act on.');

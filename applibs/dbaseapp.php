@@ -22,10 +22,11 @@ interface database_application_interface
 	// Assignment Table
 	public function queryAssignment($assign);
 	public function queryAssignmentCourseAll($course);
-	public function updateAssignment($assign, $desc, $descfile, $duedate,
-		$lockdate, $grdw, $grdwgrp, $curve, $points, $exempt);
-	public function insertAssignment($course, $desc, $descfile, $duedate,
-		$lockdate, $grdw, $grdwgrp, $curve, $points, $exempt);
+	public function queryAssignmentRangeDue($course, $min, $max);
+	public function updateAssignment($assign, $name, $desc, $descfile,
+		$duedate, $lockdate, $grdw, $grdwgrp, $curve, $points, $exempt);
+	public function insertAssignment($course, $name, $desc, $descfile,
+		$duedate, $lockdate, $grdw, $grdwgrp, $curve, $points, $exempt);
 	public function deleteAssignment($assign, $course);
 	
 	// Assignment-Step Table
@@ -138,13 +139,25 @@ class database_application implements database_application_interface
 		return($dbcore->launchQueryMultiple($table, $column, $qxa));
 	}
 
-	// Updates an assignment.
-	public function updateAssignment($assign, $desc, $descfile, $duedate,
-		$lockdate, $grdw, $grdwgrp, $curve, $points, $exempt)
+	// Queries all assignments for a course based on duedate range.
+	public function queryAssignmentRangeDue($course, $min, $max)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.assignment';
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTINT);
+		$column = '*';
+		$qxa = $dbcore->buildArray('courseid', $course, databaseCore::PTINT);
+		return($dbcore->launchQueryMultipleRange($table, $column, $qxa,
+			'duedate', databaseCore::PTINT, $min, $max));
+	}
+
+	// Updates an assignment.
+	public function updateAssignment($assign, $name, $desc, $descfile,
+		$duedate, $lockdate, $grdw, $grdwgrp, $curve, $points, $exempt)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.assignment';
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('descfile', $descfile, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('duedate', $duedate, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('lockdate', $lockdate, databaseCore::PTINT, $qxa);
@@ -158,12 +171,13 @@ class database_application implements database_application_interface
 	}
 
 	// Inserts a new assignment.
-	public function insertAssignment($course, $desc, $descfile, $duedate,
-		$lockdate, $grdw, $grdwgrp, $curve, $points, $exempt)
+	public function insertAssignment($course, $name, $desc, $descfile,
+		$duedate, $lockdate, $grdw, $grdwgrp, $curve, $points, $exempt)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.assignment';
 		$qxa = $dbcore->buildArray('course', $course, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('descfile', $descfile, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('duedate', $duedate, databaseCore::PTINT, $qxa);

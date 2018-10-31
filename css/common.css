@@ -33,9 +33,27 @@ html, body {
 	text-decoration-color: black;
 }
 
+.color-green {
+	color: #006600;
+	text-decoration-color: #006600;
+}
+
+.color-orange {
+	color: #ff9900;
+	text-decoration-color: #ff9900;
+}
+
 .color-inherit {
 	color: inherit;
 	text-decoration-color: inherit;
+}
+
+.bgcolor-black {
+	background-color: black;
+}
+
+.cursor-pointer {
+	cursor: pointer;
 }
 
 .text-left {

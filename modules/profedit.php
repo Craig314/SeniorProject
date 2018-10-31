@@ -204,7 +204,7 @@ function loadAdditionalContent()
 			$vx['profileid'],
 			$vx['name'],
 			$vx['profileid'],
-			$vx['portal'],
+			convPortalType($vx['portal']),
 		);
 		array_push($list['tdata'], $tdata);
 		array_push($list['tooltip'], $vx['description']);
@@ -751,7 +751,7 @@ function formPage($mode, $rxa)
 			'profileid' => '',
 			'name' => '',
 			'description' => '',
-			'portal' => 1,
+			'portal' => 2,
 		);
 	}
 
@@ -1003,6 +1003,26 @@ function formPage($mode, $rxa)
 	// Render
 	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
 		generateFieldCheck());
+}
+
+function convPortalType($portal)
+{
+	switch ($portal)
+	{
+		case 0:
+			$type = 'Grid';
+			break;
+		case 1:
+			$type = 'Link';
+			break;
+		case 2:
+			$type = 'Land';
+			break;
+		default:
+			$type = $portal;
+			break;
+	}
+	return $type;
 }
 
 // Generate the field definitions for client side error checking.

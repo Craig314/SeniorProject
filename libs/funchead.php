@@ -135,7 +135,6 @@ function checkUserSecurity()
 	global $vendor;
 	global $admin;
 	global $dbconf;
-	global $flag;
 
 	// The vendor account always has access.
 	if ($vendor != 0) return;
@@ -152,12 +151,12 @@ function checkUserSecurity()
 	// permission flag bits.
 	if ($functionSystem == true)
 	{
-		if ($flag->sessionGetSys($functionPermission) == 0)
+		if (flag::sessionGetSys($functionPermission) == 0)
 			redirectPortal();
 	}
 	else
 	{
-		if ($flag->sessionGetApp($functionPermission) == 0)
+		if (flag::sessionGetApp($functionPermission) == 0)
 			redirectPortal();
 	}
 }
@@ -325,8 +324,8 @@ function httpMethod_POST()
 	// return.
 	$commandId = extractCommandId();
 
-			commandProcessor($commandId);
-			exit(0);
+	commandProcessorPost($commandId);
+	exit(0);
 }
 
 // Check to make sure that mandatory variables have been set.

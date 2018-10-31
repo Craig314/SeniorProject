@@ -126,7 +126,7 @@ class ajaxClass implements ajaxInterface
 	// Sends JSON format data to the server.
 	public function sendJSON($jnbr, $data)
 	{
-		echo self::JSON . $jnbr . ' ' . $data;
+		echo self::TYPE_JSON . $jnbr . ' ' . $data;
 	}
 
 	// Loads a code into the send queue.
@@ -206,7 +206,7 @@ class ajaxClass implements ajaxInterface
 
 	public function writeMainPanelImmediate($main, $fields)
 	{
-		if (isarray($fields))
+		if (!empty($fields))
 		{
 			$data = array(
 				0 => self::TYPE_COMMAND . self::CMD_WMAINPANEL . ' ' . $main,

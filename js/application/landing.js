@@ -2,13 +2,25 @@
 
 // Custom application landing page activator
 
-var eventObjects;
+// This is used to expose a callback function in the global context.
+// XXX: This is a hack, but it is the only option...for now.
+var eventCallback;
 
+// Custom command handler.  Called from ajax.js:ajaxProcessData.parseCommand
 function customCmdProc(command, txt) {
 	switch(command) {
 		case 121:
 			activateCalendar();
-			objectJsonPost152(generateEvents());
+			break;
+		case 122:
+			try {
+				var obj = JSON.parse(txt);
+			}
+			catch (error) {
+				writeError(error.message);
+				return;
+			}
+			objectJsonPost152(obj);
 			break;
 		default:
 			return false;
@@ -18,6 +30,11 @@ function customCmdProc(command, txt) {
 }
 
 function activateCalendar() {
+	// Set function access URLs.
+	functionList[0].setUrlPath('/application/func.assignments.php');
+	functionList[1].setUrlPath('/application/func.caljson.php');
+
+	// Activate calendar.
 	$('#calendar').fullCalendar({
 		header: {
 			left: 'prev,next today',
@@ -34,91 +51,27 @@ function activateCalendar() {
 			listWeek: { buttonText: 'list week' }
 		},
 		eventClick: function(calEvent, jsEvent, view) {
-			console.log(calEvent);
-			console.log(jsEvent);
-			console.log(view);
+			funcSendCommand(0, 1, 'assignment=' + calEvent.assignment);
+		},
+		events: function(start, end, timezone, callback) {
+			eventCallback = callback;
+			var minTime = 'timemin=' + start.unix();
+			var maxTime = 'timemax=' + end.unix();
+			funcSendCommand(1, 130, minTime, maxTime);
 		},
 	});
 }
 
 // Updates the calendar events.
-function objectJsonPost152(object) {
-	$('#calendar').fullCalendar('renderEvents', object);
+// This is called by the AJAX response handler in ajax.js.
+// Initiated by fullcalendar.
+function objectJsonPost152(jsonObject) {
+	eventCallback(jsonObject);
 }
 
-
-
-
-// For testing purposes.  Remove in production code.
-function generateEvents() {
-	// Events here are for testing.
-	var events = [
-		{
-			title: 'All Day Event',
-			start: '2018-10-01',
-			controlData: 203323
-		},
-		{
-			title: 'Long Event',
-			start: '2018-10-07',
-			end: '2018-10-10',
-			controlData: 203324
-		},
-		{
-			id: 999,
-			title: 'Repeating Event',
-			start: '2018-10-09T16:00:00',
-			controlData: 201225,
-		},
-		{
-			id: 999,
-			title: 'Repeating Event',
-			start: '2018-10-16T16:00:00',
-			controlData: 203926,
-		},
-		{
-			title: 'Conference',
-			start: '2018-10-11',
-			end: '2018-10-13',
-			controlData: 203383,
-		},
-		{
-			title: 'Meeting',
-			start: '2018-10-12T10:30:00',
-			end: '2018-10-12T12:30:00',
-			controlData: 203387
-		},
-		{
-			title: 'Lunch',
-			start: '2018-10-12T12:00:00',
-			controlData: 203388
-		},
-		{
-			title: 'Meeting',
-			start: '2018-10-12T14:30:00',
-			controlData: 203389
-		},
-		{
-			title: 'Happy Hour',
-			start: '2018-10-12T17:30:00',
-			controlData: 203390
-		},
-		{
-			title: 'Dinner',
-			start: '2018-10-12T20:00:00',
-			controlData: 203391
-		},
-		{
-			title: 'Birthday Party',
-			start: '2018-10-13T07:00:00',
-			controlData: 203392
-		},
-		{
-			title: 'Click for Google',
-			url: 'http://google.com/',
-			start: '2018-10-28',
-			controlData: 203393
-		}
-	];
-	return events;
+// Loads assignment details from the server when the user
+// clicks on a calendar event.
+function loadAssignment(assignId) {
+	funcSendCommand(0, 1, 'assignment=' + assignId);
 }
+
