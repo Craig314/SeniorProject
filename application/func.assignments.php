@@ -169,9 +169,54 @@ function formPage($mode, $rxa)
 			break;
 	}
 
+	// Retrieve additional information from the database.
 	$rxb = $dbapp->queryCourse($rxa['courseid']);
+	if ($rxb == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: Unable to retrieve course information.');
+	}
+	$rxe = $dbapp->queryStudentclass($_SESSION['userId'], $rxa['courseid']);
+	if ($rxe == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		if ($_SESSION['userId'] != $rxb[''])
+			handleError('Security Violation: You are not enrolled in the requested course.');
+	}
 	$rxc = $dbuser->queryContact($rxb['instructor']);
+	if ($rxc == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: Unable to retrieve instructor information.');
+	}
 	$rxd = $dbapp->queryAssignstepAssignAll($rxa['assignment']);
+	if ($rxd == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+	}
+	$rxf = $dbapp->queryTurninStudentAssignAll($_SESSION['userId'], $rxa['assignment']);
+	if ($rxf == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		$turnedin = 'No';
+	}
+	else $turnedin = 'Yes';
+	$rxg = $dbapp->queryGradesAssign($_SESSION['userId'], $rxa['assignment']);
+	if ($rxg == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		$graded = false;
+	}
+	else $graded = true;
+
 
 
 	// XXX Custom field rendering code
@@ -207,6 +252,15 @@ function formPage($mode, $rxa)
 		convBooleanValue($rxa['exempt']),
 		'Indicates if the assignment is exempt from grading.',
 		$default, $disable);
+	$turnin = generateField(html::TYPE_TEXT, '', 'Turned In', 2,
+		$turnedin, 'Indicates if the assignment was turned in.',
+		$default, $disable);
+	if ($graded == false) $grade = NULL;
+	else
+	{
+		$grade = generateField(html::TYPE_TEXT, '', 'Grade', 2, $rxg['grade'],
+		'The grade that has been awarded for the assignment', $default, $disable);
+	}
 
 	// Assignment Steps
 	$data2 = array();
@@ -237,7 +291,6 @@ function formPage($mode, $rxa)
 			array_push($data2, $fsetopen, $astep, $asdate, $asdesc, $fsetclose);
 		}
 	}
-
 
 	// Build out the form array.
 	$data1 = array(
@@ -272,6 +325,8 @@ function formPage($mode, $rxa)
 		$adue,
 		$apoints,
 		$aexempt,
+		$turnin,
+		$grade,
 		array('type' => html::TYPE_FSETCLOSE),
 	);
 

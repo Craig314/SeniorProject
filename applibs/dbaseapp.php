@@ -81,7 +81,7 @@ interface database_application_interface
 	// Student-Class Table
 	public function queryStudentclassStudentAll($student);
 	public function queryStudentclassCourseAll($course);
-	public function queryStudentClass($student, $course);
+	public function queryStudentclass($student, $course);
 	public function insertStudentclass($student, $course);
 	public function deleteStudentclass($student, $course);
 	public function deleteStudentclassStudent($student);
@@ -692,7 +692,7 @@ class database_application implements database_application_interface
 	}
 
 	// Queries if a student is in a class.
-	public function queryStudentClass($student, $course)
+	public function queryStudentclass($student, $course)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.studentclass';
