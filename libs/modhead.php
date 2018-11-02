@@ -242,10 +242,21 @@ function redirectPortalAjax()
 	global $herr;
 	global $ajax;
 
-	if ($_SESSION['portalType'] == 1)
-		$ajax->redirect('/modules/' . $CONFIGVAR['html_linkportal_page']['value']);
-	else
-		$ajax->redirect('/modules/' . $CONFIGVAR['html_gridportal_page']['value']);
+	switch ($_SESSION['portalType'])
+	{
+		case 0:
+			$ajax->redirect('/modules/' . $CONFIGVAR['html_gridportal_page']['value']);
+			break;
+		case 1:
+			$ajax->redirect('/modules/' . $CONFIGVAR['html_linkportal_page']['value']);
+			break;
+		case 2:
+			$ajax->redirect('/application/' . $CONFIGVAR['html_appportal_page']['value']);
+			break;
+		default:
+			$ajax->redirect('/modules/' . $CONFIGVAR['html_gridportal_page']['value']);
+			break;
+	}
 	exit;
 }
 

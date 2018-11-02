@@ -2,7 +2,7 @@
 -- Host:                         127.0.0.1
 -- Server version:               5.7.22-log - MySQL Community Server (GPL)
 -- Server OS:                    Win64
--- HeidiSQL Version:             9.5.0.5280
+-- HeidiSQL Version:             9.5.0.5196
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -23,15 +23,15 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   `name` varchar(30) NOT NULL COMMENT 'The name of the assignment.',
   `desc` varchar(512) DEFAULT NULL COMMENT 'A type in description for the assignment.',
   `descfile` varchar(50) DEFAULT NULL COMMENT 'A description file for the assignment that the ',
-  `dirname` varchar(32) NOT NULL COMMENT 'The directory name for this assignment.',
   `allowext` varchar(128) DEFAULT NULL COMMENT 'A list of allowed extensions for student submissions.',
   `duedate` bigint(20) NOT NULL COMMENT 'Assignment due date.',
   `lockdate` bigint(20) DEFAULT NULL COMMENT 'The date where students can no longer submit assignments.',
   `gradeweight` int(11) DEFAULT NULL COMMENT 'The total grade weight of the assignment.',
   `gwgroup` int(11) DEFAULT '0' COMMENT 'The grade weight group if the course has one.',
-  `curve` int(11) DEFAULT NULL COMMENT 'Any curve that the instructor sets for the assignment.',
-  `points` int(11) DEFAULT NULL COMMENT 'The numbere of points the assignment is worth.',
-  `exempt` int(11) DEFAULT NULL COMMENT 'Indicates if this assignment is exempt from the total grade.',
+  `curve` int(11) NOT NULL DEFAULT '0' COMMENT 'Any curve that the instructor sets for the assignment.',
+  `points` int(11) NOT NULL DEFAULT '0' COMMENT 'The numbere of points the assignment is worth.',
+  `exempt` int(11) NOT NULL DEFAULT '0' COMMENT 'Indicates if this assignment is exempt from the total grade.',
+  `completed` int(11) NOT NULL DEFAULT '0' COMMENT 'Indicates if the assignment has been completed.',
   PRIMARY KEY (`assignment`),
   KEY `assignment` (`assignment`),
   KEY `FK1_asssignment_courseid_course_courseid` (`courseid`),
@@ -43,12 +43,12 @@ CREATE TABLE IF NOT EXISTS `assignment` (
 
 -- Dumping data for table application.assignment: ~5 rows (approximately)
 /*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
-INSERT INTO `assignment` (`assignment`, `courseid`, `name`, `desc`, `descfile`, `dirname`, `allowext`, `duedate`, `lockdate`, `gradeweight`, `gwgroup`, `curve`, `points`, `exempt`) VALUES
-	(1, 20284, 'Assignment 1', 'Assignment 1', NULL, 'a1', NULL, 1540763960, NULL, 10, 0, NULL, 10, 0),
-	(2, 14298, 'Assignment 1', 'Assignment 1', NULL, 'a1', NULL, 1540763960, NULL, 10, 0, NULL, 10, 0),
-	(3, 21924, 'Assignment 1', 'Assignment 1', NULL, 'a1', NULL, 1540995920, NULL, 10, 0, NULL, 10, 0),
-	(4, 21924, 'Assignment 2', 'Assignment 2', NULL, 'a2', NULL, 1541427920, NULL, 10, 0, NULL, 10, 0),
-	(5, 14298, 'Assignment 2', 'Assignment 2', NULL, 'a2', NULL, 1541687190, NULL, 10, 0, NULL, 10, NULL);
+INSERT INTO `assignment` (`assignment`, `courseid`, `name`, `desc`, `descfile`, `allowext`, `duedate`, `lockdate`, `gradeweight`, `gwgroup`, `curve`, `points`, `exempt`, `completed`) VALUES
+	(1, 20284, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540763960, NULL, 10, 0, 0, 10, 0, 0),
+	(2, 14298, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540763960, NULL, 10, 0, 0, 10, 0, 0),
+	(3, 21924, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540995920, NULL, 10, 0, 0, 10, 0, 0),
+	(4, 21924, 'Assignment 2', 'Assignment 2', NULL, NULL, 1541427920, NULL, 10, 0, 0, 10, 0, 0),
+	(5, 14298, 'Assignment 2', 'Assignment 2', NULL, NULL, 1541687190, NULL, 10, 0, 0, 10, 0, 0);
 /*!40000 ALTER TABLE `assignment` ENABLE KEYS */;
 
 -- Dumping structure for table application.assignstep
@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS `assignstep` (
   `step` int(11) NOT NULL COMMENT 'The step number.',
   `date` bigint(20) NOT NULL COMMENT 'The date the step should be completed.',
   `desc` varchar(512) NOT NULL COMMENT 'A description of the step.',
+  `complete` int(11) NOT NULL DEFAULT '0' COMMENT 'Indicates if this step has been completed.',
   PRIMARY KEY (`assignment`,`step`),
   KEY `step` (`step`),
   CONSTRAINT `FK1_assignstep_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE
@@ -64,11 +65,11 @@ CREATE TABLE IF NOT EXISTS `assignstep` (
 
 -- Dumping data for table application.assignstep: ~4 rows (approximately)
 /*!40000 ALTER TABLE `assignstep` DISABLE KEYS */;
-INSERT INTO `assignstep` (`assignment`, `step`, `date`, `desc`) VALUES
-	(5, 1, 1541108753, 'Assignment 2 Step 1'),
-	(5, 2, 1541195453, 'Assignment 2 Step 2'),
-	(5, 3, 1541282153, 'Assignment 2 Step 3'),
-	(5, 4, 1541368853, 'Assignment 2 Step 4');
+INSERT INTO `assignstep` (`assignment`, `step`, `date`, `desc`, `complete`) VALUES
+	(5, 1, 1541108753, 'Assignment 2 Step 1', 0),
+	(5, 2, 1541195453, 'Assignment 2 Step 2', 0),
+	(5, 3, 1541282153, 'Assignment 2 Step 3', 0),
+	(5, 4, 1541368853, 'Assignment 2 Step 4', 0);
 /*!40000 ALTER TABLE `assignstep` ENABLE KEYS */;
 
 -- Dumping structure for table application.course
@@ -77,8 +78,7 @@ CREATE TABLE IF NOT EXISTS `course` (
   `class` varchar(12) NOT NULL COMMENT 'The course code.  Ex: CSC 190',
   `section` int(11) NOT NULL COMMENT 'The course section number.',
   `name` varchar(50) NOT NULL COMMENT 'The name of the course.',
-  `dirname` varchar(32) NOT NULL COMMENT 'The filesystem directory name for this course.',
-  `syllabus` varchar(50) NOT NULL COMMENT 'The name of the course syllabus file.',
+  `syllabus` varchar(50) DEFAULT NULL COMMENT 'The name of the course syllabus file.',
   `instructor` int(11) NOT NULL COMMENT 'The userid of the course instructor.',
   `scale` int(11) DEFAULT NULL COMMENT 'The grading scale for this course.',
   `curve` int(11) DEFAULT NULL COMMENT 'The grading curve for this course.',
@@ -92,14 +92,14 @@ CREATE TABLE IF NOT EXISTS `course` (
 
 -- Dumping data for table application.course: ~7 rows (approximately)
 /*!40000 ALTER TABLE `course` DISABLE KEYS */;
-INSERT INTO `course` (`courseid`, `class`, `section`, `name`, `dirname`, `syllabus`, `instructor`, `scale`, `curve`) VALUES
-	(14298, 'CSC-152', 1, 'Cryptography', 'csc152s1', '', 1000, 0, NULL),
-	(19376, 'CSC-151', 1, 'Compiler Construction', 'csc151s1', '', 1001, 0, NULL),
-	(20284, 'CSC-152', 2, 'Cryptography', 'csc152s2', '', 1000, 0, NULL),
-	(21924, 'CSC-130', 1, 'Data Structures and Algorithms', 'csc130s1', '', 1000, 0, NULL),
-	(21925, 'CSC-130', 2, 'Data Structures and Algorithms', 'csc130s2', '', 1000, 0, NULL),
-	(83745, 'CSC-131', 1, 'Software Engineering', 'csc131s1', '', 1000, 0, NULL),
-	(83746, 'CSC-131', 2, 'Software Engineering', 'csc131s2', '', 1001, 0, NULL);
+INSERT INTO `course` (`courseid`, `class`, `section`, `name`, `syllabus`, `instructor`, `scale`, `curve`) VALUES
+	(14298, 'CSC-152', 1, 'Cryptography', '', 1000, 0, NULL),
+	(19376, 'CSC-151', 1, 'Compiler Construction', '', 1001, 0, NULL),
+	(20284, 'CSC-152', 2, 'Cryptography', '', 1000, 0, NULL),
+	(21924, 'CSC-130', 1, 'Data Structures and Algorithms', '', 1000, 0, NULL),
+	(21925, 'CSC-130', 2, 'Data Structures and Algorithms', '', 1000, 0, NULL),
+	(83745, 'CSC-131', 1, 'Software Engineering', '', 1000, 0, NULL),
+	(83746, 'CSC-131', 2, 'Software Engineering', '', 1001, 0, NULL);
 /*!40000 ALTER TABLE `course` ENABLE KEYS */;
 
 -- Dumping structure for table application.filename

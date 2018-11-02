@@ -81,7 +81,7 @@ function commandProcessorPost($commandId)
 {
 	switch ((int)$commandId)
 	{
-		case 1:
+		case 25:
 			performDataAction();
 			break;
 		default:
@@ -346,7 +346,6 @@ function formPage($mode, $rxa)
 		$grade,
 		array('type' => html::TYPE_FSETCLOSE),
 	);
-
 
 		// XXX Enter custom field data here.
 

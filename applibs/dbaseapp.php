@@ -24,16 +24,18 @@ interface database_application_interface
 	public function queryAssignmentCourseAll($course);
 	public function queryAssignmentRangeDue($course, $min, $max);
 	public function updateAssignment($assign, $name, $desc, $descfile,
-		$duedate, $lockdate, $grdw, $grdwgrp, $curve, $points, $exempt);
+		$afext, $duedate, $lockdate, $grdw, $grdwgrp, $curve, $points,
+		$exempt, $completed);
 	public function insertAssignment($course, $name, $desc, $descfile,
-		$duedate, $lockdate, $grdw, $grdwgrp, $curve, $points, $exempt);
+		$afext, $duedate, $lockdate, $grdw, $grdwgrp, $curve, $points,
+		$exempt, $completed);
 	public function deleteAssignment($assign, $course);
 	
 	// Assignment-Step Table
 	public function queryAssignstep($assign, $step);
 	public function queryAssignstepAssignAll($assign);
-	public function updateAssignstep($assign, $step, $date, $desc);
-	public function insertAssignstep($assign, $step, $date, $desc);
+	public function updateAssignstep($assign, $step, $date, $desc, $completed);
+	public function insertAssignstep($assign, $step, $date, $desc, $completed);
 	public function deleteAssignstep($assign, $step);
 	public function deleteAssignstepAll($assign);
 	
@@ -42,9 +44,11 @@ interface database_application_interface
 	public function queryCourseAll();
 	public function queryCourseInstructAll($instruct);
 	public function updateCourseAdmin($course, $class, $sect, $name,
-		$instruct, $scale, $curve);
+		$syllabus, $instruct, $scale, $curve);
 	public function updateCourseInstruct($course, $instruct, $scale);
-	public function updateCourse($course, $scale, $curve);
+	public function updateCourse($course, $syllabus, $scale, $curve);
+	public function insert($course, $class, $sect, $name, $syllabus, $instruct,
+		$scale, $curve);
 	public function deleteCourse($course);
 
 	// Filename Table
@@ -135,7 +139,7 @@ class database_application implements database_application_interface
 		global $dbcore;
 		$table = $this->tablebase . '.assignment';
 		$column = '*';
-		$qxa = $dbcore->buildArray('course', $course, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('courseid', $course, databaseCore::PTINT);
 		return($dbcore->launchQueryMultiple($table, $column, $qxa));
 	}
 
@@ -152,13 +156,15 @@ class database_application implements database_application_interface
 
 	// Updates an assignment.
 	public function updateAssignment($assign, $name, $desc, $descfile,
-		$duedate, $lockdate, $grdw, $grdwgrp, $curve, $points, $exempt)
+		$afext, $duedate, $lockdate, $grdw, $grdwgrp, $curve, $points,
+		$exempt, $completed)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.assignment';
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('descfile', $descfile, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('allowext', $afext, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('duedate', $duedate, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('lockdate', $lockdate, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('gradeweight', $grdw, databaseCore::PTINT, $qxa);
@@ -166,13 +172,15 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('curve', $curve, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('points', $points, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('exempt', $exempt, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('completed', $completed, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'assignment', $assign,
 			databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts a new assignment.
 	public function insertAssignment($course, $name, $desc, $descfile,
-		$duedate, $lockdate, $grdw, $grdwgrp, $curve, $points, $exempt)
+		$afext, $duedate, $lockdate, $grdw, $grdwgrp, $curve, $points,
+		$exempt, $completed)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.assignment';
@@ -180,13 +188,15 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('descfile', $descfile, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('allowext', $afext, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('duedate', $duedate, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('lockdate', $lockdate, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('grdw', $grdw, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('gradeweight', $grdw, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('grdwgrp', $grdwgrp, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('curve', $curve, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('points', $points, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('exempt', $exempt, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('completed', $completed, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
@@ -228,7 +238,7 @@ class database_application implements database_application_interface
 	}
 
 	// Updates an assignment step.
-	public function updateAssignstep($assign, $step, $date, $desc)
+	public function updateAssignstep($assign, $step, $date, $desc, $completed)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.assignstep';
@@ -236,11 +246,12 @@ class database_application implements database_application_interface
 		$qxk = $dbcore->buildArray('step', $step, databaseCore::PTINT, $qxk);
 		$qxa = $dbcore->buildArray('date', $date, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('complete', $completed, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdateMutiple($table, $qxk, $qxa));
 	}
 
 	// Inserts a assignment step.
-	public function insertAssignstep($assign, $step, $date, $desc)
+	public function insertAssignstep($assign, $step, $date, $desc, $completed)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.assignstep';
@@ -248,6 +259,7 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('step', $step, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('date', $date, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('complete', $completed, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
@@ -310,13 +322,14 @@ class database_application implements database_application_interface
 
 	// Updates information for a course. (Admin)
 	public function updateCourseAdmin($course, $class, $sect, $name,
-		$instruct, $scale, $curve)
+		$syllabus, $instruct, $scale, $curve)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.course';
 		$qxa = $dbcore->buildArray('class', $class, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('section', $sect, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('syllabus', $syllabus, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('scale', $scale, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('curve', $curve, databaseCore::PTINT, $qxa);
@@ -336,13 +349,14 @@ class database_application implements database_application_interface
 	}
 
 	// Updates information for a course. (Instructor)
-	public function updateCourse($course, $scale, $curve)
+	public function updateCourse($course, $syllabus, $scale, $curve)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.course';
 		$qxa = $dbcore->buildArray('class', $class, databaseCore::PTSTR);
 		$qxa = $dbcore->buildArray('section', $sect, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('syllabus', $syllabus, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('scale', $scale, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('curve', $curve, databaseCore::PTINT, $qxa);
@@ -351,7 +365,8 @@ class database_application implements database_application_interface
 	}
 
 	// Inserts a course.
-	public function insert($course, $class, $sect, $name, $instruct, $scale, $curve)
+	public function insert($course, $class, $sect, $name, $syllabus, $instruct,
+		$scale, $curve)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.course';
@@ -359,6 +374,7 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('class', $class, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('section', $sect, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('syllabus', $syllabus, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('scale', $scale, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('curve', $curve, databaseCore::PTINT, $qxa);

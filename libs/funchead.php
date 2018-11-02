@@ -230,7 +230,10 @@ function redirectPortal()
 			$ajax->redirect('/modules/' . $CONFIGVAR['html_linkportal_page']['value']);
 			break;
 		case 2:
-			$ajax::redirect('/application/' . $CONFIGVAR['html_appportal_page']['value']);
+			$ajax->redirect('/application/' . $CONFIGVAR['html_appportal_page']['value']);
+			break;
+		default:
+			$ajax->redirect('/modules/' . $CONFIGVAR['html_gridportal_page']['value']);
 			break;
 	}
 	exit;

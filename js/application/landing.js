@@ -6,6 +6,11 @@
 // XXX: This is a hack, but it is the only option...for now.
 var eventCallback;
 
+// Set function access URLs.
+functionList[0].setUrlPath('/application/func.assignments.php');
+functionList[1].setUrlPath('/application/func.caljson.php');
+
+
 // Custom command handler.  Called from ajax.js:ajaxProcessData.parseCommand
 function customCmdProc(command, txt) {
 	switch(command) {
@@ -30,10 +35,6 @@ function customCmdProc(command, txt) {
 }
 
 function activateCalendar() {
-	// Set function access URLs.
-	functionList[0].setUrlPath('/application/func.assignments.php');
-	functionList[1].setUrlPath('/application/func.caljson.php');
-
 	// Activate calendar.
 	$('#calendar').fullCalendar({
 		header: {
@@ -72,6 +73,6 @@ function objectJsonPost152(jsonObject) {
 // Loads assignment details from the server when the user
 // clicks on a calendar event.
 function loadAssignment(assignId) {
-	funcSendCommand(0, 1, 'assignment=' + assignId);
+	funcSendCommand(0, 25, 'assignment=' + assignId);
 }
 

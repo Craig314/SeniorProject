@@ -4,7 +4,7 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application Module Template
+PHP Web Application Module Student Assignments
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -42,11 +42,11 @@ $moduleId = 1600;		// XXX Set This
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
-$moduleDisplayUpper = 'Assignments';		// XXX Set This
+$moduleDisplayUpper = 'Assignment';		// XXX Set This
 
 // The lowercase short display name of the module.  This shows up in
 // various messages.
-$moduleDisplayLower = 'assignments';		// XXX Set This
+$moduleDisplayLower = 'assignment';		// XXX Set This
 
 // Set to true if this is a system module.
 $moduleSystem = false;
@@ -80,6 +80,8 @@ const BASEAPP = '../applibs/';
 require_once BASEAPP . 'panels.php';
 require_once BASEAPP . 'loadmodule.php';
 require_once BASEAPP . 'dbaseapp.php';
+require_once BASEDIR . 'dbaseuser.php';
+require_once BASEDIR . 'timedate.php';
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -118,11 +120,6 @@ function loadInitialContent()
 		// use nested associtive arrays to group buttons together.
 		// $funcBar = array();
 		$funcBar = array(
-			array(
-				'Insert' => 'insertDataItem',
-				'Update' => 'updateDataItem',
-				'Delete' => 'deleteDataItem',
-			),
 			'View' => 'viewDataItem',
 			'List' => 'listDataItems',
 		);
@@ -132,8 +129,9 @@ function loadInitialContent()
 		// section of the HTML page.
 		$jsFiles = array(
 			'/js/baseline/common.js',
+			'/js/baseline/function.js',
 			'/js/module/portal.js',
-			//'/js/application/.js',
+			'/js/application/landing.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -182,100 +180,109 @@ function loadAdditionalContent()
 	global $baseUrl;
 	global $panels;
 	global $ajax;
+	global $herr;
 	global $dbapp;
+	global $dbuser;
 
-/*
 	// Get data from database.
-	$rxa = $DATABASE_QUERY_ALL();	// XXX Set This
+	$rxa = $dbapp->queryStudentclassStudentAll($_SESSION['userId']);	// XXX Set This
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessages());
 		else
-			handleError('There are no ' . $moduleDisplayLower . 's in the database to edit.');
+			handleError('You are not enrolled in any courses.');
 	}
 
-	// Generate Selection Table.
-	$list = array(
-		'type' => html::TYPE_RADTABLE,
-		'name' => 'select_item',
-		'clickset' => true,
-		'condense' => true,
-		'hover' => true,
-		'titles' => array(
-			// Add column titles here
-			'',
-		),
-		'tdata' => array(),
-		'tooltip' => array(),
-	);
-	foreach ($rxa as $kx => $vx)
+	// We step through each course the student has and generate a separate
+	// list of assignments for each course.
+	$data2 = array();
+	$fsetclose = array('type' => html::TYPE_FSETCLOSE);
+
+	foreach ($rxa as $kxa => $vxa)
 	{
-		$tdata = array(
-			// These are the values that show up under the columns above.
-			// The *FIRST* value is the value that is sent when a row
-			// is selected.  AKA Key Field.
-			$vx[''],
-			$vx[''],
-			$vx[''],
+		$rxb = $dbapp->queryCourse($vxa['courseid']);
+		if ($rxb == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessages());
+			continue;
+		}
+		$rxc = $dbuser->queryContact($rxb['instructor']);
+		if ($rxc == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessages());
+			else
+				handleError('Database Error: Missing contact record for instructor.');
+		}
+		$rxd = $dbapp->queryAssignmentCourseAll($vxa['courseid']);
+
+		// Build field set header
+		$fsetxt = $rxb['courseid'] . ': ' . $rxb['class'] . '-' . $rxb['section']
+			. ' ' . $rxb['name'] . '<br>' . 'Instructor: ' . $rxc['name'];
+		$fsetopen = array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => $fsetxt,
 		);
-		array_push($list['tdata'], $tdata);
-		array_push($list['tooltip'], $vx['description']);
+
+		// Generate Selection Table.
+		$list = array(
+			'type' => html::TYPE_RADTABLE,
+			'name' => 'select_item',
+			'clickset' => true,
+			'condense' => true,
+			'hover' => true,
+			'titles' => array(
+				// Add column titles here
+				'Assignment',
+				'Due Date',
+			),
+			'tdata' => array(),
+			'tooltip' => array(),
+		);
+		foreach ($rxd as $kxb => $vxb)
+		{
+			$tdata = array(
+				// These are the values that show up under the columns above.
+				// The *FIRST* value is the value that is sent when a row
+				// is selected.  AKA Key Field.
+				$vxb['assignment'],
+				$vxb['name'],
+				timedate::unix2canonical($vxb['duedate']),
+			);
+			array_push($list['tdata'], $tdata);
+			//array_push($list['tooltip'], $vx['description']);
+		}
+
+		// Add onto data array.
+		array_push($data2, $fsetopen, $list, $fsetclose);
 	}
-*/
+
 	// Generate rest of page.
-	$data = array(
+	$data1 = array(
 		array(
 			'type' => html::TYPE_HEADING,
 			'message1' => 'Assignments',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
-		array('type' => html::TYPE_FORMOPEN),
 		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Upcoming Assignments'
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'select_table',
 		),
-		array(
-			// Unordered, Nested List
-			'type' => html::TYPE_BLIST,
-			'data' => array(
-				'Assignment 2',
-				'data' => array(
-					'Assignment 2.1',
-					'Assignment 2.2',
-					'Assignment 2.3',
-					'Assignment 2.4',
-				),
-				'Assignment 3',
-				'Assignment 4',
-				'Assignment 5',
-			)
-		),
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Past Assignments'
-		),
-		array('type' => html::TYPE_FSETCLOSE),
-		array(
-			// Unordered, Nested List
-			'type' => html::TYPE_BLIST,
-			'data' => array(
-				'Assignment 1',	
-			)
-		),
-
-		
+	);
+	$data3 = array(	
 		array('type' => html::TYPE_FORMCLOSE),
 		array('type' => html::TYPE_WDCLOSE),
 		array('type' => html::TYPE_BOTB2)
 	);
+	$data = array_merge($data1, $data2, $data3);
 
 	// Get panel content
 	$navContent = $panels->getLinks();
 	$statusContent = $panels->getStatus();
 	$mainContent = html::pageAutoGenerate($data);
-	$statusContent = "Status Bar";
 
 	// Queue content in ajax transmit buffer.
 	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
@@ -299,26 +306,8 @@ function commandProcessor($commandId)
 		case 1:		// View
 			viewRecordView();
 			break;
-		case 2:		// Update
-			updateRecordView();
-			break;
-		case 3:		// Insert
-			insertRecordView();
-			break;
-		case 4:		// Delete
-			deleteRecordView();
-			break;
 		case 5:		// Load Module
 			$moduleLoad->loadModule();
-			break;
-		case 12:	// Submit Update
-			updateRecordAction();
-			break;
-		case 13:	// Submit Insert
-			insertRecordAction();
-			break;
-		case 14:	// Submit Delete
-			deleteRecordAction();
 			break;
 		default:
 			// If we get here, then the command is undefined.
@@ -337,12 +326,13 @@ function databaseLoad()
 {
 	global $herr;
 	global $moduleDisplayLower;
+	global $dbapp;
 
 	$key = getPostValue('select_item', 'hidden');
 	if ($key == NULL)
-		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
+		handleError('You must select an ' . $moduleDisplayLower . ' from the list view.');
 	// The below line requires customization for database loading.	
-	$rxa = $DATABASE_QUERY_OPERATION($key);		// XXX Set This
+	$rxa = $dbapp->queryAssignment($key);		// XXX Set This
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
@@ -360,181 +350,6 @@ function viewRecordView()
 	formPage(MODE_VIEW, $rxa);
 }
 
-// The Edit Record view.
-function updateRecordView()
-{
-	$rxa = databaseLoad();
-	formPage(MODE_UPDATE, $rxa);
-}
-
-// The Add Record view.
-function insertRecordView()
-{
-	formPage(MODE_INSERT, NULL);
-}
-
-// The Delete Record view.
-function deleteRecordView()
-{
-	$rxa = databaseLoad();
-	formPage(MODE_DELETE, $rxa);
-}
-
-// Updates the record in the database.
-// XXX: Requires customization.
-function updateRecordAction()
-{
-	global $ajax;
-	global $herr;
-	global $vfystr;
-	global $CONFIGVAR;
-	global $moduleDisplayUpper;
-	global $moduleDisplayLower;
-
-	// Get field data.
-	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
-
-	// Get data
-	$key = getPostValue('hidden');
-	$id = getPostValue('');
-
-	// Check key data.
-	if ($key == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
-	if ($id == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
-	if (!is_numeric($key))
-		handleError('Malformed key sequence.');
-	if (!is_numeric($id))
-		handleError('Malformed key sequence.');
-	if ($key != $id)
-		handleError('Database key mismatch.');
-
-	// Check field data.
-	$vfystr->fieldchk($fieldData, $index, $postData);
-
-	// Handle any errors from above.
-	if ($vfystr->errstat() == true)
-	{
-		if ($herr->checkState() == true)
-		{
-			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe);
-			exit(1);
-		}
-	}
-
-	// Safely encode all strings to prevent XSS attacks.
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	
-	// We are good, update the record
-	$result = $DATABASE_UPDATE_OPERATION($key);		// XXX Set This
-	if ($result == false)
-	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessage());
-		else
-			handleError('Database: Record update failed. Key = ' . $key);
-	}
-	sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
-	exit(0);
-}
-
-// Inserts the record into the database.
-// XXX: Requires customization.
-function insertRecordAction()
-{
-	global $ajax;
-	global $herr;
-	global $vfystr;
-	global $CONFIGVAR;
-	global $moduleDisplayUpper;
-	global $moduleDisplayLower;
-
-	// Get field data.
-	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
-
-	// Get data
-	$id = getPostValue('');
-
-	// Check field data.
-	$vfystr->fieldchk($fieldData, $index, $postData);
-
-	// Handle any errors from above.
-	if ($vfystr->errstat() == true)
-	{
-		if ($herr->checkState() == true)
-		{
-			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe);
-			exit(1);
-		}
-	}
-
-	// Safely encode all strings to prevent XSS attacks.
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	
-	// We are good, insert the record
-	$result = $DATABASE_INSERT_OPERATION($id);		// XXX Set This
-	if ($result == false)
-	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessage());
-		else
-			handleError('Database: Record insert failed. Key = ' . $id);
-	}
-	sendResponseClear($moduleDisplayUpper . ' insert completed: key = '
-		. $id);
-	exit(0);
-}
-
-// Deletes the record from the database.
-// XXX: Requires customization.
-function deleteRecordAction()
-{
-	global $ajax;
-	global $herr;
-	global $vfystr;
-	global $CONFIGVAR;
-	global $moduleDisplayUpper;
-	global $moduleDisplayLower;
-
-	// Gather data...
-	$key = getPostValue('hidden');
-	$id = getPostValue('');		// XXX Set This
-
-	// ...and check it.
-	if ($key == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' module selection data.');
-	if ($id == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
-	if (!is_numeric($key))
-		handleError('Malformed key sequence.');
-	if (!is_numeric($id))
-		handleError('Malformed key sequence.');
-	if ($key != $id)
-		handleError('Database key mismatch.');
-	
-	// Now remove the record from the database.
-	$result = $DATABASE_DELETE_OPERATION($key);		// XXX Set This
-	if ($result == false)
-	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
-		else
-			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
-				' data. Key = ' . $key);
-	}
-	sendResponse($moduleDisplayUpper . ' delete completed: key = ' . $key);
-	exit(0);
-}
-
 // Generate generic form page.
 // XXX Requires customization
 function formPage($mode, $rxa)
@@ -543,6 +358,10 @@ function formPage($mode, $rxa)
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 	global $ajax;
+	global $herr;
+	global $dbapp;
+	global $dbuser;
+	global $dbconf;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -618,12 +437,131 @@ function formPage($mode, $rxa)
 		);
 	}
 
-	// XXX Custom field rendering code
+	// Retrieve additional information from the database.
+	$rxb = $dbapp->queryCourse($rxa['courseid']);
+	if ($rxb == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: Unable to retrieve course information.');
+	}
+	$rxe = $dbapp->queryStudentclass($_SESSION['userId'], $rxa['courseid']);
+	if ($rxe == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		if ($_SESSION['userId'] != $rxb[''])
+			handleError('Security Violation: You are not enrolled in the requested course.');
+	}
+	$rxc = $dbuser->queryContact($rxb['instructor']);
+	if ($rxc == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: Unable to retrieve instructor information.');
+	}
+	$rxd = $dbapp->queryAssignstepAssignAll($rxa['assignment']);
+	if ($rxd == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+	}
+	$rxf = $dbapp->queryTurninStudentAssignAll($_SESSION['userId'], $rxa['assignment']);
+	if ($rxf == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		$turnedin = 'No';
+	}
+	else $turnedin = 'Yes';
+	$rxg = $dbapp->queryGradesAssign($_SESSION['userId'], $rxa['assignment']);
+	if ($rxg == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		$graded = false;
+	}
+	else $graded = true;
 
+
+
+	// XXX Custom field rendering code
+	// Course
+	$course = generateField(html::TYPE_TEXT, '', 'Course Number', 2,
+		$rxb['courseid'], 'The course ID number that is assigned by the institution.',
+		$default, $disable);
+	$class = generateField(html::TYPE_TEXT, '', 'Class', 3, $rxb['class'],
+		'The class designation that is assigned by the institution.',
+		$default, $disable);
+	$section = generateField(html::TYPE_TEXT, '', 'Section', 2,
+		$rxb['section'], 'The course section number.', $default, $disable);
+	$name = generateField(html::TYPE_TEXT, '', 'Course Name', 4,
+		$rxb['name'], 'The name of the course.', $default, $disable);
+	$instruct = generateField(html::TYPE_TEXT, '', 'Instructor Name',
+		4, $rxc['name'], 'The name of the course instructor.', $default,
+		$disable);
+
+	// Assignment
+	$aname = generateField(html::TYPE_TEXT, '', 'Name', 4,
+		$rxa['name'], 'The name of the assignment', $default, $disable);
+	$adesc = generateField(html::TYPE_AREA, '', 'Description', 6,
+		$rxa['desc'], 'The description of the assignment.', $default,
+		$disable);
+	$adesc['rows'] = 6;
+	$adue = generateField(html::TYPE_TEXT, '', 'Due Date/Time', 3,
+		timedate::unix2canonical($rxa['duedate']),
+		'The date and time the assignment is due.', $default, $disable);
+	$apoints = generateField(html::TYPE_TEXT, '', 'Points', 2,
+		$rxa['points'], 'The number of points the assignment is worth.',
+		$default, $disable);
+	$aexempt = generateField(html::TYPE_TEXT, '', 'Exempt', 2,
+		convBooleanValue($rxa['exempt']),
+		'Indicates if the assignment is exempt from grading.',
+		$default, $disable);
+	$turnin = generateField(html::TYPE_TEXT, '', 'Turned In', 2,
+		$turnedin, 'Indicates if the assignment was turned in.',
+		$default, $disable);
+	if ($graded == false) $grade = NULL;
+	else
+	{
+		$grade = generateField(html::TYPE_TEXT, '', 'Grade', 2, $rxg['grade'],
+		'The grade that has been awarded for the assignment', $default, $disable);
+	}
+
+	// Assignment Steps
+	$data2 = array();
+	if (is_array($rxd))
+	{
+		$fsetclose = array('type' => html::TYPE_FSETCLOSE);
+		foreach($rxd as $kx => $vx)
+		{
+			$astep = generateField(html::TYPE_TEXT, '', 'Step', 2, $vx['step'],
+				'The assignment step number.', $default, $disable);
+			$asdate = generateField(html::TYPE_TEXT, '', 'Date', 3,
+				timedate::unix2canonical($vx['date']),
+				'The time/date that this step should be completed by.',
+				$default, $disable);
+			if (!empty($vx['desc']))
+			{
+				$asdesc = generateField(html::TYPE_AREA, '', 'Description', 6,
+					$vx['desc'], 'The description of this step.', $default,
+					$disable);
+				$asdesc['rows'] = 6;
+			}
+			else
+				$asdesc = NULL;
+			$fsetopen = array(
+				'type' => html::TYPE_FSETOPEN,
+				'name' => 'Assignment Step ' . $vx['step'],
+			);
+			array_push($data2, $fsetopen, $astep, $asdate, $asdesc, $fsetclose);
+		}
+	}
 
 	// Build out the form array.
-	$data = array(
-		$hidden,
+	$data1 = array(
 		array(
 			'type' => html::TYPE_HEADING,
 			'message1' => $msg1,
@@ -636,10 +574,34 @@ function formPage($mode, $rxa)
 			'type' => html::TYPE_FORMOPEN,
 			'name' => 'dataForm',
 		),
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Course Information',
+		),
+		$course,
+		$class,
+		$section,
+		$name,
+		$instruct,
+		array('type' => html::TYPE_FSETCLOSE),
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Assignment Information',
+		),
+		$aname,
+		$adesc,
+		$adue,
+		$apoints,
+		$aexempt,
+		$turnin,
+		$grade,
+		array('type' => html::TYPE_FSETCLOSE),
+	);
+
 
 		// XXX Enter custom field data here.
 
-
+	$data3 = array(
 		array(
 			'type' => html::TYPE_ACTBTN,
 			'dispname' => $moduleDisplayUpper,
@@ -652,9 +614,11 @@ function formPage($mode, $rxa)
 		array('type' => html::TYPE_VTAB10),
 	);
 
+	// Merge Arrays
+	$data = array_merge($data1, $data2, $data3);
+
 	// Render
-	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
-		generateFieldCheck());
+	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data), NULL);
 }
 
 // Generate the field definitions for client side error checking.

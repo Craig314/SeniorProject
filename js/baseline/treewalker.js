@@ -104,6 +104,12 @@ function treeWalkerMainFunction(nodeObject) {
 
 				// Boolean input types
 				case 'checkbox':
+					if (nodeObject.checked == true) {
+						if (params.length > 0) params += '&';
+						params += getNameId(nodeObject) + '=' +
+							encodeURIComponent(nodeObject.value);
+					}
+					break;
 				case 'radio':
 					if (nodeObject.checked == true) {
 						if (params.length > 0) params += '&';
