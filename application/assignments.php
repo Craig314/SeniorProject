@@ -29,24 +29,24 @@ the module directory taking precidence.
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = 'grades.php';		// XXX Set This
+$moduleFilename = 'assignments.php';		// XXX Set This
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
-$moduleTitle = 'Grades';		// XXX Set This
+$moduleTitle = 'Assignments';		// XXX Set This
 
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 1500;		// XXX Set This
+$moduleId = 1600;		// XXX Set This
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
-$moduleDisplayUpper = 'Grades';		// XXX Set This
+$moduleDisplayUpper = 'Assignments';		// XXX Set This
 
 // The lowercase short display name of the module.  This shows up in
 // various messages.
-$moduleDisplayLower = 'grades';		// XXX Set This
+$moduleDisplayLower = 'assignments';		// XXX Set This
 
 // Set to true if this is a system module.
 $moduleSystem = false;
@@ -227,7 +227,7 @@ function loadAdditionalContent()
 	$data = array(
 		array(
 			'type' => html::TYPE_HEADING,
-			'message1' => 'Grades',
+			'message1' => 'Assignments',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
@@ -240,22 +240,28 @@ function loadAdditionalContent()
 			// Unordered, Nested List
 			'type' => html::TYPE_BLIST,
 			'data' => array(
-				'Assignment 2 Grade: ',
-				'Assignment 3 Grade: ',
-				'Assignment 4 Grade: ',
-				'Assignment 5 Grade: ',
+				'Assignment 2',
+				'data' => array(
+					'Assignment 2.1',
+					'Assignment 2.2',
+					'Assignment 2.3',
+					'Assignment 2.4',
+				),
+				'Assignment 3',
+				'Assignment 4',
+				'Assignment 5',
 			)
 		),
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Assignment 1 Grade: '
+			'name' => 'Past Assignments'
 		),
 		array('type' => html::TYPE_FSETCLOSE),
 		array(
 			// Unordered, Nested List
 			'type' => html::TYPE_BLIST,
 			'data' => array(
-				'Assignment 1 Grade:',	
+				'Assignment 1',	
 			)
 		),
 
