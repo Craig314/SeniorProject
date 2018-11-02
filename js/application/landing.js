@@ -52,7 +52,7 @@ function activateCalendar() {
 			listWeek: { buttonText: 'list week' }
 		},
 		eventClick: function(calEvent, jsEvent, view) {
-			funcSendCommand(0, 1, 'assignment=' + calEvent.assignment);
+			funcSendCommand(0, 25, 'assignment=' + calEvent.assignment);
 		},
 		events: function(start, end, timezone, callback) {
 			eventCallback = callback;

@@ -62,6 +62,8 @@ require_once BASEDIR . 'funchead.php';
 // XXX: Requires customization.
 function commandProcessorGet($commandId)
 {
+	global $ajax;
+
 	switch ((int)$commandId)
 	{
 		default:
@@ -79,6 +81,8 @@ function commandProcessorGet($commandId)
 // XXX: Requires customization.
 function commandProcessorPost($commandId)
 {
+	global $ajax;
+
 	switch ((int)$commandId)
 	{
 		case 25:
@@ -99,6 +103,8 @@ function commandProcessorPost($commandId)
 // XXX: Requires customization.
 function commandProcessorPut($commandId)
 {
+	global $ajax;
+
 	switch ((int)$commandId)
 	{
 		default:
