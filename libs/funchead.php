@@ -328,6 +328,29 @@ function httpMethod_POST()
 	exit(0);
 }
 
+// The HTTP PUT request is used for unlimited bulk data
+// transfer to the server.  This is where command processing
+// takes place.
+function httpMethod_PUT()
+{
+	global $ajax;
+	global $CONFIGVAR;
+
+	// We need to make sure that the user has access.
+	checkUserSecurity();
+
+	// In additon, we also need to check the tokens as well.
+	checkTokenSecurity(1);
+
+	// Now we *NEED* the command to determine what we are going
+	// to do.  If it's missing, then this function will not
+	// return.
+	$commandId = extractCommandId();
+
+	commandProcessorPut($commandId);
+	exit(0);
+}
+
 // Check to make sure that mandatory variables have been set.
 if (!isset($functionFilename) || empty($functionFilename))
 	printErrorImmediate('Internal Error: Function Filename is not set.');
@@ -360,6 +383,10 @@ switch ($_SERVER['REQUEST_METHOD'])
 	case 'POST':
 		// POST request method
 		httpMethod_POST();
+		break;
+	case 'PUT':
+		// PUT request method
+		httpMethod_PUT();
 		break;
 	default:
 		// Unknown request method

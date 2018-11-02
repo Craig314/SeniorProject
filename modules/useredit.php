@@ -83,9 +83,12 @@ $htmlInjectFile = false;
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
+const APPSDIR = '../applibs/';
 require_once BASEDIR . 'dbaseuser.php';
 require_once BASEDIR . 'timedate.php';
 require_once BASEDIR . 'password.php';
+if (file_exists(APPSDIR . 'dbaseapp.php'))
+	include_once(APPSDIR . 'dbaseapp.php');
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -1144,6 +1147,7 @@ function deleteRecordAction()
 	global $moduleDisplayLower;
 	global $dbcore;
 	global $dbuser;
+	global $dbapp;
 
 	// Gather data...
 	$key = getPostValue('hidden');
@@ -1176,6 +1180,20 @@ function deleteRecordAction()
 		handleError('You are not allowed to delete system accounts.');
 
 	// Now remove the user from the database.
+
+	// Check if we have an application associated with the core.
+	// If so, then we need to take action on the application first.
+	if ($dbapp != NULL)
+	{
+		$result = $dbapp->metaDeleteUser($userid);
+		if ($result == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('Database Error: Unable to delete user from application.');
+		}
+	}
 
 	// We need to check what is present in the database and
 	// update the internal variables.

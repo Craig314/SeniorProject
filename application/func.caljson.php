@@ -93,6 +93,23 @@ function commandProcessorPost($commandId)
 	}
 }
 
+// Aways called on a HTTP PUT method request.
+// Do not remove
+// XXX: Requires customization.
+function commandProcessorPut($commandId)
+{
+	switch ((int)$commandId)
+	{
+		default:
+			// If we get here, then the command is undefined.
+			$ajax->sendCode(ajaxClass::CODE_NOTIMP,
+				'The command ' . $_POST['COMMAND'] .
+				' has not been implemented');
+			exit(1);
+			break;
+	}
+}
+
 // Performs the primary action for this function
 // XXX: Requires customization.
 function performDataAction()

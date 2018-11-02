@@ -79,6 +79,11 @@ class account implements accountInterface
 		if ($userId == $CONFIGVAR['account_id_admin']['value']
 			&& $profId == $CONFIGVAR['profile_id_admin']['value'])
 			return true;
+		if ($CONFIGVAR['admin_allow_alts']['value'] == true)
+		{
+			if ($profId == $CONFIGVAR['profile_id_admin']['value'])
+				return true;
+		}
 		return false;
 	}
 

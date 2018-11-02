@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   `name` varchar(30) NOT NULL COMMENT 'The name of the assignment.',
   `desc` varchar(512) DEFAULT NULL COMMENT 'A type in description for the assignment.',
   `descfile` varchar(50) DEFAULT NULL COMMENT 'A description file for the assignment that the ',
+  `dirname` varchar(32) NOT NULL COMMENT 'The directory name for this assignment.',
+  `allowext` varchar(128) DEFAULT NULL COMMENT 'A list of allowed extensions for student submissions.',
   `duedate` bigint(20) NOT NULL COMMENT 'Assignment due date.',
   `lockdate` bigint(20) DEFAULT NULL COMMENT 'The date where students can no longer submit assignments.',
   `gradeweight` int(11) DEFAULT NULL COMMENT 'The total grade weight of the assignment.',
@@ -39,14 +41,14 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   CONSTRAINT `FK2_assignment_gwgroup_weightgroup_group` FOREIGN KEY (`gwgroup`) REFERENCES `weightgroup` (`group`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COMMENT='The assignments that the instructor assigns to students.';
 
--- Dumping data for table application.assignment: ~4 rows (approximately)
+-- Dumping data for table application.assignment: ~5 rows (approximately)
 /*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
-INSERT INTO `assignment` (`assignment`, `courseid`, `name`, `desc`, `descfile`, `duedate`, `lockdate`, `gradeweight`, `gwgroup`, `curve`, `points`, `exempt`) VALUES
-	(1, 20284, 'Assignment 1', 'Assignment 1', NULL, 1540763960, NULL, 10, 0, NULL, 10, 0),
-	(2, 14298, 'Assignment 1', 'Assignment 1', NULL, 1540763960, NULL, 10, 0, NULL, 10, 0),
-	(3, 21924, 'Assignment 1', 'Assignment 1', NULL, 1540995920, NULL, 10, 0, NULL, 10, 0),
-	(4, 21924, 'Assignment 2', 'Assignment 2', NULL, 1541427920, NULL, 10, 0, NULL, 10, 0),
-	(5, 14298, 'Assignment 2', 'Assignment 2', NULL, 1541687190, NULL, 10, 0, NULL, 10, NULL);
+INSERT INTO `assignment` (`assignment`, `courseid`, `name`, `desc`, `descfile`, `dirname`, `allowext`, `duedate`, `lockdate`, `gradeweight`, `gwgroup`, `curve`, `points`, `exempt`) VALUES
+	(1, 20284, 'Assignment 1', 'Assignment 1', NULL, 'a1', NULL, 1540763960, NULL, 10, 0, NULL, 10, 0),
+	(2, 14298, 'Assignment 1', 'Assignment 1', NULL, 'a1', NULL, 1540763960, NULL, 10, 0, NULL, 10, 0),
+	(3, 21924, 'Assignment 1', 'Assignment 1', NULL, 'a1', NULL, 1540995920, NULL, 10, 0, NULL, 10, 0),
+	(4, 21924, 'Assignment 2', 'Assignment 2', NULL, 'a2', NULL, 1541427920, NULL, 10, 0, NULL, 10, 0),
+	(5, 14298, 'Assignment 2', 'Assignment 2', NULL, 'a2', NULL, 1541687190, NULL, 10, 0, NULL, 10, NULL);
 /*!40000 ALTER TABLE `assignment` ENABLE KEYS */;
 
 -- Dumping structure for table application.assignstep
@@ -60,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `assignstep` (
   CONSTRAINT `FK1_assignstep_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Steps or milestones the assignment requires for completetion.';
 
--- Dumping data for table application.assignstep: ~0 rows (approximately)
+-- Dumping data for table application.assignstep: ~4 rows (approximately)
 /*!40000 ALTER TABLE `assignstep` DISABLE KEYS */;
 INSERT INTO `assignstep` (`assignment`, `step`, `date`, `desc`) VALUES
 	(5, 1, 1541108753, 'Assignment 2 Step 1'),
@@ -75,6 +77,8 @@ CREATE TABLE IF NOT EXISTS `course` (
   `class` varchar(12) NOT NULL COMMENT 'The course code.  Ex: CSC 190',
   `section` int(11) NOT NULL COMMENT 'The course section number.',
   `name` varchar(50) NOT NULL COMMENT 'The name of the course.',
+  `dirname` varchar(32) NOT NULL COMMENT 'The filesystem directory name for this course.',
+  `syllabus` varchar(50) NOT NULL COMMENT 'The name of the course syllabus file.',
   `instructor` int(11) NOT NULL COMMENT 'The userid of the course instructor.',
   `scale` int(11) DEFAULT NULL COMMENT 'The grading scale for this course.',
   `curve` int(11) DEFAULT NULL COMMENT 'The grading curve for this course.',
@@ -88,14 +92,14 @@ CREATE TABLE IF NOT EXISTS `course` (
 
 -- Dumping data for table application.course: ~7 rows (approximately)
 /*!40000 ALTER TABLE `course` DISABLE KEYS */;
-INSERT INTO `course` (`courseid`, `class`, `section`, `name`, `instructor`, `scale`, `curve`) VALUES
-	(14298, 'CSC-152', 1, 'Cryptography', 1000, 0, NULL),
-	(19376, 'CSC-151', 1, 'Compiler Construction', 1001, 0, NULL),
-	(20284, 'CSC-152', 2, 'Cryptography', 1000, 0, NULL),
-	(21924, 'CSC-130', 1, 'Data Structures and Algorithms', 1000, 0, NULL),
-	(21925, 'CSC-130', 2, 'Data Structures and Algorithms', 1000, 0, NULL),
-	(83745, 'CSC-131', 1, 'Software Engineering', 1000, 0, NULL),
-	(83746, 'CSC-131', 2, 'Software Engineering', 1001, 0, NULL);
+INSERT INTO `course` (`courseid`, `class`, `section`, `name`, `dirname`, `syllabus`, `instructor`, `scale`, `curve`) VALUES
+	(14298, 'CSC-152', 1, 'Cryptography', 'csc152s1', '', 1000, 0, NULL),
+	(19376, 'CSC-151', 1, 'Compiler Construction', 'csc151s1', '', 1001, 0, NULL),
+	(20284, 'CSC-152', 2, 'Cryptography', 'csc152s2', '', 1000, 0, NULL),
+	(21924, 'CSC-130', 1, 'Data Structures and Algorithms', 'csc130s1', '', 1000, 0, NULL),
+	(21925, 'CSC-130', 2, 'Data Structures and Algorithms', 'csc130s2', '', 1000, 0, NULL),
+	(83745, 'CSC-131', 1, 'Software Engineering', 'csc131s1', '', 1000, 0, NULL),
+	(83746, 'CSC-131', 2, 'Software Engineering', 'csc131s2', '', 1001, 0, NULL);
 /*!40000 ALTER TABLE `course` ENABLE KEYS */;
 
 -- Dumping structure for table application.filename

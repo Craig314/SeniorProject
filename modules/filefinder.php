@@ -4,7 +4,7 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application 
+PHP Web Application File Management Utility
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -1015,7 +1015,6 @@ function fileUpload()
 
 	// Refresh listing
 	buildDirectoryList($currentPath);
-
 }
 
 // Generates a URL for file download.

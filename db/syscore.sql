@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`setting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains configuration information about the application.\r\nThe following numerical ranges are defined:\r\n0-9  Server\r\n10-19 HTML\r\n20-29 SSL\r\n30-49 Security\r\n50-59 Session\r\n60-69 Time/Timezone\r\n70-79 Account/Profile\r\n1000+ Application Specific';
 
--- Dumping data for table configuration.config: ~48 rows (approximately)
+-- Dumping data for table configuration.config: ~52 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
 	(0, 0, 'server_document_root', 'Appliation Root Directory', '/Servers/webdocs', 'This sets the application root directory on the server.', 1),
@@ -62,7 +62,7 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(40, 1, 'security_hashtime_max', 'Password Hashtime Maximum', '500', 'Maximum jitter time for password hashing.', 0),
 	(41, 1, 'security_login_failure_lockout', 'Allowed Login Failure Attempts', '5', 'The maximum number of login failure attempts before the account is locked out.', 1),
 	(42, 1, 'security_lockout_time', 'Account Lockout Time', '900', 'The amount of time the account is locked out after the\r\nnumber of login failure attempts have been exceeded.', 1),
-	(50, 2, 'session_regen_enable', 'Session Regenerate Enable', '0', 'Enables or disables session ID regeneration.', 1),
+	(50, 2, 'session_regen_enable', 'Session Regenerate Enable', '1', 'Enables or disables session ID regeneration.', 1),
 	(51, 1, 'session_regen_time', 'Session Regenerate Timeout', '30', 'The time interval between session ID regeneration.\r\nThis helps to prevent session fixation and session\r\nhijacking.', 1),
 	(52, 1, 'session_expire_time', 'Session Expire Timeout', '60', 'The time in seconds that the old session before ID regeneration is still valid.', 1),
 	(53, 1, 'session_nonce_len', 'Session Nonce Length', '32', 'The length of the session nonce in bytes.', 0),
@@ -75,13 +75,22 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(75, 1, 'profile_id_none', 'Null Profile ID', '0', 'The profile ID number for a NULL user who has not yet logged in.', 0),
 	(76, 1, 'profile_id_vendor', 'Vendor Profile ID', '1', 'The profile ID number of the vendor account.', 0),
 	(77, 1, 'profile_id_admin', 'Admin Profile ID', '2', 'The profile ID number of the administrator account.', 0),
+	(78, 2, 'admin_allow_alts', 'Allow Alternate Admins', '1', 'Allows users other than Admin to also be administrators.', 1),
 	(80, 2, 'oauth_enable', 'OAuth Login Enabled', '0', 'Specifies whether OAuth is a login method.', 1),
 	(90, 2, 'openid_enable', 'OpenID Login Enabled', '0', 'Specifies whether OpenID is a login method.', 1),
 	(1000, 1, 'assign_duedate_lookahead', 'Assignment Due Date Look Ahead Time', '1209600', 'The assignment due date look ahead time for the status panel', 1),
 	(1001, 1, 'assign_past_due_time', 'Assignment Past Due Time', '604800', 'The amount of time in seconds to display past due assignments.', 1),
 	(1002, 1, 'assign_priority_high', 'Assignment Priority High', '86400', 'The amount of time before the due date where the assignment has high priority.', 1),
 	(1003, 1, 'assign_priority_medium', 'Assignment Priority Medium', '259200', 'The amount of time before the due date where the assignment has medium priority.', 1),
-	(1004, 1, 'assign_priority_low', 'Assignment Priority Low', '604800', 'The amount of time before the due date where the assignment has low priority.', 1);
+	(1004, 1, 'assign_priority_low', 'Assignment Priority Low', '604800', 'The amount of time before the due date where the assignment has low priority.', 1),
+	(1020, 0, 'files_base_path', 'File Base Path', '/Servers/webdocs/files', 'The base path for user files and directories.  For security reasons, this should exist outside of the web server document root.', 1),
+	(1021, 0, 'files_course', 'Course Files Path', 'course', 'This is where the files for various courses are stored.  Courses have sub-directories inside this directory, and is added onto the base path.', 1),
+	(1022, 0, 'files_turned_in', 'Turned in Files Location', 'turnin', 'This is the directory where student file submissions for assignments are uploaded too.', 1),
+	(1037, 1, 'files_random_filename_length', 'Random Filename Length', '16', 'The number of bytes used to generate random filenames.  The bytes are converted into base64, so the filename will be about 33 percent longer then the number specified.', 1),
+	(1038, 3, 'files_allowed_extensions', 'Upload Files Allowed Extensions', 'pdf zip doc docx xls xlsx ppt pptx pub xps odt ods odp odf odc', 'A space separated list of allowed extensions for uploaded files.  Can be overridden by the instructor on a per-assignment basis.', 1),
+	(1039, 1, 'files_max_upload_size', 'Maximum upload file size', '4194304', 'The maximum file size, in bytes, that the system will accept for uploaded files.', 1),
+	(1040, 1, 'app_profile_instruct', 'Instructor Profile ID', '100', 'The profile ID that course instructors use.', 0),
+	(1041, 1, 'app_profile_student', 'Student Profile ID', '200', 'The profile ID that students use.', 0);
 /*!40000 ALTER TABLE `config` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.flagdesc_app
@@ -228,7 +237,7 @@ CREATE TABLE IF NOT EXISTS `profile` (
   PRIMARY KEY (`profileid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='All user accounts must be assigned one of the profiles which are defined in this table.';
 
--- Dumping data for table configuration.profile: ~3 rows (approximately)
+-- Dumping data for table configuration.profile: ~6 rows (approximately)
 /*!40000 ALTER TABLE `profile` DISABLE KEYS */;
 INSERT INTO `profile` (`profileid`, `name`, `description`, `portal`, `bitmap_core`, `bitmap_app`) VALUES
 	(0, 'NONE', NULL, 1, NULL, NULL),
@@ -292,12 +301,12 @@ CREATE TABLE IF NOT EXISTS `login` (
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
 	(0, 0, 0, 0, 0, -1, 'SHA256', 100, '0000000000000000000000000000000000000000000000000000000000000000', '0000000000000000000000000000000000000000000000000000000000000000'),
-	(1, 0, 1532714506, 1541017477, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 0, 1532714506, 1541099591, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, 0, 0, 1536731231, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
 	(34, 0, 1541017469, 1537509577, 1, 2147483647, 'SHA256', 100, '62b1c831bcabd2235af77b7d607199cebbe13f2e2383d690c5eb6cb8e1f1a9da', '35ff44e1a99b3fa565a6b9c11624bff018437d465fe125c206b4a9fee6f44e1a'),
 	(1000, 0, 0, 1541017383, 0, 2147483647, 'SHA256', 100, '3d85c8641e61e8b8c5ddb6b2b52f717736415cad7ceae3486fa835d59b18a6f8', 'db8812f0f4d975c2ea9172ea0611169dc3ff27475b5057ca21762d16402c61bc'),
 	(1001, 0, 0, 0, 0, 2147483647, 'SHA256', 100, 'fae2455c525bf8364cda5a95bd38287461ee8ca3662ecfa1285bdb0141e73592', '15452a7755e9d68edff36d20d573b662ac2f8b037cb67629437a4f8cc4681a4c'),
-	(2000, 0, 1540995065, 1541006025, 0, 2147483647, 'SHA256', 100, '61942ac2e51e43516d325b4aa4cd33f9c3d829f666cbac140a200452df3f9373', '6ead0b2e7c114c0bdbcf55595cc7115af2a436669381fb51c77a2b4af12a37e1'),
+	(2000, 0, 1540995065, 1541063653, 0, 2147483647, 'SHA256', 100, '61942ac2e51e43516d325b4aa4cd33f9c3d829f666cbac140a200452df3f9373', '6ead0b2e7c114c0bdbcf55595cc7115af2a436669381fb51c77a2b4af12a37e1'),
 	(2001, 0, 0, 0, 0, 2147483647, 'SHA256', 100, '6f0724ece7ba6ac9296c1e32fc6e1054e45a493ff684a8cab049fc8e8b10d0ef', '5922976a8119338be7716654f7cb8726ff21d129cf853f8d9ef4d5143ada1f86'),
 	(2003, 0, 0, 0, 0, 2147483647, 'SHA256', 100, '9c2b3ddfc3d1e8caf1ca5797eda8eb27fb431f1b5031f1fa1918da972b181689', '956430a38a95241f3175eae6e3ff1e4f3c5080fb13935a7e0c48e50b43b72717');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
