@@ -180,19 +180,74 @@ function loadInitialContent()
 function loadAdditionalContent()
 {
 	global $baseUrl;
+
+	global $dbapp;	//Need to use dbaseapp.php functions
+	global $herr;   
+
+	global $baseUrl;
+	global $dbconf;
+	global $moduleTitle;
+	global $moduleDisplayLower;
+	global $dbuser;
+	global $admin;
+	global $vendor;
+
 	global $panels;
 	global $ajax;
-	global $dbapp;
 
-/*
 	// Get data from database.
-	$rxa = $DATABASE_QUERY_ALL();	// XXX Set This
-	if ($rxa == false)
+
+	// If the currently logged user is vendor or admin, then show all courses
+	if ($vendor || $admin)
 	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessages());
+		//$rxa = $dbapp->queryCourseAll();	//Querying the database
+		$rxa = $dbapp->queryCourseAll();
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+
+		}
+	}
+	else
+	{
+		//Checks the course query is for a student first.
+		$rxb = $dbapp->queryStudentclassStudentAll($_SESSION['userId']);
+		if ($rxb == false)	//If false then there is an error or query is for an instructor's courses.
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+			{
+				//Handling case that user is an instructor
+				$rxa = $dbapp->queryCourseInstructAll($_SESSION['userId']);	// 
+				if ($rxa == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+					else
+						handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+				}
+			}
+		}
 		else
-			handleError('There are no ' . $moduleDisplayLower . 's in the database to edit.');
+		{
+			//Handle case that user is a student
+			$rxa = array();
+			$rxc = $dbapp->queryGradesAll($_SESSION['userId']);
+			if($rxc == false)
+			{
+				if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+				else
+					handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+			}
+			else {
+				array_push($rxa, $rxc);
+			}
+		}
 	}
 
 	// Generate Selection Table.
@@ -204,81 +259,82 @@ function loadAdditionalContent()
 		'hover' => true,
 		'titles' => array(
 			// Add column titles here
-			'',
+			'Studentid',
+			'Assignment',
+			'Course',
+			'Comment',
+			'Grade',
 		),
 		'tdata' => array(),
 		'tooltip' => array(),
 	);
-	foreach ($rxa as $kx => $vx)
+	foreach ($rxa as $kx)
 	{
-		$tdata = array(
-			// These are the values that show up under the columns above.
-			// The *FIRST* value is the value that is sent when a row
-			// is selected.  AKA Key Field.
-			$vx[''],
-			$vx[''],
-			$vx[''],
-		);
-		array_push($list['tdata'], $tdata);
-		array_push($list['tooltip'], $vx['description']);
+		foreach ($kx as $vx) {
+			$tdata = array(
+				// These are the values that show up under the columns above.
+				// The *FIRST* value is the value that is sent when a row
+				// is selected.  AKA Key Field.
+				$vx['studentid'],
+				$vx['studentid'],
+				$vx['assignment'],
+				$vx['course'],
+				$vx['comment'],
+				$vx['grade'],
+			);
+			array_push($list['tdata'], $tdata);
+			//array_push($list['tooltip'], $vx['description']);
+		}
 	}
-*/
-	// Generate rest of page.
+
+	// Generate rest of page. (Title, headers, etc)
 	$data = array(
 		array(
 			'type' => html::TYPE_HEADING,
 			'message1' => 'Grades',
+			'message2' => 'Test',	// Delete if not needed.
+			'warning' => 'Still in development',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
-		array('type' => html::TYPE_FORMOPEN),
 		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Upcoming Assignments'
-		),
-		array(
-			// Unordered, Nested List
-			'type' => html::TYPE_BLIST,
-			'data' => array(
-				'Assignment 2 Grade: ',
-				'Assignment 3 Grade: ',
-				'Assignment 4 Grade: ',
-				'Assignment 5 Grade: ',
-			)
-		),
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Assignment 1 Grade: '
-		),
-		array('type' => html::TYPE_FSETCLOSE),
-		array(
-			// Unordered, Nested List
-			'type' => html::TYPE_BLIST,
-			'data' => array(
-				'Assignment 1 Grade:',	
-			)
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'select_table',
 		),
 
-		
+		// Enter custom data here.
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Current Grades'
+		),
+		$list,
+
+		//End of custom data
+
 		array('type' => html::TYPE_FORMCLOSE),
 		array('type' => html::TYPE_WDCLOSE),
-		array('type' => html::TYPE_BOTB2)
+		array('type' => html::TYPE_BOTB1)
 	);
 
 	// Get panel content
 	$navContent = $panels->getLinks();
 	$statusContent = $panels->getStatus();
 	$mainContent = html::pageAutoGenerate($data);
-	$statusContent = "Status Bar";
 
 	// Queue content in ajax transmit buffer.
 	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
 	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
 	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
-
+	
+	//Don't need this if using loadQueueCommand
+	
+	//$ajax->writePanelsImmediate($navContent, $statusContent, $mainContent);
+	
 	// Render
 	$ajax->sendQueue();
 
+	// Render
+	//echo html::pageAutoGenerate($data);
 	exit(0);
 }
 

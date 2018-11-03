@@ -67,6 +67,7 @@ interface database_application_interface
 	public function queryGradesAssign($student, $assign);
 	public function queryGradesCourse($course);
 	public function queryGradesStudent($student, $course);
+	public function queryGradesAll($student);
 	public function updateGrades($student, $assign, $comment, $grade);
 	public function insertGrades($student, $assign, $course, $comment, $grade);
 	public function deleteGrades($student, $assign, $course);
@@ -537,6 +538,15 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('studentid', $student, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('course', $course, databaseCore::PTINT, $qxa);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	public function queryGradesAll($student)
+	{
+		global $dbcore;
+		$table = $this->tablebase .'.grades';
+		$column = '*';
+		$qxa = $dbcore->buildArray('studentid', $student, databaseCore::PTINT);
+		return($dbcore->launchQueryMultiple($table, $column, $qxa));
 	}
 
 	// Updates a student grade on an assignment.
