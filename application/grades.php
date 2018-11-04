@@ -197,6 +197,8 @@ function loadAdditionalContent()
 
 	// Get data from database.
 
+	$list = false;
+
 	// If the currently logged user is vendor or admin, then show all courses
 	if ($vendor || $admin)
 	{
@@ -230,14 +232,16 @@ function loadAdditionalContent()
 					else
 						handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
 				}
+				//var_dump($rxa);
+
 			}
 		}
 		else
 		{
 			//Handle case that user is a student
-			$rxa = array();
-			$rxc = $dbapp->queryGradesAll($_SESSION['userId']);
-			if($rxc == false)
+			//$rxa = array();
+			$rxa = $dbapp->queryGradesAll($_SESSION['userId']);
+			if($rxa == false)
 			{
 				if ($herr->checkState())
 						handleError($herr->errorGetMessage());
@@ -245,46 +249,50 @@ function loadAdditionalContent()
 					handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
 			}
 			else {
-				array_push($rxa, $rxc);
+				// Generate Selection Table.
+				$list = array(
+					'type' => html::TYPE_RADTABLE,
+					'name' => 'select_item',
+					'clickset' => true,
+					'condense' => true,
+					'hover' => true,
+					'titles' => array(
+						// Add column titles here
+						'Assignment',
+						'Course',
+						'Comment',
+						'Grade',
+					),
+					'tdata' => array(),
+					'tooltip' => array(),
+				);
+				foreach ($rxa as $kx => $vx)
+				{
+					//foreach ($kx as $vx) {
+						$tdata = array(
+							// These are the values that show up under the columns above.
+							// The *FIRST* value is the value that is sent when a row
+							// is selected.  AKA Key Field.
+							$vx['studentid'],
+							$vx['assignment'],
+							$vx['course'],
+							$vx['comment'],
+							$vx['grade'],
+						);
+						array_push($list['tdata'], $tdata);
+						//array_push($list['tooltip'], $vx['description']);
+					//}
+				}
 			}
 		}
 	}
 
-	// Generate Selection Table.
-	$list = array(
-		'type' => html::TYPE_RADTABLE,
-		'name' => 'select_item',
-		'clickset' => true,
-		'condense' => true,
-		'hover' => true,
-		'titles' => array(
-			// Add column titles here
-			'Studentid',
-			'Assignment',
-			'Course',
-			'Comment',
-			'Grade',
-		),
-		'tdata' => array(),
-		'tooltip' => array(),
-	);
-	foreach ($rxa as $kx)
+	if($list == false) 
 	{
-		foreach ($kx as $vx) {
-			$tdata = array(
-				// These are the values that show up under the columns above.
-				// The *FIRST* value is the value that is sent when a row
-				// is selected.  AKA Key Field.
-				$vx['studentid'],
-				$vx['studentid'],
-				$vx['assignment'],
-				$vx['course'],
-				$vx['comment'],
-				$vx['grade'],
-			);
-			array_push($list['tdata'], $tdata);
-			//array_push($list['tooltip'], $vx['description']);
-		}
+		$list = array(
+			'type' => html::TYPE_BOTB1,
+			'data' => 'There are no ' . $moduleDisplayLower . '\'s in the database to query.',
+		);
 	}
 
 	// Generate rest of page. (Title, headers, etc)
@@ -320,6 +328,7 @@ function loadAdditionalContent()
 	$navContent = $panels->getLinks();
 	$statusContent = $panels->getStatus();
 	$mainContent = html::pageAutoGenerate($data);
+	//$testContent = html::insertRadioButtons($data);
 
 	// Queue content in ajax transmit buffer.
 	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
@@ -503,15 +512,29 @@ function insertRecordAction()
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $dbapp;
+	global $admin;
+	global $vendor;
 
 	// Get field data.
 	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
 
 	// Get data
-	$id = getPostValue('');
+	$studentid = getPostValue('studentid');
+	$assignment = getPostValue('assignment');
+	$course = getPostValue('course');
+	$comment = getPostValue('comment');
+	$grade = getPostValue('grade');
 
 	// Check field data.
-	$vfystr->fieldchk($fieldData, $index, $postData);
+	$vfystr->fieldchk($fieldData, 0, $studentid);
+	$vfystr->fieldchk($fieldData, 1, $assignment);
+	$vfystr->fieldchk($fieldData, 2, $course);
+	$vfystr->fieldchk($fieldData, 3, $comment);
+	$vfystr->fieldchk($fieldData, 4, $grade);
+
+	if (!empty($active)) $active = true; else $active = false;
+	if ($vendor || $admin) $active = true;
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -525,22 +548,23 @@ function insertRecordAction()
 	}
 
 	// Safely encode all strings to prevent XSS attacks.
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
+	$studentid = safeEncodeString($studentid);
+	$assignment = safeEncodeString($assignment);
+	$course = safeEncodeString($course);
+	$comment = safeEncodeString($comment);
+	$grade = safeEncodeString($grade);
 	
 	// We are good, insert the record
-	$result = $DATABASE_INSERT_OPERATION($id);		// XXX Set This
+	$result = $dbapp->insertGrades($studentid, $assignment, $course, $comment, $grade);		// XXX Set This
 	if ($result == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
 		else
-			handleError('Database: Record insert failed. Key = ' . $id);
+			handleError('Database: Record insert failed. Key = ' . $studentid);
 	}
 	sendResponseClear($moduleDisplayUpper . ' insert completed: key = '
-		. $id);
+		. $studentid);
 	exit(0);
 }
 
@@ -645,6 +669,8 @@ function formPage($mode, $rxa)
 			break;
 	}
 
+	// Generating fields to insert grades
+
 	// Hidden field to pass key data
 	if (isset($hideValue))
 	{
@@ -664,12 +690,27 @@ function formPage($mode, $rxa)
 		// Datafill this array with dummy values to prevent PHP
 		// from issuing errors.
 		$rxa = array(
-			'' => '',
+			'studentid' => '',
+			'assignment' => '',
+			'course' => '',
+			'comment' => '',
+			'grade' => '',
 		);
 	}
 
 	// XXX Custom field rendering code
-
+	// Associating the grade table columns with the fields 
+	$studentid = generateField(html::TYPE_TEXT, 'studentid', 'Student ID', 6, $rxa['studentid'],
+		'The numeric user id which uniquely identifies the student.', $default, $key);
+	$assignment = generateField(html::TYPE_TEXT, 'assignment', 'Assignment Number.', 4,
+		$rxa['assignment'], 'The assignment number.', $default, $disable);
+	$courseNum = generateField(html::TYPE_TEXT, 'course', 'Course Number.', 6,
+		$rxa['course'], 'The course the assignment is associated with.',
+		$default, $disable);
+	$comment = generateField(html::TYPE_TEXT, 'comment', 'Comments', 1000,
+		$rxa['comment'], 'Comments.', $default, $disable);
+	$grade = generateField(html::TYPE_TEXT, 'grade', 'Grade', 3,
+		$rxa['grade'], 'The grade.', $default, $disable);
 
 	// Build out the form array.
 	$data = array(
@@ -688,7 +729,11 @@ function formPage($mode, $rxa)
 		),
 
 		// XXX Enter custom field data here.
-
+		$studentid,
+		$assignment,
+		$courseNum,
+		$comment,
+		$grade,
 
 		array(
 			'type' => html::TYPE_ACTBTN,
@@ -716,15 +761,15 @@ function generateFieldCheck($returnType = 0)
 	$data = array(
 		0 => array(
 			// This is the display name of the field.
-			'dispname' => '',
+			'dispname' => 'Student ID',
 			// The internal name of the field.
-			'name' => '',
+			'name' => 'studentid',
 			// The type of the field.
-			'type' => $vfystr::STR_,
+			'type' => $vfystr::STR_USERID,
 			// If special handling of this field is required, then set type
 			// to $vfystr::STR_CUSTOM and this field to the actual datatype.
 			// Remove if this field is not needed.
-			'ctype' => $vfystr::STR_,
+			//'ctype' => $vfystr::STR_,
 			// True if this field cannot be blank.  False otherwise.
 			'noblank' => true,
 			// Same as noblank above, except this is only for insert mode.
@@ -732,19 +777,45 @@ function generateFieldCheck($returnType = 0)
 			// Remove if this field is not needed.
 			'noblankins' => true,
 			// Maximum allowable field length (or numeric value).
-			'max' => 0,
+			'max' => 1000,
 			// Minimum allowable field length (or numeric value).
 			// In all cases, if min > max, then no checking is done.
 			'min' => 0,
 		),
-		0 => array(
-			'dispname' => '',
-			'name' => '',
-			'type' => $vfystr::STR_,
-			'ctype' => $vfystr::STR_,
+		1 => array(
+			'dispname' => 'Assignment Number',
+			'name' => 'assignment',
+			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
 			'noblankins' => true,
-			'max' => 0,
+			'max' => 10,
+			'min' => 0,
+		),
+		2 => array(
+			'dispname' => 'Course Number',
+			'name' => 'course',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'noblankins' => true,
+			'max' => 100000,
+			'min' => 0,
+		),
+		3 => array(
+			'dispname' => 'Comments',
+			'name' => 'comment',
+			'type' => $vfystr::STR_DESC,
+			'noblank' => true,
+			'noblankins' => true,
+			'max' => 1000,
+			'min' => 0,
+		),
+		4 => array(
+			'dispname' => 'Grade',
+			'name' => 'grade',
+			'type' => $vfystr::STR_PINTEGER,
+			'noblank' => true,
+			'noblankins' => true,
+			'max' => 20,
 			'min' => 0,
 		),
 	);

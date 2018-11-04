@@ -566,7 +566,7 @@ class database_application implements database_application_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.grades';
-		$qxa = $dbcore->buildArray('student', $student, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('studentid', $student, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('assignment', $assign, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('course', $course, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('comment', $comment, databaseCore::PTSTR, $qxa);
