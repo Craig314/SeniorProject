@@ -273,7 +273,7 @@ function loadAdditionalContent()
 							// These are the values that show up under the columns above.
 							// The *FIRST* value is the value that is sent when a row
 							// is selected.  AKA Key Field.
-							$vx['studentid'],
+							$vx['assignment'],
 							$vx['assignment'],
 							$vx['course'],
 							$vx['comment'],
@@ -396,12 +396,13 @@ function databaseLoad()
 {
 	global $herr;
 	global $moduleDisplayLower;
+	global $dbapp;
 
 	$key = getPostValue('select_item', 'hidden');
 	if ($key == NULL)
 		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
 	// The below line requires customization for database loading.	
-	$rxa = $DATABASE_QUERY_OPERATION($key);		// XXX Set This
+	$rxa = $dbapp->queryAssignment($key);		// XXX Set This
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
@@ -617,6 +618,10 @@ function formPage($mode, $rxa)
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 	global $ajax;
+	global $dbapp;
+	global $herr;
+
+	global $dbuser;
 
 	// Determine the editing mode.
 	switch($mode)
@@ -683,142 +688,345 @@ function formPage($mode, $rxa)
 	}
 	else $hidden = array();
 
-	// Load $rxa with dummy values for insert mode.
-	if ($mode == MODE_INSERT)
+	$data = array();
+	
+	switch($mode)
 	{
-		// Variable $rxa is null when the exit mode is insert.
-		// Datafill this array with dummy values to prevent PHP
-		// from issuing errors.
-		$rxa = array(
-			'studentid' => '',
-			'assignment' => '',
-			'course' => '',
-			'comment' => '',
-			'grade' => '',
-		);
+		case MODE_INSERT:
+			// Load $rxa with dummy values for insert mode.
+			// Variable $rxa is null when the exit mode is insert.
+			// Datafill this array with dummy values to prevent PHP
+			// from issuing errors.
+			$rxa = array(
+				'studentid' => '',
+				'assignment' => '',
+				'course' => '',
+				'comment' => '',
+				'grade' => '',
+			);
+
+			// XXX Custom field rendering code
+			// Associating the grade table columns with the fields 
+			$studentid = generateField(html::TYPE_TEXT, 'studentid', 'Student ID', 6, $rxa['studentid'],
+				'The numeric user id which uniquely identifies the student.', $default, $key);
+			$assignment = generateField(html::TYPE_TEXT, 'assignment', 'Assignment Number.', 4,
+				$rxa['assignment'], 'The assignment number.', $default, $disable);
+			$courseNum = generateField(html::TYPE_TEXT, 'course', 'Course Number.', 6,
+				$rxa['course'], 'The course the assignment is associated with.',
+				$default, $disable);
+			$comment = generateField(html::TYPE_TEXT, 'comment', 'Comments', 1000,
+				$rxa['comment'], 'Comments.', $default, $disable);
+			$grade = generateField(html::TYPE_TEXT, 'grade', 'Grade', 3,
+				$rxa['grade'], 'The grade.', $default, $disable);
+
+			// Build out the form array.
+			$data = array(
+				$hidden,
+				array(
+					'type' => html::TYPE_HEADING,
+					'message1' => $msg1,
+					'message2' => $msg2,
+					'warning' => $warn,
+				),
+				array('type' => html::TYPE_TOPB2),
+				array('type' => html::TYPE_WD75OPEN),
+				array(
+					'type' => html::TYPE_FORMOPEN,
+					'name' => 'dataForm',
+				),
+
+				// XXX Enter custom field data here.
+				$studentid,
+				$assignment,
+				$courseNum,
+				$comment,
+				$grade,
+
+				array(
+					'type' => html::TYPE_ACTBTN,
+					'dispname' => $moduleDisplayUpper,
+					'btnset' => $btnset,
+					'action' => $action,
+				),
+				array('type' => html::TYPE_FORMCLOSE),
+				array('type' => html::TYPE_WDCLOSE),
+				array('type' => html::TYPE_BOTB2),
+				array('type' => html::TYPE_VTAB10),
+			);
+			break;
+		case MODE_VIEW:
+			// Retrieve additional information from the database.
+			$rxb = $dbapp->queryCourse($rxa['courseid']);
+			if ($rxb == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				else
+					handleError('Database Error: Unable to retrieve course information.');
+			}
+			
+			$rxe = $dbapp->queryStudentclass($_SESSION['userId'], $rxa['courseid']);
+			if ($rxe == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				//if ($_SESSION['userId'] != $rxb[''])
+				//	handleError('Security Violation: You are not enrolled in the requested course.');
+			}
+			
+			$rxc = $dbuser->queryContact($rxb['instructor']);
+			if ($rxc == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				else
+					handleError('Database Error: Unable to retrieve instructor information.');
+			}
+			
+			$rxd = $dbapp->queryAssignstepAssignAll($rxa['assignment']);
+			if ($rxd == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+			}
+			
+			$rxf = $dbapp->queryTurninStudentAssignAll($_SESSION['userId'], $rxa['assignment']);
+			if ($rxf == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				$turnedin = 'No';
+			}
+			else $turnedin = 'Yes';
+			
+			$rxg = $dbapp->queryGradesAssign($_SESSION['userId'], $rxa['assignment']);
+			if ($rxg == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				$graded = false;
+			}
+			else $graded = true;
+
+			// XXX Custom field rendering code
+			// Course
+			$course = generateField(html::TYPE_TEXT, '', 'Course Number', 2,
+				$rxb['courseid'], 'The course ID number that is assigned by the institution.',
+				$default, $disable);
+			$class = generateField(html::TYPE_TEXT, '', 'Class', 3, $rxb['class'],
+				'The class designation that is assigned by the institution.',
+				$default, $disable);
+			$section = generateField(html::TYPE_TEXT, '', 'Section', 2,
+				$rxb['section'], 'The course section number.', $default, $disable);
+			$name = generateField(html::TYPE_TEXT, '', 'Course Name', 4,
+				$rxb['name'], 'The name of the course.', $default, $disable);
+			$instruct = generateField(html::TYPE_TEXT, '', 'Instructor Name',
+				4, $rxc['name'], 'The name of the course instructor.', $default,
+				$disable);
+
+			// Assignment
+			$aname = generateField(html::TYPE_TEXT, '', 'Name', 4,
+				$rxa['name'], 'The name of the assignment', $default, $disable);
+			$adesc = generateField(html::TYPE_AREA, '', 'Description', 6,
+				$rxa['desc'], 'The description of the assignment.', $default,
+				$disable);
+			$adesc['rows'] = 6;
+			$adue = generateField(html::TYPE_TEXT, '', 'Due Date/Time', 3,
+				timedate::unix2canonical($rxa['duedate']),
+				'The date and time the assignment is due.', $default, $disable);
+			$apoints = generateField(html::TYPE_TEXT, '', 'Points', 2,
+				$rxa['points'], 'The number of points the assignment is worth.',
+				$default, $disable);
+			$aexempt = generateField(html::TYPE_TEXT, '', 'Exempt', 2,
+				convBooleanValue($rxa['exempt']),
+				'Indicates if the assignment is exempt from grading.',
+				$default, $disable);
+			$turnin = generateField(html::TYPE_TEXT, '', 'Turned In', 2,
+				$turnedin, 'Indicates if the assignment was turned in.',
+				$default, $disable);
+			if ($graded == false) $grade = NULL;
+			else
+			{
+				$grade = generateField(html::TYPE_TEXT, '', 'Grade', 2, $rxg['grade'],
+				'The grade that has been awarded for the assignment', $default, $disable);
+			}
+
+			// Assignment Steps
+			$data2 = array();
+			if (is_array($rxd))
+			{
+				$fsetclose = array('type' => html::TYPE_FSETCLOSE);
+				foreach($rxd as $kx => $vx)
+				{
+					$astep = generateField(html::TYPE_TEXT, '', 'Step', 2, $vx['step'],
+						'The assignment step number.', $default, $disable);
+					$asdate = generateField(html::TYPE_TEXT, '', 'Date', 3,
+						timedate::unix2canonical($vx['date']),
+						'The time/date that this step should be completed by.',
+						$default, $disable);
+					if (!empty($vx['desc']))
+					{
+						$asdesc = generateField(html::TYPE_AREA, '', 'Description', 6,
+							$vx['desc'], 'The description of this step.', $default,
+							$disable);
+						$asdesc['rows'] = 6;
+					}
+					else
+						$asdesc = NULL;
+					$fsetopen = array(
+						'type' => html::TYPE_FSETOPEN,
+						'name' => 'Assignment Step ' . $vx['step'],
+					);
+					array_push($data2, $fsetopen, $astep, $asdate, $asdesc, $fsetclose);
+				}
+			}
+
+			// Build out the form array.
+			$data1 = array(
+				array(
+					'type' => html::TYPE_HEADING,
+					'message1' => $msg1,
+					'message2' => $msg2,
+					'warning' => $warn,
+				),
+				array('type' => html::TYPE_TOPB2),
+				array('type' => html::TYPE_WD75OPEN),
+				array(
+					'type' => html::TYPE_FORMOPEN,
+					'name' => 'dataForm',
+				),
+				array(
+					'type' => html::TYPE_FSETOPEN,
+					'name' => 'Course Information',
+				),
+				$course,
+				$class,
+				$section,
+				$name,
+				$instruct,
+				array('type' => html::TYPE_FSETCLOSE),
+				array(
+					'type' => html::TYPE_FSETOPEN,
+					'name' => 'Assignment Information',
+				),
+				$aname,
+				$adesc,
+				$adue,
+				$apoints,
+				$aexempt,
+				$turnin,
+				$grade,
+				array('type' => html::TYPE_FSETCLOSE),
+			);
+
+			// XXX Enter custom field data here.
+
+			$data3 = array(
+				array(
+					'type' => html::TYPE_ACTBTN,
+					'dispname' => $moduleDisplayUpper,
+					'btnset' => $btnset,
+					'action' => $action,
+				),
+				array('type' => html::TYPE_FORMCLOSE),
+				array('type' => html::TYPE_WDCLOSE),
+				array('type' => html::TYPE_BOTB2),
+				array('type' => html::TYPE_VTAB10),
+			);
+
+			// Merge Arrays
+			$data = array_merge($data1, $data2, $data3);
+					break;
+
+		default:
+			handleError('Internal Error: Contact your administrator.  XX82747');
+			break;
 	}
-
-	// XXX Custom field rendering code
-	// Associating the grade table columns with the fields 
-	$studentid = generateField(html::TYPE_TEXT, 'studentid', 'Student ID', 6, $rxa['studentid'],
-		'The numeric user id which uniquely identifies the student.', $default, $key);
-	$assignment = generateField(html::TYPE_TEXT, 'assignment', 'Assignment Number.', 4,
-		$rxa['assignment'], 'The assignment number.', $default, $disable);
-	$courseNum = generateField(html::TYPE_TEXT, 'course', 'Course Number.', 6,
-		$rxa['course'], 'The course the assignment is associated with.',
-		$default, $disable);
-	$comment = generateField(html::TYPE_TEXT, 'comment', 'Comments', 1000,
-		$rxa['comment'], 'Comments.', $default, $disable);
-	$grade = generateField(html::TYPE_TEXT, 'grade', 'Grade', 3,
-		$rxa['grade'], 'The grade.', $default, $disable);
-
-	// Build out the form array.
-	$data = array(
-		$hidden,
-		array(
-			'type' => html::TYPE_HEADING,
-			'message1' => $msg1,
-			'message2' => $msg2,
-			'warning' => $warn,
-		),
-		array('type' => html::TYPE_TOPB2),
-		array('type' => html::TYPE_WD75OPEN),
-		array(
-			'type' => html::TYPE_FORMOPEN,
-			'name' => 'dataForm',
-		),
-
-		// XXX Enter custom field data here.
-		$studentid,
-		$assignment,
-		$courseNum,
-		$comment,
-		$grade,
-
-		array(
-			'type' => html::TYPE_ACTBTN,
-			'dispname' => $moduleDisplayUpper,
-			'btnset' => $btnset,
-			'action' => $action,
-		),
-		array('type' => html::TYPE_FORMCLOSE),
-		array('type' => html::TYPE_WDCLOSE),
-		array('type' => html::TYPE_BOTB2),
-		array('type' => html::TYPE_VTAB10),
-	);
-
 	// Render
 	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
-		generateFieldCheck());
+		generateFieldCheck($mode));
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck($returnType = 0)
+// Use $mode passed in from formpage to check whether doing an insert,
+// view, update, or delete.
+function generateFieldCheck($mode, $returnType = 0)
 {
 	global $CONFIGVAR;
 	global $vfystr;
 
-	$data = array(
-		0 => array(
-			// This is the display name of the field.
-			'dispname' => 'Student ID',
-			// The internal name of the field.
-			'name' => 'studentid',
-			// The type of the field.
-			'type' => $vfystr::STR_USERID,
-			// If special handling of this field is required, then set type
-			// to $vfystr::STR_CUSTOM and this field to the actual datatype.
-			// Remove if this field is not needed.
-			//'ctype' => $vfystr::STR_,
-			// True if this field cannot be blank.  False otherwise.
-			'noblank' => true,
-			// Same as noblank above, except this is only for insert mode.
-			// Use only if different from noblank.
-			// Remove if this field is not needed.
-			'noblankins' => true,
-			// Maximum allowable field length (or numeric value).
-			'max' => 1000,
-			// Minimum allowable field length (or numeric value).
-			// In all cases, if min > max, then no checking is done.
-			'min' => 0,
-		),
-		1 => array(
-			'dispname' => 'Assignment Number',
-			'name' => 'assignment',
-			'type' => $vfystr::STR_PINTEGER,
-			'noblank' => true,
-			'noblankins' => true,
-			'max' => 10,
-			'min' => 0,
-		),
-		2 => array(
-			'dispname' => 'Course Number',
-			'name' => 'course',
-			'type' => $vfystr::STR_PINTEGER,
-			'noblank' => true,
-			'noblankins' => true,
-			'max' => 100000,
-			'min' => 0,
-		),
-		3 => array(
-			'dispname' => 'Comments',
-			'name' => 'comment',
-			'type' => $vfystr::STR_DESC,
-			'noblank' => true,
-			'noblankins' => true,
-			'max' => 1000,
-			'min' => 0,
-		),
-		4 => array(
-			'dispname' => 'Grade',
-			'name' => 'grade',
-			'type' => $vfystr::STR_PINTEGER,
-			'noblank' => true,
-			'noblankins' => true,
-			'max' => 20,
-			'min' => 0,
-		),
-	);
+	$data = array();
+
+	switch($mode) 
+	{
+		case MODE_INSERT:
+			$data = array(
+				0 => array(
+					// This is the display name of the field.
+					'dispname' => 'Student ID',
+					// The internal name of the field.
+					'name' => 'studentid',
+					// The type of the field.
+					'type' => $vfystr::STR_USERID,
+					// If special handling of this field is required, then set type
+					// to $vfystr::STR_CUSTOM and this field to the actual datatype.
+					// Remove if this field is not needed.
+					//'ctype' => $vfystr::STR_,
+					// True if this field cannot be blank.  False otherwise.
+					'noblank' => true,
+					// Same as noblank above, except this is only for insert mode.
+					// Use only if different from noblank.
+					// Remove if this field is not needed.
+					'noblankins' => true,
+					// Maximum allowable field length (or numeric value).
+					'max' => 1000,
+					// Minimum allowable field length (or numeric value).
+					// In all cases, if min > max, then no checking is done.
+					'min' => 0,
+				),
+				1 => array(
+					'dispname' => 'Assignment Number',
+					'name' => 'assignment',
+					'type' => $vfystr::STR_PINTEGER,
+					'noblank' => true,
+					'noblankins' => true,
+					'max' => 10,
+					'min' => 0,
+				),
+				2 => array(
+					'dispname' => 'Course Number',
+					'name' => 'course',
+					'type' => $vfystr::STR_PINTEGER,
+					'noblank' => true,
+					'noblankins' => true,
+					'max' => 100000,
+					'min' => 0,
+				),
+				3 => array(
+					'dispname' => 'Comments',
+					'name' => 'comment',
+					'type' => $vfystr::STR_DESC,
+					'noblank' => true,
+					'noblankins' => true,
+					'max' => 1000,
+					'min' => 0,
+				),
+				4 => array(
+					'dispname' => 'Grade',
+					'name' => 'grade',
+					'type' => $vfystr::STR_PINTEGER,
+					'noblank' => true,
+					'noblankins' => true,
+					'max' => 20,
+					'min' => 0,
+				),
+			);
+			break;
+		case MODE_VIEW:
+			break;
+		default:
+			break;
+	}
 	switch ($returnType)
 	{
 		case FIELDCHK_JSON:
