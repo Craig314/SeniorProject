@@ -311,7 +311,28 @@ function formPage($mode, $rxa)
 				'type' => html::TYPE_FSETOPEN,
 				'name' => 'Assignment Step ' . $vx['step'],
 			);
-			array_push($data2, $fsetopen, $astep, $asdate, $asdesc, $fsetclose);
+			if ($vx['turninreq'] != 0)
+			{
+				$ascomp = generateField(html::TYPE_CHECK, '', 'Completed', 1,
+					$vx['complete'], 'Indicates if this step has been turned in.',
+					$default, $disable);
+				$formcode = 'A' . $vx['assignment'] . 'S' . $vx['step'];
+				$asupload = array(
+					'type' => html::TYPE_FILE,
+					'bname' => 'fileSubmit_' . $formcode,
+					'fname' => 'fileInputForm_' . $formcode,
+					'name' => 'fileInput_' . $formcode,
+					'action' => 'fileUpload(' . $vx['assignment'] . ', ' . $vx['step'] . ')',
+					'fsize' => 8,
+				);
+			}
+			else
+			{
+				$ascomp = NULL;
+				$asupload = NULL;
+			}
+			array_push($data2, $fsetopen, $astep, $asdate, $asdesc, $ascomp,
+				$asupload, $fsetclose);
 		}
 	}
 

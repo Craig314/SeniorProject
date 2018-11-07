@@ -352,6 +352,7 @@ function loadAdditionalContent()
 function commandProcessor($commandId)
 {
 	global $moduleLoad;
+	global $ajax;
 
 	switch ((int)$commandId)
 	{
@@ -367,17 +368,17 @@ function commandProcessor($commandId)
 		case 4:		// Delete
 			deleteRecordView();
 			break;
-		case 5:		// Load Module
-			$moduleLoad->loadModule();
-			break;
-		case 12:	// Submit Update
+		case 5:	// Submit Update
 			updateRecordAction();
 			break;
-		case 13:	// Submit Insert
+		case 6:	// Submit Insert
 			insertRecordAction();
 			break;
-		case 14:	// Submit Delete
+		case 7:	// Submit Delete
 			deleteRecordAction();
+			break;
+		case 90:		// Load Module
+			$moduleLoad->loadModule();
 			break;
 		default:
 			// If we get here, then the command is undefined.

@@ -17,6 +17,7 @@ aspects of a web application.
 
 require_once 'confload.php';
 require_once 'session.php';
+require_once 'timedate.php';
 
 
 interface html_interface
@@ -68,6 +69,7 @@ interface html_interface
 	const TYPE_HEADING		= 14;	// Banner headings
 	const TYPE_CHECKLIST	= 15;	// Checkbox Lists
 	const TYPE_IMAGE		= 16;	// Image File
+	const TYPE_DATETIME		= 17;	// Date & Time input field
 	const TYPE_FORMOPEN		= 30;	// Open form with name
 	const TYPE_FORMCLOSE	= 31;	// Close form
 	const TYPE_FSETOPEN		= 32;	// Open field set with title
@@ -115,6 +117,7 @@ interface html_interface
 	static public function insertHeadingBanner($data);
 	static public function insertCheckList($data);
 	static public function insertImage($data);
+	static public function insertFieldDateTime($data);
 
 	// Other HTML Constructs
 	static public function openForm($data);
@@ -763,7 +766,9 @@ class html implements html_interface
 			else $bname = '';
 		if (!empty($data['action'])) $action = ' onclick="' . $data['action'] . '"';
 			else $action = '';
-		$html = "
+		if (!empty($fname))
+		{
+			$html = "
 		<form $fname>
 			<div class=\"row\">
 				<div class=\"form-group\">
@@ -780,6 +785,25 @@ class html implements html_interface
 				<button $bname $action class=\"btn btn-default\">Upload</button>
 			</div>
 		</div>";
+		}
+		else
+		{
+			$html = "
+		<div class=\"row\">
+			<div class=\"form-group\">
+				<label $lclass> $label</label>
+				<div $fclass>
+					<input type=\"file\" $name class=\"form-control\" multiple>
+				</div>
+			</div>
+		</div>
+		<div class=\"row\">
+			<div class=\"form-group\">
+				<span $lclass></span>
+				<button $bname $action class=\"btn btn-default\">Upload</button>
+			</div>
+		</div>";
+		}
 		return $html;
 	}
 
@@ -1754,6 +1778,130 @@ class html implements html_interface
 		return $html;
 	}
 
+	// Inserts date and time (hour, minute) input fields.
+	static public function insertFieldDateTime($data)
+	{
+		// Check Input
+		if (!is_array($data)) return;
+
+		// Setup
+		$name = NULL;
+		$forx = NULL;
+		$event = NULL;
+		$disabled = NULL;
+		$value = NULL;
+		$stx = NULL;
+		$gix = NULL;
+		$default = NULL;
+		$label = NULL;
+		$lclass = NULL;
+		$fclass = NULL;
+		$lclass = NULL;
+
+		$tooltip = NULL;
+		$icond = NULL;
+		$icons = NULL;
+		$dcmGL = NULL;
+		$dcmST = NULL;
+		$dcmMS = NULL;
+
+		// Parameters
+		self::helperNameId($data, $name, $forx);
+		self::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
+		self::helperOnEvent($data, $event);
+		self::helperDisabled($data, $disabled);
+		//self::helperValue($data, $value);
+		self::helperState($data, $stx, $gix);
+		//self::helperDefault($data, self::DEFTYPE_TEXTBOX, $default);
+		self::helperLabel($data, $label);
+		self::helperLabelSizeText($data, $lclass);
+		self::helperFieldSizeText($data, $fclass);
+		self::helperTooltip($data, $tooltip);
+		self::helperIcon($data, $icons, $icond);
+
+		// Custom
+		if (!empty($data['name']))
+		{
+			$namehour = $data['name'] . '_timehour';
+			$namemin = $data['name'] . '_timemin';
+		}
+		else
+		{
+			$namehour = '';
+			$namemin = '';
+		}
+		if (!empty($data['value']))
+		{
+			$value = ' value="' . timedate::unix2day($data['value']) . '"';
+			$thour = timedate::unix2todhour($data['value']);
+			$tmin = timedate::unix2todmin($data['value']);
+		}
+		else
+		{
+		}
+
+		// Combine
+		$printout = $name . $value . $default . $event . $tooltip . $disabled;
+
+		// Date Picker Options
+		$datePickOptions = 'data-provide="datepicker"';
+		if (!empty($data['date_format'])) $datePickOptions .= ' data-date-format="' . $data['date_format'] . '"';
+			else $datePickOptions .= ' data-date-format="mm/dd/yyyy"';
+		if (!empty($data['date_highlight'])) $datePickOptions .= ' data-date-today-highlight="true"';
+		if (!empty($data['date_autoclose'])) $datePickOptions .= ' data-date-autoclose="true"';
+		if (!empty($data['date_todaybtn'])) $datePickOptions .= ' data-date-today-btn="true"';
+		if (!empty($data['date_clearbtn'])) $datePickOptions .= ' data-date-clear-btn="true"';
+
+		// Generate Time Selection
+		$optlisthour = "
+							<option value=\"none\">--</option>";
+		$optlistmin = "
+							<option value=\"none\">--</option>";
+		for ($i = 0; $i < 24; $i++)
+		{
+			if ($i == $thour)
+				$optlisthour .= "
+							<option value=\"th_$i\" selected=\"selected\">$i</option>";
+			else
+				$optlisthour .= "
+							<option value=\"th_$i\">$i</option>";
+		}
+		for ($i = 0; $i < 60; $i++)
+		{
+			if ($i == $tmin)
+				$optlistmin .= "
+							<option value=\"tm_$i\" selected=\"selected\">$i</option>";
+			else
+				$optlistmin .= "
+							<option value=\"tm_$i\">$i</option>";
+		}
+		$html = "
+		<div class=\"row\">
+			<div $dcmST class=\"form-group $stx\">
+				<label $lclass $forx>$label</label>
+				<div $fclass>
+					<div class=\"input-group date\" $datePickOptions>
+						<span $icons><i $icond></i></span>
+						<label class=\"control-label col-xs-1\">Date</label>
+						<input type=\"text\" class=\"form-control\" $printout>
+						<label class=\"control-label col-xs-1\">Hour</label>
+						<select class=\"form-control col-xs-1\" name=\"$namehour\" id=\"$namehour\" $disabled>$optlisthour
+						</select>
+						<label class=\"control-label col-xs-1\">Minute</label>
+						<select class=\"form-control col-xs-1\" name=\"$namemin\" id=\"$namemin\" $disabled>$optlistmin
+						</select>
+						<span class=\"input-group-addon\">
+							<i class=\"glyphicon glyphicon-th\"></i>
+						</span>
+						<span $dcmGL class=\"glyphicon $gix form-control-feedback\"></span>
+						<span $dcmMS></span>
+					</div>
+				</div>
+			</div>
+		</div>";
+		return $html;
+	}
+
 	// Opens a form element.
 	// name - name of the form
 	// method - send method (GET/POST)
@@ -1998,6 +2146,9 @@ class html implements html_interface
 					case self::TYPE_CHECKLIST:
 						$htmlCollection .= self::insertCheckList($vx);
 						break;
+					case self::TYPE_DATETIME:
+						$htmlCollection .= self::insertFieldDateTime($vx);
+						break;
 					case self::TYPE_IMAGE:
 						$htmlCollection .= self::insertImage($vx);
 						break;
@@ -2078,6 +2229,7 @@ class html implements html_interface
 		if (is_array($funcbar3))   $flag_fbar3 = true;    else $flag_fbar3 = false;
 		if (is_array($js_files))   $flag_jsfile = true;   else $flag_jsfile = false;
 		if (is_array($css_files))  $flag_cssfile = true;  else $flag_cssfile = false;
+
 		// Used to activate features
 		if (is_array($html_flags))
 		{
@@ -2085,6 +2237,7 @@ class html implements html_interface
 			$flag_datepick = in_array('datepick', $html_flags);
 			$flag_tooltip = in_array('tooltip', $html_flags);
 			$flag_type2 = in_array('type2', $html_flags);
+			$flag_funchide = in_array('funchide', $html_flags);
 		}
 		else
 		{
@@ -2092,7 +2245,14 @@ class html implements html_interface
 			$flag_datepick = false;
 			$flag_tooltip = false;
 			$flag_type2 = false;
+			$flag_funchide = false;
 		}
+
+		// Hide navigation buttons
+		if ($flag_funchide)
+			$funchide = ' hidden';
+		else
+			$funchide = '';
 
 ?>
 <!DOCTYPE html>
@@ -2199,7 +2359,7 @@ class html implements html_interface
 		{
 ?>
 			<!-- Beginning of function bar -->
-			<nav id="functionBar" class="nav nav-inline">
+			<nav id="functionBar1" class="nav nav-inline" <?php echo $funchide; ?>>
 <?php
 			foreach($funcbar as $kx => $vx)
 			{
@@ -2234,7 +2394,7 @@ class html implements html_interface
 		{
 ?>
 			<!-- Beginning of function bar -->
-			<nav id="functionBar" class="nav nav-inline">
+			<nav id="functionBar2" class="nav nav-inline" <?php echo $funchide; ?>>
 <?php
 			foreach($funcbar2 as $kx => $vx)
 			{
@@ -2269,7 +2429,7 @@ class html implements html_interface
 		{
 ?>
 			<!-- Beginning of function bar 3 -->
-			<nav id="functionBar" class="nav nav-inline">
+			<nav id="functionBar3" class="nav nav-inline" <?php echo $funchide; ?>>
 <?php
 			foreach($funcbar3 as $kx => $vx)
 			{

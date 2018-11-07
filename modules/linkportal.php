@@ -177,7 +177,7 @@ function commandProcessor($commandId)
 
 	switch ((int)$commandId)
 	{
-		case 5:
+		case 90:
 			loadModule();
 			break;
 		default:

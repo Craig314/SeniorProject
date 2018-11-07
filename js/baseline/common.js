@@ -90,6 +90,17 @@ function selectItemCheck(item) {
 	}
 }
 
+// When working with a selection table listing, when
+// clicking anywhere in the row, this function immediately
+// sends the selection to the server for processing.
+function selectItemClick(item) {
+	var nodeObject;
+
+	nodeObject = document.getElementById(item);
+	if (nodeObject == null) return;
+	ajaxServerCommand.sendCommand(6, 'item=' + nodeObject.value);
+}
+
 // Button click handler for List.
 $('#listDataItems').on('click', function () {
 	writeError('');
@@ -146,7 +157,7 @@ function submitUpdate() {
 	writeResponse('');
 	if (verifyData.verify(VERIFY_MODE_OTHER) == false) return;
 	params = getFormData();
-	ajaxServerCommand.sendCommand(12, params);
+	ajaxServerCommand.sendCommand(5, params);
 }
 
 // Button click hander for submit add.
@@ -158,7 +169,7 @@ function submitInsert() {
 	writeResponse('');
 	if (verifyData.verify(VERIFY_MODE_INSERT) == false) return;
 	params = getFormData();
-	ajaxServerCommand.sendCommand(13, params);
+	ajaxServerCommand.sendCommand(6, params);
 }
 
 // Button click handler for submit delete.
@@ -168,7 +179,7 @@ function submitDelete() {
 	writeError('');
 	writeResponse('');
 	params = getFormData();
-	ajaxServerCommand.sendCommand(14, params);
+	ajaxServerCommand.sendCommand(7, params);
 }
 
 // This is called when the reset button is pressed on the

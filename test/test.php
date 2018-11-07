@@ -155,11 +155,11 @@ function content()
 		),
 		array(
 			// Date Picker Test
-			'type' => html::TYPE_DATE,
+			'type' => html::TYPE_DATETIME,
 			'label' => 'Test Field 3',
 			'name' => 'field3',
 			'lsize' => 2,
-			'fsize' => 6,
+			'fsize' => 4,
 			'icon' => 'calendar',
 			'tooltip' => 'Enter a date.  Datepicker will popup.',
 			'date_highlight' => true,
@@ -167,6 +167,8 @@ function content()
 			'date_todaybtn' => true,
 			'date_clearbtn' => true,
 			'date_format' => 'dd/mm/yyyy',
+			'value' => time(),
+			//'disable' => true,
 		),
 		array(
 			// Pulldown Menu

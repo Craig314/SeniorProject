@@ -21,29 +21,37 @@ function getParameters() {
 	return(params);
 }
 
-// Issues a prompt to the user for a new file/directory
-// name.
-function getNewName(type) {
+// Issues a prompt to the user for a new file name.
+function getNewFileName() {
 	var pname;
 	var params;
-	var tn;
-	var pm;
 
-	switch (type) {
-		case 0:
-			tn = ' directory ';
-			pm = 'dirname';
-			break;
-		case 1:
-			tn = ' file ';
-			pm = 'filename';
-			break;
-		default:
-			tn = ' ';
-	}
-	pname = window.prompt('Enter new' + tn + 'name.', '');
+	pname = window.prompt('Enter new filename.', '');
 	if (pname == null || pname == '') return null;
-	params = pm + '=' + encodeURIComponent(pname);
+	params = 'filename=' + encodeURIComponent(pname);
+	return params;
+}
+
+// Issues a prompt to the user for the new location to move
+// a file to.
+function getNewFilePath() {
+	var pname;
+	var params;
+
+	pname = window.prompt('Enter new path for file. Do not enter new filename.', '');
+	if (pname == null || pname == '') return null;
+	params = 'pathname=' + encodeURIComponent(pname);
+	return params;
+}
+
+// Issues a prompt to the user for a new directory name.
+function getNewDirName() {
+	var pname;
+	var params;
+
+	pname = window.prompt('Enter new directory name.', '');
+	if (pname == null || pname == '') return null;
+	params = 'dirname=' + encodeURIComponent(pname);
 	return params;
 }
 
@@ -70,6 +78,9 @@ function getConfirmation(type, method) {
 			break;
 		case 1:
 			md = ' delete ';
+			break;
+		case 2:
+			md = ' move ';
 			break;
 		default:
 			md = ' ';
@@ -103,7 +114,7 @@ function selectItemRadio(name, item) {
 
 // Button click handler for moving to the home directory.
 $('#directoryHome').on('click', function() {
-	ajaxServerCommand.sendCommand(-1);
+	ajaxServerCommand.sendCommand(20);
 });
 
 // Button click handler for moving up one directory level.
@@ -111,7 +122,7 @@ $('#directoryUp').on('click', function() {
 	var params;
 
 	params = getParameters();
-	ajaxServerCommand.sendCommand(1, params);
+	ajaxServerCommand.sendCommand(21, params);
 });
 
 // Button click handler for moving down one directory level.
@@ -119,7 +130,7 @@ $('#directoryDown').on('click', function() {
 	var params;
 
 	params = getParameters();
-	ajaxServerCommand.sendCommand(2, params);
+	ajaxServerCommand.sendCommand(22, params);
 });
 
 // Button click handler for creating a directory.
@@ -128,9 +139,9 @@ $('#directoryCreate').on('click', function() {
 	var dirname;
 
 	params = getParameters();
-	dirname = getNewName(0);
+	dirname = getNewDirName();
 	if (dirname != null) {
-		ajaxServerCommand.sendCommand(3, dirname, params);
+		ajaxServerCommand.sendCommand(23, dirname, params);
 	}
 });
 
@@ -141,11 +152,27 @@ $('#directoryRename').on('click', function() {
 	var conf;
 
 	params = getParameters();
-	dirname = getNewName(0);
+	dirname = getNewDirName();
 	if (dirname != null) {
 		conf = getConfirmation(0, 0);
 		if (conf == true) {
-			ajaxServerCommand.sendCommand(4, dirname, params);
+			ajaxServerCommand.sendCommand(24, dirname, params);
+		}
+	}
+});
+
+// Button click handler for moving a directory.
+$('#directoryMove').on('click', function() {
+	var params;
+	var pathname;
+	var conf;
+
+	params = getParameters();
+	pathname = getNewPathName();
+	if (dirname != null) {
+		conf = getConfirmation(0, 2);
+		if (conf == true) {
+			ajaxServerCommand.sendCommand(25, pathname, params);
 		}
 	}
 });
@@ -158,7 +185,7 @@ $('#directoryDelete').on('click', function() {
 	params = getParameters();
 	conf = getConfirmation(0, 1);
 	if (conf == true) {
-		ajaxServerCommand.sendCommand(5, params);
+		ajaxServerCommand.sendCommand(26, params);
 	}
 });
 
@@ -209,7 +236,7 @@ function fileUpload() {
 			file = fileList[i];
 			formData.append('uploadFiles', file, file.name);
 		}
-		ajaxServerSend.filePut(serverLinkObject, path, formData, fileButton, secToken, 10);
+		ajaxServerSend.filePut(serverLinkObject, path, formData, fileButton, secToken, 30);
 	}
 }
 
@@ -218,7 +245,7 @@ $('#fileDownload').on('click', function() {
 	var params;
 
 	params = getParameters();
-	ajaxServerCommand.sendCommand(11, params);
+	ajaxServerCommand.sendCommand(31, params);
 });
 
 // Button click handler for viewing a file.
@@ -226,7 +253,7 @@ $('#fileView').on('click', function() {
 	var params;
 
 	params = getParameters();
-	ajaxServerCommand.sendCommand(12, params);
+	ajaxServerCommand.sendCommand(32, params);
 });
 
 // Button click handler for file details.
@@ -234,7 +261,7 @@ $('#fileDetail').on('click', function() {
 	var params;
 
 	params = getParameters();
-	ajaxServerCommand.sendCommand(15, params);
+	ajaxServerCommand.sendCommand(33, params);
 });
 
 // Button click handler for renaming a file.
@@ -244,11 +271,43 @@ $('#fileRename').on('click', function() {
 	var filename;
 
 	params = getParameters();
-	filename = getNewName(1);
+	filename = getNewFileName();
 	if (filename != null) {
 		conf = getConfirmation(1, 0);
 		if (conf == true) {
-			ajaxServerCommand.sendCommand(13, filename, params);
+			ajaxServerCommand.sendCommand(34, filename, params);
+		}
+	}
+});
+
+// Button click handler for moving a file.
+$('#fileMove').on('click', function() {
+	var params;
+	var conf;
+	var pathname;
+
+	params = getParameters();
+	pathname = getNewFilePath();
+	if (filename != null) {
+		conf = getConfirmation(1, 2);
+		if (conf == true) {
+			ajaxServerCommand.sendCommand(35, pathname, params);
+		}
+	}
+});
+
+// Button click handler for copying a file.
+$('#fileCopy').on('click', function() {
+	var params;
+	var conf;
+	var pathname;
+
+	params = getParameters();
+	pathname = getNewFilePath();
+	if (filename != null) {
+		conf = getConfirmation(1, 2);
+		if (conf == true) {
+			ajaxServerCommand.sendCommand(36, pathname, params);
 		}
 	}
 });
@@ -261,7 +320,7 @@ $('#fileDelete').on('click', function() {
 	params = getParameters();
 	conf = getConfirmation(1, 1);
 	if (conf == true) {
-		ajaxServerCommand.sendCommand(14, params);
+		ajaxServerCommand.sendCommand(37, params);
 	}
 });
 

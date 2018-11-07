@@ -183,7 +183,9 @@ function loadInitialContent()
 				'Detail' => 'fileDetail',
 			),
 			array(
+				'Move' => 'fileMove',
 				'Rename' => 'fileRename',
+				'Copy' => 'fileCopy',
 				'Delete' => 'fileDelete',
 			),
 		);
@@ -197,6 +199,7 @@ function loadInitialContent()
 			array(
 				'Create' => 'directoryCreate',
 				'Rename' => 'directoryRename',
+				'Move' => 'directoryMove',
 				'Delete' => 'directoryDelete',
 			),
 		);
@@ -263,38 +266,50 @@ function commandProcessor($commandId)
 
 	switch ((int)$commandId)
 	{
-		case 1:
+		case 20:
+			directoryHome();
+			break;
+		case 21:
 			directoryMoveUp();
 			break;
-		case 2:
+		case 22:
 			directoryMoveDown();
 			break;
-		case 3:
+		case 23:
 			directoryCreate();
 			break;
-		case 4:
+		case 24:
 			directoryRename();
 			break;
-		case 5:
+		case 25:
+			directoryMove();
+			break;
+		case 26:
 			directoryDelete();
 			break;
-		case 10:
+		case 30:
 			fileUpload();
 			break;
-		case 11:
+		case 31:
 			fileDownload();
 			break;
-		case 12:
+		case 32:
 			fileView();
 			break;
-		case 13:
+		case 33:
+			fileDetail();
+			break;
+		case 34:
 			fileRename();
 			break;
-		case 14:
-			fileDelete();
+		case 35:
+			fileMove();
 			break;
-		case 15:
-			fileDetail();
+		case 36:
+			fileCopy();
+			break;
+		case 37:
+			fileDelete();
 			break;
 		default:
 			// If we get here, then the command is undefined.
@@ -303,6 +318,12 @@ function commandProcessor($commandId)
 			exit(1);
 			break;
 	}
+}
+
+// Sets the current directory to /.
+function directoryHome()
+{
+	buildDirectoryList('/');
 }
 
 // Moves up one directory
@@ -725,8 +746,6 @@ function fileRename()
 	if (empty($fileName))
 		handleError('Missing new filename.');
 
-	var_dump($_POST);
-
 	// Check to make sure that there are no invalid characters.
 	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
 	if ($result == false)
@@ -734,7 +753,7 @@ function fileRename()
 	$result = $vfystr->strchk($select, '', '', verifyString::STR_FILENAME);
 	if ($result == false)
 		$herr->puterrmsg('Invalid characters in old filename.');
-	$result = $vfystr->strchk($fileName, '', '', verifyString::STR_PATHNAME);
+	$result = $vfystr->strchk($fileName, '', '', verifyString::STR_FILENAME);
 	if ($result == false)
 		$herr->puterrmsg('Invalid characters in new filename.');
 	if ($herr->checkState())
@@ -750,6 +769,61 @@ function fileRename()
 	$result = rename($realPath . '/' . $select, $realPath . '/' . $fileName);
 	if ($result == false)
 		handleError('Filesystem Error: Rename file failed.');
+	
+	// Refresh listing
+	buildDirectoryList($currentPath);
+}
+
+// Moves an existing file to a new location.
+function fileMove()
+{
+	global $herr;
+	global $vfystr;
+	global $CONFIGVAR;
+
+	// Get the current path.
+	$currentPath = getPostValue('hidden');
+	if (empty($currentPath))
+		handleError('Missing path data.');
+	if ($currentPath == '/')
+		$realPath = $CONFIGVAR['server_document_root']['value'];
+	else
+		$realPath = $CONFIGVAR['server_document_root']['value'] . $currentPath;
+
+	// Get the selected item.
+	$select = getPostValue('select_item');
+	if ($select == NULL)
+		handleError('You must select an item from the list in order ' .
+			'to use this command.');
+	
+	// Get the directory name.
+	$newPath = getPostValue('pathname');
+	if (empty($fileName))
+		handleError('Missing target path.');
+
+	// Check to make sure that there are no invalid characters.
+	$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in directory path.');
+	$result = $vfystr->strchk($select, '', '', verifyString::STR_FILENAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in filename.');
+	$result = $vfystr->strchk($newPath, '', '', verifyString::STR_PATHNAME);
+	if ($result == false)
+		$herr->puterrmsg('Invalid characters in new path.');
+	if ($herr->checkState())
+		handleError($herr->errorGetMessage());
+
+	// Check to make sure that the current path is valid.
+	$result = checkDirectory($realPath);
+	if ($result == false)
+		handleError('Filesystem Error: You are not allowed to exit the ' .
+			'server document root.');
+	
+	// Everything is good, so rename the file.
+	$result = rename($realPath . '/' . $select, $newPath . '/' . $select);
+	if ($result == false)
+		handleError('Filesystem Error: Move file failed.');
 	
 	// Refresh listing
 	buildDirectoryList($currentPath);

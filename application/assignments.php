@@ -306,7 +306,7 @@ function commandProcessor($commandId)
 		case 1:		// View
 			viewRecordView();
 			break;
-		case 5:		// Load Module
+		case 90:		// Load Module
 			$moduleLoad->loadModule();
 			break;
 		default:

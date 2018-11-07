@@ -266,6 +266,9 @@ function loadAdditionalContent()
 // command number. This call comes from modhead.php.
 function commandProcessor($commandId)
 {
+	global $ajax;
+	global $moduleLoad;
+
 	switch ((int)$commandId)
 	{
 		case 1:		// View
@@ -280,17 +283,17 @@ function commandProcessor($commandId)
 		case 4:		// Delete
 			deleteRecordView();
 			break;
-		case 5:		// Load Module
-			loadModule();
-			break;
-		case 12:	// Submit Update
+		case 5:	// Submit Update
 			updateRecordAction();
 			break;
-		case 13:	// Submit Insert
+		case 6:	// Submit Insert
 			insertRecordAction();
 			break;
-		case 14:	// Submit Delete
+		case 7:	// Submit Delete
 			deleteRecordAction();
+			break;
+		case 90:		// Load Module
+			$moduleLoad->loadModule();
 			break;
 		default:
 			// If we get here, then the command is undefined.

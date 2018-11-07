@@ -251,6 +251,8 @@ function loadAdditionalContent()
 // command number. This call comes from modhead.php.
 function commandProcessor($commandId)
 {
+	global $ajax;
+
 	switch ((int)$commandId)
 	{
 		case 1:		// View
@@ -259,7 +261,7 @@ function commandProcessor($commandId)
 		case 2:		// Update
 			updateRecordView();
 			break;
-		case 12:	// Submit Update
+		case 5:	// Submit Update
 			updateRecordAction();
 			break;
 		default:

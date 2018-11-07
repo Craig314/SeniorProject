@@ -71,6 +71,8 @@ function loadInitialContent()
 
 function commandProcessor($commandId)
 {
+	global $ajax;
+
 	switch($commandId)
 	{
 		case 1:

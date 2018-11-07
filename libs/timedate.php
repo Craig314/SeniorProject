@@ -29,9 +29,12 @@ interface timedate_interface
 	static public function getTimeUnix();
 	static public function unix2db($unixtime);
 	static public function unix2canonical($unixtime);
+	static public function unix2day($unixtime);
 	static public function unix2moment($unixtime);
 	static public function db2unix($dbasetime);
 	static public function unix2tod($unixtime);
+	static public function unix2todhour($unixtime);
+	static public function unix2todmin($unixtime);
 	static public function unixDiffTime($time1, $time2);
 	static public function unixDiffDate($time1, $time2);
 }
@@ -73,6 +76,15 @@ class timedate implements timedate_interface
 		return $dt->format('m-d-Y H:i:s');
 	}
 
+	// Converts a Unix time to the current date in MM-DD-YYYY
+	// format.
+	static public function unix2day($unixtime)
+	{
+		$dt = DateTime::createFromFormat('U', $unixtime);
+		$dt->setTimezone(timedate::setTimeZone());
+		return $dt->format('m-d-Y');
+	}
+
 	// Converts a Unix time to a moment.js time format of
 	// MM-DD-YYYYTHH:mm:ss
 	static public function unix2moment($unixtime)
@@ -97,6 +109,22 @@ class timedate implements timedate_interface
 		$dt = DateTime::createFromFormat('U', $unixtime);
 		$dt->setTimezone(timedate::setTimeZone());
 		return $dt->format('H:i');
+	}
+
+	// Converts a Unix time to time of day hour.
+	static public function unix2todhour($unixtime)
+	{
+		$dt = DateTime::createFromFormat('U', $unixtime);
+		$dt->setTimezone(timedate::setTimeZone());
+		return $dt->format('H');
+	}
+
+	// Converts a Unix time to time of day minutes.
+	static public function unix2todmin($unixtime)
+	{
+		$dt = DateTime::createFromFormat('U', $unixtime);
+		$dt->setTimezone(timedate::setTimeZone());
+		return $dt->format('i');
 	}
 
 	// Helper method that calculates time differences.
