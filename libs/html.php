@@ -70,16 +70,21 @@ interface html_interface
 	const TYPE_CHECKLIST	= 15;	// Checkbox Lists
 	const TYPE_IMAGE		= 16;	// Image File
 	const TYPE_DATETIME		= 17;	// Date & Time input field
+	const TYPE_BARPROG		= 18;	// Progress bar
+	const TYPE_BARMETER		= 19;	// Meter (gauge) bar
+
 	const TYPE_FORMOPEN		= 30;	// Open form with name
 	const TYPE_FORMCLOSE	= 31;	// Close form
 	const TYPE_FSETOPEN		= 32;	// Open field set with title
 	const TYPE_FSETCLOSE	= 33;	// Close field set
 	const TYPE_HIDEOPEN		= 34;	// Opens a named hidden block
 	const TYPE_HIDECLOSE	= 35;	// Close named hidden block
+
 	const TYPE_TOPB1		= 40;	// Top border type 1
 	const TYPE_TOPB2		= 41;	// Top border type 2
 	const TYPE_BOTB1		= 42;	// Bottom border type 1
 	const TYPE_BOTB2		= 43;	// Bottom border type 2
+
 	const TYPE_WD75OPEN		= 50;	// Open a area of 75% width
 	const TYPE_WD50OPEN		= 51;	// Open a area of 50% width
 	const TYPE_WDCLOSE		= 59;	// Close width area
@@ -118,6 +123,8 @@ interface html_interface
 	static public function insertCheckList($data);
 	static public function insertImage($data);
 	static public function insertFieldDateTime($data);
+	static public function insertProgressBar($data);
+	static public function insertMeterBar($data);
 
 	// Other HTML Constructs
 	static public function openForm($data);
@@ -1499,8 +1506,14 @@ class html implements html_interface
 		$bsFeatures = '';
 
 		// Parameters
-		if (isset($data['chkbox'])) $checkmode = true;
-			else $checkmode = false;
+		if (isset($data['chkbox']))
+		{
+			if ($data['chkbox'] === true)
+				$checkmode = 1;
+			else
+				$checkmode = $data['chkbox'];
+		}
+		else $checkmode = 0;
 		if (isset($data['name']))
 		{
 			$tableName = $data['name'];
@@ -1516,8 +1529,22 @@ class html implements html_interface
 		if (isset($data['border'])) $bsFeatures .= ' table-bordered';
 
 		// Setup
-		if ($checkmode) $clickCall= 'selectItemCheck';
-			else $clickCall= 'selectItemRadio';
+		switch ($checkmode)
+		{
+			case 0:
+				$clickCall = 'selectItemRadio';
+				break;
+			case 1:
+				$clickCall = 'selectitemCheck';
+				break;
+			case 2:
+				$clickCall = 'selectItemClick';
+				break;
+			default:
+				$clickCall = 'selectItemRadio';
+				$checkmode = 0;
+				break;
+		}
 
 		// Title Row
 		if (isset($data['titles']))
@@ -1525,8 +1552,12 @@ class html implements html_interface
 			$html .= "
 		<table class=\"table $bsFeatures\">
 			<thead> 
-				<tr>
+				<tr>";
+			if ($checkmode != 2)
+			{
+				$html .= "
 					<th class=\"text-center\">Select</th>";
+			}
 			foreach($data['titles'] as $kx)
 			{
 				$html .= "
@@ -1563,31 +1594,37 @@ class html implements html_interface
 				}
 				else $tooltip = '';
 				$keydata = $kxr[0];
-				if ($checkmode)
+				switch ($checkmode)
 				{
-					$name = 'id="' . $data['name'] . '_' . $keydata . '"';
-					if ($clickset)
-					{
-						$checkKey = $tableName . '_' . $keydata;
-						$checkBox = "onclick=\"selectItemCheck('$checkKey');\"";
-						$html .= "
-				<tr $tooltip onclick=\"selectItemCheck('$checkKey');\">";
-					}
-					else
-						$html .= "
-						<tr $tooltip>";
-				}
-				else
-				{
-					$name = 'name="' . $data['name'] . '"';
-					if ($clickset)
-					{
-						$html .= "
+					case 0:
+						$name = 'name="' . $data['name'] . '"';
+						if ($clickset)
+						{
+							$html .= "
 				<tr $tooltip onclick=\"selectItemRadio('$tableName', '$keydata');\">";
-					}
-					else
+						}
+						else
+							$html .= "
+				<tr $tooltip>";
+						break;
+					case 1:
+						$name = 'id="' . $data['name'] . '_' . $keydata . '"';
+						if ($clickset)
+						{
+							$checkKey = $tableName . '_' . $keydata;
+							$checkBox = "onclick=\"selectItemCheck('$checkKey');\"";
+							$html .= "
+				<tr $tooltip onclick=\"selectItemCheck('$checkKey');\">";
+						}
+						else
+							$html .= "
+				<tr $tooltip>";
+						break;
+					case 2:
+						$name = 'id="' . $data['name'] . '_' . $keydata . '"';
 						$html .= "
-						<tr $tooltip>";
+				<tr $tooltip onclick=\"selectItemClick('$keydata');\">";
+					break;
 				}
 
 				// Column
@@ -1596,24 +1633,29 @@ class html implements html_interface
 				{
 					if ($count == 0)
 					{
-						$html .= "
-					<td class=\"text-center\">";
-						if ($checkmode)
+						switch ($checkmode)
 						{
-							$html .= "
-						<div class=\"checkbox\">
-							<label><input type=\"checkbox\" $name value=\"true\" $checkBox></label>
-						</div>";
-						}
-						else
-						{
-							$html .= "
+							case 0:
+								$html .= "
+					<td class=\"text-center\">
 						<div class=\"radio\">
 							<label><input type=\"radio\" $name value=\"$kxc\"></label>
-						</div>";
-						}
-						$html .= "
+						</div>
 					</td>";
+								break;
+							case 1:
+								$html .= "
+					<td class=\"text-center\">
+						<div class=\"checkbox\">
+							<label><input type=\"checkbox\" $name value=\"true\" $checkBox></label>
+						</div>
+					</td>";
+								break;
+							default:
+								$html .= "
+					<td class=\"text-center\">$kxc</td>";
+								break;
+						}
 					}
 					else
 					{
@@ -1810,9 +1852,7 @@ class html implements html_interface
 		self::helperDCM($data, 'text', $dcmGL, $dcmST, $dcmMS);
 		self::helperOnEvent($data, $event);
 		self::helperDisabled($data, $disabled);
-		//self::helperValue($data, $value);
 		self::helperState($data, $stx, $gix);
-		//self::helperDefault($data, self::DEFTYPE_TEXTBOX, $default);
 		self::helperLabel($data, $label);
 		self::helperLabelSizeText($data, $lclass);
 		self::helperFieldSizeText($data, $fclass);
@@ -1838,6 +1878,9 @@ class html implements html_interface
 		}
 		else
 		{
+			$value = '';
+			$thour = -1;
+			$tmin = -1;
 		}
 
 		// Combine
@@ -1860,11 +1903,33 @@ class html implements html_interface
 		for ($i = 0; $i < 24; $i++)
 		{
 			if ($i == $thour)
-				$optlisthour .= "
+			{
+				if ($i > 12)
+				{
+					$j = $i - 12;
+					$optlisthour .= "
+							<option value=\"th_$i\" selected=\"selected\">$i, $j PM</option>";
+				}
+				else
+				{
+					$optlisthour .= "
 							<option value=\"th_$i\" selected=\"selected\">$i</option>";
+				}
+			}
 			else
-				$optlisthour .= "
+			{
+				if ($i > 12)
+				{
+					$j = $i - 12;
+					$optlisthour .= "
+							<option value=\"th_$i\">$i, $j PM</option>";
+				}
+				else
+				{
+					$optlisthour .= "
 							<option value=\"th_$i\">$i</option>";
+				}
+			}
 		}
 		for ($i = 0; $i < 60; $i++)
 		{
@@ -1895,6 +1960,109 @@ class html implements html_interface
 						</span>
 						<span $dcmGL class=\"glyphicon $gix form-control-feedback\"></span>
 						<span $dcmMS></span>
+					</div>
+				</div>
+			</div>
+		</div>";
+		return $html;
+	}
+
+	// Generates a progress bar
+	// name - Name and ID for the field
+	// label - Text label for the field
+	// icon - Icon to use.  For complete list, goto
+	//   http://www.w3schools.com/bootstrap/bootstrap_ref_comp_glyphs.asp
+	// lsize - Size of the label (Bootstrap)
+	// fsize - Size of the field (Bootstrap)
+	// value - current value to display
+	// max - maximum value
+	static public function insertProgressBar($data)
+	{
+		$name = NULL;
+		$forx = NULL;
+		$label = NULL;
+		$lclass = NULL;
+		$fclass = NULL;
+		$value = NULL;
+		$max = NULL;
+		$icons = NULL;
+		$icond = NULL;
+
+		self::helperNameId($data, $name, $forx);
+		self::helperLabel($data, $label);
+		self::helperLabelSizeText($data, $lclass);
+		self::helperFieldSizeText($data, $fclass);
+		self::helperValue($data, $value);
+		self::helperIcon($data, $icons, $icond);
+
+		if (isset($max)) $max = ' max="' . $data['max'] . '"';
+
+		$printout = $name . $value . $max;
+
+		$html = "
+		<div class=\"row\">
+			<div class=\"form-group\">
+				<label $lclass $forx>$label</label>
+				<div $fclass>
+					<div class=\"input-group\">
+						<span $icons><i $icond></i></span>
+						<meter $printout></meter>
+					</div>
+				</div>
+			</div>
+		</div>";
+		return $html;
+	}
+
+	// Generates a meter bar
+	// name - Name and ID for the field
+	// label - Text label for the field
+	// icon - Icon to use.  For complete list, goto
+	//   http://www.w3schools.com/bootstrap/bootstrap_ref_comp_glyphs.asp
+	// lsize - Size of the label (Bootstrap)
+	// fsize - Size of the field (Bootstrap)
+	// value - current value to display
+	// min - minimum value
+	// max - maximum value
+	// low - low value threshold
+	// high - high value threshold
+	static public function insertMeterBar($data)
+	{
+		$name = NULL;
+		$forx = NULL;
+		$label = NULL;
+		$lclass = NULL;
+		$fclass = NULL;
+		$value = NULL;
+		$min = NULL;
+		$max = NULL;
+		$low = NULL;
+		$high = NULL;
+		$icons = NULL;
+		$icond = NULL;
+
+		self::helperNameId($data, $name, $forx);
+		self::helperLabel($data, $label);
+		self::helperLabelSizeText($data, $lclass);
+		self::helperFieldSizeText($data, $fclass);
+		self::helperValue($data, $value);
+		self::helperIcon($data, $icons, $icond);
+
+		if (isset($min)) $min = ' min="' . $data['min'] . '"';
+		if (isset($max)) $max = ' max="' . $data['max'] . '"';
+		if (isset($low)) $low = ' low="' . $data['low'] . '"';
+		if (isset($high)) $high = ' high="' . $data['high'] . '"';
+
+		$printout = $name . $value . $min . $max . $low . $high;
+
+		$html = "
+		<div class=\"row\">
+			<div class=\"form-group\">
+				<label $lclass $forx>$label</label>
+				<div $fclass>
+					<div class=\"input-group\">
+						<span $icons><i $icond></i></span>
+						<meter $printout></meter>
 					</div>
 				</div>
 			</div>
@@ -2146,11 +2314,17 @@ class html implements html_interface
 					case self::TYPE_CHECKLIST:
 						$htmlCollection .= self::insertCheckList($vx);
 						break;
+					case self::TYPE_IMAGE:
+						$htmlCollection .= self::insertImage($vx);
+						break;
 					case self::TYPE_DATETIME:
 						$htmlCollection .= self::insertFieldDateTime($vx);
 						break;
-					case self::TYPE_IMAGE:
-						$htmlCollection .= self::insertImage($vx);
+					case self::TYPE_BARPROG:
+						$htmlCollection .= self::insertProgressBar($vx);
+						break;
+					case self::TYPE_BARMETER:
+						$htmlCollection .= self::insertMeterBar($vx);
 						break;
 					case self::TYPE_FORMOPEN:
 						$htmlCollection .= self::openForm($vx);

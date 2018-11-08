@@ -94,11 +94,7 @@ function selectItemCheck(item) {
 // clicking anywhere in the row, this function immediately
 // sends the selection to the server for processing.
 function selectItemClick(item) {
-	var nodeObject;
-
-	nodeObject = document.getElementById(item);
-	if (nodeObject == null) return;
-	ajaxServerCommand.sendCommand(6, 'item=' + nodeObject.value);
+	ajaxServerCommand.sendCommand(91, 'item=' + item);
 }
 
 // Button click handler for List.

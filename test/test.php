@@ -166,8 +166,8 @@ function content()
 			'date_autoclose' => true,
 			'date_todaybtn' => true,
 			'date_clearbtn' => true,
-			'date_format' => 'dd/mm/yyyy',
-			'value' => time(),
+			//'date_format' => 'dd/mm/yyyy',
+			//'value' => time(),
 			//'disable' => true,
 		),
 		array(
@@ -478,7 +478,57 @@ function content()
 
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Block 7: Radio Buttons',
+			'name' => 'Block 7: Click Selection Table',
+		),
+		array('type' => html::TYPE_RADTABLE,
+			'name' => 'ClickSelectionTable',
+			'hover' => true,
+			'condense' => true,
+			'chkbox' => 2,
+			'clickset' => true,
+			'titles' => array(
+				'Data 1',
+				'Data 2',
+				'Data 3',
+				'Data 4',
+				'Data 5',
+			),
+			'tdata' => array(
+				array(
+					'one',
+					'1.1',
+					'1.2',
+					'1.3',
+					'1.4',
+				),
+				array(
+					'two',
+					'2.1',
+					'2.2',
+					'2.3',
+					'2.4',
+				),
+				array(
+					'three',
+					'3.1',
+					'3.2',
+					'3.3',
+					'3.4',
+				),
+				array(
+					'four',
+					'4.1',
+					'4.2',
+					'4.3',
+					'4.4',
+				),
+			),
+		),
+		array('type' => html::TYPE_FSETCLOSE),
+
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Block 8: Radio Buttons',
 		),
 		array(
 			'type' => html::TYPE_RADIO,

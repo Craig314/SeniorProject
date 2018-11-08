@@ -299,6 +299,7 @@ function loadAdditionalContent()
 // command number. This call comes from modhead.php.
 function commandProcessor($commandId)
 {
+	global $ajax;
 	global $moduleLoad;
 
 	switch ((int)$commandId)
