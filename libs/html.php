@@ -1521,6 +1521,10 @@ class html implements html_interface
 				$name = 'name="' . $data['name'] . '"';
 		}
 		else $name = '';
+		if (isset($data['stage'])) $stage = $data['stage'];
+			else $stage = 0;
+		if (isset($data['stagelast'])) $stageLast = $data['stage'];
+			else $stageLast = 0;
 		if (isset($data['clickset'])) $clickset = true;
 			else $clickset = false;
 		if (isset($data['stripe'])) $bsFeatures .= ' table-striped';
@@ -1623,7 +1627,7 @@ class html implements html_interface
 					case 2:
 						$name = 'id="' . $data['name'] . '_' . $keydata . '"';
 						$html .= "
-				<tr $tooltip onclick=\"selectItemClick('$keydata');\">";
+				<tr $tooltip onclick=\"selectItemClick('$stage', '$stageLast', '$keydata');\">";
 					break;
 				}
 
@@ -1652,8 +1656,8 @@ class html implements html_interface
 					</td>";
 								break;
 							default:
-								$html .= "
-					<td class=\"text-center\">$kxc</td>";
+					// 			$html .= "
+					// <td class=\"text-center\">$kxc</td>";
 								break;
 						}
 					}

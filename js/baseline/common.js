@@ -93,8 +93,89 @@ function selectItemCheck(item) {
 // When working with a selection table listing, when
 // clicking anywhere in the row, this function immediately
 // sends the selection to the server for processing.
-function selectItemClick(item) {
-	ajaxServerCommand.sendCommand(91, 'item=' + item);
+function selectItemClick(stage, last, item) {
+	switch (stage) {
+		case 1:
+			ajaxServerCommand.sendCommand(10, 'item=' + item);
+			break;
+		case 2:
+			ajaxServerCommand.sendCommand(11, 'item=' + item);
+			break;
+		case 3:
+			ajaxServerCommand.sendCommand(12, 'item=' + item);
+			break;
+		case 4:
+			ajaxServerCommand.sendCommand(13, 'item=' + item);
+			break;
+		default:
+			ajaxServerCommand.sendCommand(91, 'item=' + item);
+	}
+	if (stage >= last) {
+		showFuncBar();
+	} else {
+		hideFuncBar();
+	}
+}
+
+// Sends the command to move to a particular stage.
+function selectStage(stage, item) {
+	switch (stage) {
+		case 1:
+			ajaxServerCommand.sendCommand(10, 'item=' + item);
+			break;
+		case 2:
+			ajaxServerCommand.sendCommand(11, 'item=' + item);
+			break;
+		case 3:
+			ajaxServerCommand.sendCommand(12, 'item=' + item);
+			break;
+		case 4:
+			ajaxServerCommand.sendCommand(13, 'item=' + item);
+			break;
+	}
+	if (stage >= last) {
+		showFuncBar();
+	} else {
+		hideFuncBar();
+	}
+}
+
+// Shows the function bars.
+function showFuncBar() {
+	funcBarObject = document.getElementById('functionBar1');
+	if (funcBarObject != null) {
+		funcBarObject.hidden = false;
+	}
+	funcBarObject = document.getElementById('functionBar2');
+	if (funcBarObject != null) {
+		funcBarObject.hidden = false;
+	}
+	funcBarObject = document.getElementById('functionBar3');
+	if (funcBarObject != null) {
+		funcBarObject.hidden = false;
+	}
+	if (typeof windowResize === 'function') {
+		windowResize();
+	}
+}
+
+// Hides the function bars.
+function hideFuncBar() {
+	funcBarObject = document.getElementById('functionBar1');
+	if (funcBarObject != null) {
+		funcBarObject.hidden = true;
+	}
+	funcBarObject = document.getElementById('functionBar2');
+	if (funcBarObject != null) {
+		funcBarObject.hidden = true;
+	}
+	funcBarObject = document.getElementById('functionBar3');
+	if (funcBarObject != null) {
+		funcBarObject.hidden = true;
+	}
+	if (typeof windowResize === 'function') {
+		windowResize();
+	}
 }
 
 // Button click handler for List.
