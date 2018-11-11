@@ -422,8 +422,7 @@ class filesClass implements filesInterface
 					}
 				}
 				if ($position !== false) $location = $position + $advance;
-				var_dump($formpart, $filepos, $location, $position);
-				if ($position === false) break;
+					else break;
 			}
 
 			// If we hit the EOF, then we bail.
