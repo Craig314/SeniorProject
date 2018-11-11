@@ -111,7 +111,7 @@ class mimeTypes implements mimeTypesInterface
 		'potx'	=> 'application/vnd.openxmlformats-officedocument.presentationml.template',
 		'xlsx'	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 		'xltx'	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
-		'pdf'	=> 'application/',
+		'pdf'	=> 'application/pdf',
 	);
 
 	// returns the MIME type of the given filename.  The filename must be

@@ -2436,8 +2436,20 @@ class html implements html_interface
 <!DOCTYPE html>
 <html lang="enUS">
 	<head>
+		<!-- Page Title (Shows up in title bar of browser) -->
 		<title><?php echo $title; ?></title>
-		<!-- Install baseline Ajax system -->
+		<!-- Favirotie Icons (Shows up next to the URL in the browser address bar)
+			 Generated from https://realfavicongenerator.net/ -->
+		<link rel="apple-touch-icon" sizes="180x180" href="<?php echo $url; ?>/images/favicons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="<?php echo $url; ?>/images/favicons/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="<?php echo $url; ?>/images/favicons/favicon-16x16.png">
+		<link rel="manifest" href="<?php echo $url; ?>/images/favicons/site.webmanifest">
+		<link rel="mask-icon" href="<?php echo $url; ?>/images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+		<link rel="shortcut icon" href="<?php echo $url; ?>/images/favicons/favicon.ico">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="msapplication-config" content="<?php echo $url; ?>/images/favicons/browserconfig.xml">
+		<meta name="theme-color" content="#ffffff">
+		<!-- JavaScript Core Files -->
 		<script type="text/javascript" src="<?php echo $url; ?>/js/baseline/ajax.js"></script>
 		<script type="text/javascript" src="<?php echo $url; ?>/js/baseline/heartbeat.js"></script>
 		<script type="text/javascript" src="<?php echo $url; ?>/js/baseline/treewalker.js"></script>

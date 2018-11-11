@@ -35,7 +35,7 @@ require_once 'timedate.php';
 interface filesInterface
 {
 	// Some operational constants
-	const BLOCKSIZE = 4096;
+	const BLOCKSIZE = 65536;
 	const BLOCKBACK = 512;
 
 	// Methods
@@ -62,7 +62,8 @@ interface filesInterface
 	public function directoryMove($basePath, $currentPath, $dirname, $newPath);
 	public function directoryRemove($basePath, $currentPath, $dirname);
 
-	// Listing
+	// Listings
+	public function getFileList($basePath, $currentPath, $recursive = false);
 	public function buildDirectoryList($basePath, $currentPath);
 }
 
@@ -83,7 +84,8 @@ class filesClass implements filesInterface
 	}
 
 	// Checks path/names for invalid characters.
-	private function checkNamesPaths($type, $basePath, $currentPath, $name1, $name2 = '')
+	private function checkNamesPaths($type, $basePath, $currentPath,
+		$name1 = '', $name2 = '')
 	{
 		global $vfystr;
 		global $herr;
@@ -146,13 +148,16 @@ class filesClass implements filesInterface
 				$chk1 = verifyString::STR_FILENAME;
 				$chk2 = verifyString::STR_PATHNAME;
 				$type = -1;
-				break;	
+				break;
 		}
 
 		// Run the file/dir/path name checks.
-		$result = $vfystr->strchk($name1, '', '', $chk1);
-		if ($result == false)
-			$herr->puterrmsg($msg1);
+		if (!empty($name1))
+		{
+			$result = $vfystr->strchk($name1, '', '', $chk1);
+			if ($result == false)
+				$herr->puterrmsg($msg1);
+		}
 		if (!empty($name2))
 		{
 			// Check the second name if needed.
@@ -183,14 +188,21 @@ class filesClass implements filesInterface
 		}
 
 		// Check source type.
+		/*
 		switch ($type)
 		{
 			case 0:
 				if (!file_exists($name1))
 					handleError('Filesystem Error: Selected file does' .
 						' not exist.');
+				if (!is_file($name1))
+					handleError('Filesystem Error: Selected file does' .
+						' not exist.');
 				break;
 			case 1:
+				if (!file_exists($name1))
+					handleError('Filesystem Error: Selected directory does' .
+						' not exist.');
 				if (!is_dir($name1))
 					handleError('Filesystem Error: This command can only' .
 						' be used with directories.');
@@ -198,6 +210,7 @@ class filesClass implements filesInterface
 			default:
 				break;
 		}
+		*/
 	}
 
 
@@ -217,8 +230,36 @@ class filesClass implements filesInterface
 		$bin = openssl_random_pseudo_bytes($length, $secure);
 		if ($bin === false) return false;
 		if ($secure == false) return false;
-		$b64 = base64_encode($bin);
+		$hex = bin2hex($bin);
+
+		// Return hex string.
 		return $hex;
+	}
+
+	// Generates a file token associated with the given file and
+	// places it into the user's session variable.
+	private function generateFileToken($basePath, $currentPath, $filename)
+	{
+		global $CONFIGVAR;
+
+		// Build paths
+		$realPath = $this->buildRealPath($basePath, $currentPath, $filename);
+
+		// Check to make sure that there are no invalid characters and
+		// that the current paths are valid.
+		$this->checkNamesPaths(100, $basePath, $currentPath, $filename);
+
+		// Generate a security access token and place it into the user's
+		// session state.
+		$token = $this->generateTempFilename(
+			$CONFIGVAR['download_token_length']['value']);
+		if ($token == false)
+			handleError('OpenSSL Error: Failed to generate download token.');
+		$token = str_replace('=', '', $token);
+		$_SESSION[$token] = $realPath;
+
+		// Return the token
+		return $token;
 	}
 
 	// Checks if the given path is outside the web server document
@@ -269,6 +310,7 @@ class filesClass implements filesInterface
 		global $vfystr;
 	
 		// Sets the time limit.  Needed on Windows only.
+		$timeLimit = ini_get('max_execution_time');
 		if (identOS() == 2) set_time_limit(14400);
 	
 		// Check the request method.  This function only works with the
@@ -285,7 +327,7 @@ class filesClass implements filesInterface
 		$realPath = $this->buildRealPath($basePath, $currentPath);
 
 		// ...and verify they are correct.
-		$this->checkNamesPaths(200, $basePath, $currentPath, $realPath);
+		$this->checkNamesPaths(200, $basePath, $currentPath);
 
 		// Make sure the target directory exists.
 		if (!file_exists($realPath))
@@ -305,6 +347,9 @@ class filesClass implements filesInterface
 		$markerStart = $cxb[1];
 		$markerEnd = '--' . $cxb[1] . '--';
 		unset($cxa, $cxb);
+		$markerLenStart = strlen($markerStart);
+		$markerLenEnd = strlen($markerEnd);
+		var_dump($markerStart, $markerEnd);
 	
 		// Save file to temp file
 		$tempFile = tmpfile();
@@ -343,6 +388,7 @@ class filesClass implements filesInterface
 		$filepos = 0;
 		while (!feof($tempFile))
 		{
+
 			// Read the tempfile data.
 			$data = fread($tempFile, self::BLOCKSIZE);
 			if ($data === false)
@@ -353,25 +399,47 @@ class filesClass implements filesInterface
 					'<br>XX23006');
 			}
 	
-			// Look for the marker.
-			$position = strpos($data, $markerEnd);
-			if ($position !== false) array_push($formpart, $position + $filepos);
-			else
+			// Look for the marker.  Since the start marker is just a
+			// substring of the end marker, we look for the end marker
+			// first.
+			$location = 0;
+			$advance = $markerLenEnd;
+			while (true)
 			{
-				$position = strpos($data, $markerStart);
-				if ($position !== false) array_push($formpart, $position + $filepos);
+				$position = strpos($data, $markerEnd, $location);
+				if ($position !== false)
+				{
+					array_push($formpart, $position + $filepos);
+					$advance = $markerLenEnd;
+				}
+				else
+				{
+					$position = strpos($data, $markerStart, $location);
+					if ($position !== false)
+					{
+						array_push($formpart, $position + $filepos);
+						$advance = $markerLenStart;
+					}
+				}
+				if ($position !== false) $location = $position + $advance;
+				var_dump($formpart, $filepos, $location, $position);
+				if ($position === false) break;
 			}
-	
+
 			// If we hit the EOF, then we bail.
 			if (feof($tempFile)) break;
+
+			// Increment $filepos by the block size.
+			$filepos += self::BLOCKSIZE;
 	
 			// Backup the file pointer just in case a marker was split across
 			// reads.
-			$result = fseek($tempFile, -self::BLOCKBACK, SEEK_CUR);
+			$result = fseek($tempFile, -$markerLenEnd, SEEK_CUR);
 			if ($result != 0)
 				handleError('Filesystem Error: Unable to perform seek on' .
 				' temporary file.<br>XX23007');
-			$filepos += self::BLOCKSIZE - self::BLOCKBACK;
+			$filepos -= $markerLenEnd;
+
 		}
 	
 		// Now that we have everything that we need, we now jump to each
@@ -453,7 +521,7 @@ class filesClass implements filesInterface
 			// to copy into the new file.
 			$fileLength = $formpart[$kx + 1] - $filepos - 2;	// XXX May need adjustment.
 			if ($fileLength < 0)
-				handlerError('Processing Error: File length is negative!<br>' .
+				handleError('Processing Error: File length is negative!<br>' .
 				'XX23011 FILE=' . $filename);
 			
 			// Check to see if the file length does not exceed maximum size.
@@ -500,6 +568,9 @@ class filesClass implements filesInterface
 		// Close the temp file.
 		fclose($tempFile);
 
+		// Reset the time limit to default.
+		if (identOS() == 2) set_time_limit($timeLimit);
+
 		// If this was a student submission, then we return the filename
 		// mapping array to the caller.
 		if ($randFilename == true) return $fileLinkArray;
@@ -511,25 +582,17 @@ class filesClass implements filesInterface
 	public function fileDownloadUrl($basePath, $currentPath, $filename,
 		$baseUrl, $modPathFile)
 	{
-		global $CONFIGVAR;
+		// Get the token.
+		$token = $this->generateFileToken($basePath, $currentPath, $filename);
 
-		// Build paths
-		$realPath = $this->buildRealPath($basePath, $currentPath, $filename);
+		// Generate the resource string.
+		$resource = $modPathFile . '?mode=download&token=' . $token;
 
-		// Check to make sure that there are no invalid characters and
-		// that the current paths are valid.
-		$this->checkNamesPaths(100, $basePath, $currentPath, $filename);
-
-		// Generate a security access token and place it into the user's
-		// session state.
-		$token = $this->generateTempFile(
-			$CONFIGVAR['download_token_length']['value']);
-		if ($token == false)
-			handleError('OpenSSL Error: Failed to generate download token.');
-		$_SESSION[$token] = $realPath;
-
-		// Now build the URL
-		$url = $baseUrl . '/' . $modPathFile . '?download=' . $token;
+		// Build the download URL.
+		if (substr($modPathFile, 0, 1) === '/')
+			$url = $baseUrl . $resource;
+		else
+			$url = $baseUrl . '/' . $resource;
 
 		// Return the full URL to the caller.
 		return $url;
@@ -548,7 +611,7 @@ class filesClass implements filesInterface
 		if (file_exists($realPath)) {
 			header('Content-Description: File Transfer');
 			header('Content-Type: application/octet-stream');
-			header('Content-Disposition: attachment; filename=' . basename($realpath));
+			header('Content-Disposition: attachment; filename=' . basename($realPath));
 			header('Expires: 0');
 			header('Cache-Control: must-revalidate');
 			header('Pragma: public');
@@ -563,25 +626,17 @@ class filesClass implements filesInterface
 	public function fileViewUrl($basePath, $currentPath, $filename,
 		$baseUrl, $modPathFile)
 	{
-		global $CONFIGVAR;
+		// Get the token.
+		$token = $this->generateFileToken($basePath, $currentPath, $filename);
 
-		// Build paths
-		$realPath = $this->buildRealPath($basePath, $currentPath, $filename);
+		// Generate the resource string.
+		$resource = $modPathFile . '?mode=view&token=' . $token;
 
-		// Check to make sure that there are no invalid characters and
-		// that the current paths are valid.
-		$this->checkNamesPaths(100, $basePath, $currentPath, $filename);
-
-		// Generate a security access token and place it into the user's
-		// session state.
-		$token = $this->generateTempFile(
-			$CONFIGVAR['download_token_length']['value']);
-		if ($token == false)
-			handleError('OpenSSL Error: Failed to generate download token.');
-		$_SESSION[$token] = $realPath;
-
-		// Now build the URL
-		$url = $baseUrl . '/' . $modPathFile . '?view=' . $token;
+		// Build the download URL.
+		if (substr($modPathFile, 0, 1) === '/')
+			$url = $baseUrl . $resource;
+		else
+			$url = $baseUrl . '/' . $resource;
 
 		// Return the full URL to the caller.
 		return $url;
@@ -620,7 +675,7 @@ class filesClass implements filesInterface
 
 		// Check to make sure that there are no invalid characters and
 		// that the current paths are valid.
-		$this->checkNamesPaths(101, $basePath, $currentPath, $realFileOld, $realFileNew);
+		$this->checkNamesPaths(101, $basePath, $currentPath, $oldFile, $newFile);
 
 		// Check to make sure that $oldFile exists and $newFile doesn't.
 		if (!file_exists($realFileOld))
@@ -642,23 +697,23 @@ class filesClass implements filesInterface
 		// Build paths
 		$realPath = $this->buildRealPath($basePath, $currentPath);
 		$pathFile = $this->buildRealPath($basePath, $currentPath, $filename);
-		$target = $this->buildRealPath($basePath, $currentPath, $newPath);
+		$targetPath = $this->buildRealPath($basePath, $newPath, $filename);
 
 		// Check to make sure that there are no invalid characters and
 		// that the current paths are valid.
-		$this->checkNamesPaths(102, $basePath, $currentPath, $pathFile, $targetPath);
+		$this->checkNamesPaths(102, $basePath, $currentPath, $filename, $targetPath);
 
 		// Check to make sure that the orig file exists and the target
 		// file doesn't.
 		if (!file_exists($pathFile))
 			handleError('The selected file with the name ' . $filename
 				. ' does not exist.');
-		if (file_exists($targetPath . '/' . $filename))
+		if (file_exists($targetPath))
 			handleError('A file with the name ' . $filename .
 				' already exists.');
 
 		// Everything is good, so rename the file.
-		$result = rename($pathFile, $targetPath . '/' . $filename);
+		$result = rename($pathFile, $targetPath);
 		if ($result == false)
 			handleError('Filesystem Error: Move file failed.');
 	}
@@ -669,18 +724,18 @@ class filesClass implements filesInterface
 		// Build paths
 		$realPath = $this->buildRealPath($basePath, $currentPath);
 		$pathFile = $this->buildRealPath($basePath, $currentPath, $filename);
-		$target = $this->buildRealPath($basePath, $currentPath, $newPath);
+		$targetPath = $this->buildRealPath($basePath, $newPath, $filename);
 
 		// Check to make sure that there are no invalid characters and
 		// that the current paths are valid.
-		$this->checkNamesPaths(102, $basePath, $currentPath, $pathFile, $targetPath);
+		$this->checkNamesPaths(102, $basePath, $currentPath, $filename, $targetPath);
 
 		// Check to make sure that the orig file exists and the target
 		// file doesn't.
 		if (!file_exists($pathFile))
 			handleError('The selected file with the name ' . $filename
 				. ' does not exist.');
-		if (file_exists($targetPath . '/' . $filename))
+		if (file_exists($targetPath))
 			handleError('A file with the name ' . $filename .
 				' already exists.');
 
@@ -745,7 +800,7 @@ class filesClass implements filesInterface
 		// Now build the information text.
 		$fileinfo = 'Name: ' . $filename. chr(13);
 		$fileinfo .= 'Path: ' . $currentPath . chr(13);
-		$fileinfo .= 'Type: ' . $this->determineFileType($filepath) . chr(13);
+		$fileinfo .= 'Type: ' . $this->determineFileType($realPath) . chr(13);
 		$fileinfo .= 'MIME Type: ' . $mtype . chr(13);
 		$fileinfo .= 'MIME Encoding: ' . $mencode . chr(13);
 		$fileinfo .= 'Size: ' . $filestat['size'] . chr(13);
@@ -787,7 +842,7 @@ class filesClass implements filesInterface
 
 		// Check to make sure that we are allowed to go into the given
 		// directory.
-		$result = $this->checkDirectory($basePath, $newPath);
+		$result = $this->checkDirectory($basePath, $basePath . $newPath);
 		if ($result == false)
 			handleError('Filesystem Error: You are not allowed to exit ' .
 				'the root directory.');
@@ -803,7 +858,7 @@ class filesClass implements filesInterface
 		global $vfystr;
 
 		// Check to make sure that there are no invalid characters.
-		$result = $vfystr->strchk($filename, '', '', verifyString::STR_FILENAME);
+		$result = $vfystr->strchk($dirname, '', '', verifyString::STR_FILENAME);
 		if ($result == false)
 			$herr->puterrmsg('Invalid characters in directory name.');
 		$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
@@ -825,7 +880,7 @@ class filesClass implements filesInterface
 
 		// Check to make sure that we are allowed to go into the given
 		// directory.
-		$result = $this->checkDirectory($basePath, $newPath);
+		$result = $this->checkDirectory($basePath, $basePath . $newPath);
 		if ($result == false)
 			handleError('Filesystem Error: You are not allowed to exit ' .
 				'the root directory.');
@@ -850,12 +905,12 @@ class filesClass implements filesInterface
 				' already exists.');
 
 		// Everything is good, so create the directory and set the group.
-		$result = mkdir($realPath . '/' . $dirName, 0775);
+		$result = mkdir($realPath, 0775);
 		if ($result == false)
 			handleError('Filesystem Error: Make directory failed.');
 		if (identOS() == 0)
 		{
-			$result = chgrp($realPath . '/' . $dirName, 'www');
+			$result = chgrp($realPath, 'www');
 			if ($result == false)
 				handleError('Filesystem Error: Unable to set directory GID.');
 		}
@@ -867,17 +922,17 @@ class filesClass implements filesInterface
 		// Build paths
 		$realPath = $this->buildRealPath($basePath, $currentPath);
 		$realDirOld = $this->buildRealPath($basePath, $currentPath, $oldDir);
-		$realDirnew = $this->buildRealPath($basePath, $currentPath, $newDir);
+		$realDirNew = $this->buildRealPath($basePath, $currentPath, $newDir);
 
 		// Check to make sure that there are no invalid characters and
 		// that the current paths are valid.
 		$this->checkNamesPaths(201, $basePath, $currentPath, $oldDir, $newDir);
 
 		// Check to make sure that $oldDir exists and $newDir doesn't.
-		if (!file_exists($realFileOld))
+		if (!file_exists($realDirOld))
 			handleError('The selected directory with the name ' . $oldDir
 				. ' does not exist.');
-		if (file_exists($realFileNew))
+		if (file_exists($realDirNew))
 			handleError('A directory with the name ' . $newDir
 				. ' already exists.');
 
@@ -897,20 +952,20 @@ class filesClass implements filesInterface
 
 		// Check to make sure that there are no invalid characters and
 		// that the current paths are valid.
-		$this->checkNamesPaths(202, $basePath, $currentPath, $oldDir, $newDir);
+		$this->checkNamesPaths(202, $basePath, $currentPath, $dirname, $newPath);
 
 		// Check to make sure that $oldDir exists and $newDir doesn't.
 		if (!file_exists($realDirOld))
 			handleError('The selected directory with the name ' . $dirname
 				. ' does not exist.');
-		if (file_exists($realDirnew))
+		if (file_exists($realDirNew))
 			handleError('A directory with the name ' . $dirname
 				. ' already exists.');
 
 		// Everything is good, so rename the file.
 		$result = rename($realDirOld, $realDirNew);
 		if ($result == false)
-			handleError('Filesystem Error: Rename directory failed.');
+			handleError('Filesystem Error: Move directory failed.');
 	}
 
 	// Removes a directory.
@@ -920,11 +975,11 @@ class filesClass implements filesInterface
 		global $vfystr;
 
 		// Build paths
-		$realPath = $this->buildRealPath($basePath, $currentPath, $filename);
+		$realPath = $this->buildRealPath($basePath, $currentPath, $dirname);
 
 		// Check to make sure that there are no invalid characters and
 		// that the current paths are valid.
-		$this->checkNamesPaths(200, $basePath, $currentPath, $filename);
+		$this->checkNamesPaths(200, $basePath, $currentPath, $dirname);
 
 		// Check to make sure that $oldDir exists and $newDir doesn't.
 		if (!file_exists($realPath))
@@ -943,10 +998,62 @@ class filesClass implements filesInterface
 			handleError('Filesystem Error: Remove file failed.');
 	}
 
+	// Returns a list of files in an array.  If recursive is true,
+	// then files in sub-directories are also returned.
+	public function getFileList($basePath, $currentPath, $recursive = false)
+	{
+		global $herr;
+		global $vfystr;
+
+		// Check to make sure that current path is valid.
+		$result = $vfystr->strchk($currentPath, '', '', verifyString::STR_PATHNAME);
+		if ($result == false)
+			$herr->puterrmsg('Invalid characters in directory path.');
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+
+		// Setup
+		$stack = array();
+		$fileList = array();
+		$flag = $recursive;
+
+
+		$realPath = $this->buildRealPath($basePath, $currentPath);
+		if (is_dir($realPath)) array_push($stack, $currentPath);
+		while (true)
+		{
+			$currentPath = array_shift($stack);
+			if ($currentPath == NULL) break;
+			$realPath = $this->buildRealPath($basePath, $currentPath);
+			$files = scandir($realPath);
+			if ($files == false)
+				handleError('Filesystem Error: Unable to retrieve list of files.');
+			foreach ($files as $kx => $vx)
+			{
+				if ($vx == '.') continue;
+				if ($vx == '..') continue;
+				$path = $this->buildRealPath($currentPath, $vx);
+				if ($recursive)
+				{
+					$realPath = $this->buildRealPath($basePath, $currentPath, $vx);
+					if (is_dir($realPath))
+						array_push($stack, $path);
+					else
+						$fileList[$path] = $path;
+				}
+				else
+					$fileList[$path] = $path;
+			}
+		}
+		return $fileList;
+	}
+
 	// Builds a list of files and directories.
 	public function buildDirectoryList($basePath, $currentPath)
 	{
 		global $CONFIGVAR;
+		global $vfystr;
+		global $herr;
 
 		// Set default path if path variable is empty.
 		if (empty($currentPath)) $currentPath = '/';
@@ -956,7 +1063,7 @@ class filesClass implements filesInterface
 			'type' => html::TYPE_HIDE,
 			'fname'=> 'hiddenForm',
 			'name' => 'hidden',
-			'data' => $path,
+			'data' => $currentPath,
 		);
 	
 		// Build paths

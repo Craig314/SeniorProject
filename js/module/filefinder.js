@@ -32,13 +32,24 @@ function getNewFileName() {
 	return params;
 }
 
-// Issues a prompt to the user for the new location to move
-// a file to.
-function getNewFilePath() {
+// Issues a prompt to the user for the new location to
+// move/copy a file to.
+function getNewFilePath(mode) {
 	var pname;
 	var params;
 
-	pname = window.prompt('Enter new path for file. Do not enter new filename.', '');
+	switch (mode) {
+		case 0:
+			pname = window.prompt('Enter new path for file.\nDo not enter'
+				+ ' new filename.', '');
+			break;
+		case 1:
+			pname = window.prompt('Enter new location to copy the file to.'
+				+ '\nDo not enter new filename.', '');
+			break;
+		default:
+			pname = null;
+	}
 	if (pname == null || pname == '') return null;
 	params = 'pathname=' + encodeURIComponent(pname);
 	return params;
@@ -52,6 +63,19 @@ function getNewDirName() {
 	pname = window.prompt('Enter new directory name.', '');
 	if (pname == null || pname == '') return null;
 	params = 'dirname=' + encodeURIComponent(pname);
+	return params;
+}
+
+// Issues a prompt to the user for the new location to move
+// a directory to.
+function getNewDirPath() {
+	var pname;
+	var params;
+
+	pname = window.prompt('Enter new path for directory.\nDo not enter'
+		+ ' new directory name.', '');
+	if (pname == null || pname == '') return null;
+	params = 'pathname=' + encodeURIComponent(pname);
 	return params;
 }
 
@@ -87,7 +111,7 @@ function getConfirmation(type, method) {
 	}
 	message = 'Are you sure that you want to' + md;
 	message += 'the selected' + tn + '?\nDoing so can ';
-	message += 'have an adverse effect on the application';
+	message += 'have an adverse effect on the application.';
 	return window.confirm(message);
 }
 
@@ -168,8 +192,8 @@ $('#directoryMove').on('click', function() {
 	var conf;
 
 	params = getParameters();
-	pathname = getNewPathName();
-	if (dirname != null) {
+	pathname = getNewDirPath();
+	if (pathname != null) {
 		conf = getConfirmation(0, 2);
 		if (conf == true) {
 			ajaxServerCommand.sendCommand(25, pathname, params);
@@ -287,8 +311,8 @@ $('#fileMove').on('click', function() {
 	var pathname;
 
 	params = getParameters();
-	pathname = getNewFilePath();
-	if (filename != null) {
+	pathname = getNewFilePath(0);
+	if (pathname != null) {
 		conf = getConfirmation(1, 2);
 		if (conf == true) {
 			ajaxServerCommand.sendCommand(35, pathname, params);
@@ -303,8 +327,8 @@ $('#fileCopy').on('click', function() {
 	var pathname;
 
 	params = getParameters();
-	pathname = getNewFilePath();
-	if (filename != null) {
+	pathname = getNewFilePath(1);
+	if (pathname != null) {
 		conf = getConfirmation(1, 2);
 		if (conf == true) {
 			ajaxServerCommand.sendCommand(36, pathname, params);
