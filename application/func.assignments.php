@@ -313,9 +313,9 @@ function formPage($mode, $rxa)
 			);
 			if ($vx['turninreq'] != 0)
 			{
-				$ascomp = generateField(html::TYPE_CHECK, '', 'Completed', 1,
-					$vx['complete'], 'Indicates if this step has been turned in.',
-					$default, $disable);
+				// $ascomp = generateField(html::TYPE_CHECK, '', 'Completed', 1,
+				// 	$vx['complete'], 'Indicates if this step has been turned in.',
+				// 	$default, $disable);
 				$formcode = 'A' . $vx['assignment'] . 'S' . $vx['step'];
 				$asupload = array(
 					'type' => html::TYPE_FILE,
@@ -328,11 +328,10 @@ function formPage($mode, $rxa)
 			}
 			else
 			{
-				$ascomp = NULL;
+				// $ascomp = NULL;
 				$asupload = NULL;
 			}
-			array_push($data2, $fsetopen, $astep, $asdate, $asdesc, $ascomp,
-				$asupload, $fsetclose);
+			array_push($data2, $fsetopen, $astep, $asdate, $asdesc, $asupload, $fsetclose);
 		}
 	}
 
