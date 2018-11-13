@@ -21,6 +21,8 @@ $modPathFile	The path/filename of the module in reference to the
 				server document root.  IE: / means top level directory
 				of the server document root.
 
+NOTE:	You must use the JavaScript file /js/baseline/files.php in order to
+		use this library.
 */
 
 
@@ -35,8 +37,13 @@ require_once 'timedate.php';
 interface filesInterface
 {
 	// Some operational constants
-	const BLOCKSIZE = 65536;
-	const BLOCKBACK = 512;
+	const BLOCKSIZE = 65536;	// Upload file block size.
+
+	// getFileList Flags
+	const FILELIST_RECURSIVE =	0x00000001;		// Recuse into subdirs
+	const FILELIST_NUMINDEX =	0x00000002;		// Numerical index
+	const FILELIST_INCDIRS =	0x00000004;		// Include directories
+	const FILELIST_REVERSE = 	0x00000008;		// Reverse order
 
 	// Methods
 
@@ -61,10 +68,11 @@ interface filesInterface
 	public function directoryRename($basePath, $currentPath, $oldDir, $newDir);
 	public function directoryMove($basePath, $currentPath, $dirname, $newPath);
 	public function directoryRemove($basePath, $currentPath, $dirname);
+	public function directoryRemoveAll($basePath, $currentPath, $dirname);
 
 	// Listings
-	public function getFileList($basePath, $currentPath, $recursive = false);
-	public function buildDirectoryList($basePath, $currentPath);
+	public function getFileList($basePath, $currentPath, $flags);
+	public function buildDirectoryList($basePath, $currentPath, $message = '');
 }
 
 
@@ -149,6 +157,13 @@ class filesClass implements filesInterface
 				$chk2 = verifyString::STR_PATHNAME;
 				$type = -1;
 				break;
+			default:
+				$msg1 = '';
+				$msg2 = '';
+				$chk1 = -1;
+				$chk2 = -1;
+				$type = -1;
+				break;
 		}
 
 		// Run the file/dir/path name checks.
@@ -213,6 +228,18 @@ class filesClass implements filesInterface
 		*/
 	}
 
+	// Helper function to remove a directory tree.
+	private function directoryDeleteTree($realPath)
+	{
+		$fileList = glob($realPath . '/*');
+		foreach ($fileList as $file)
+		{
+			$result = (is_dir($file)) ? removeDirectory($file) : unlink($file);
+			if ($result == false) return false;
+		}
+		$result = rmdir($realPath);
+		return $result;
+	}
 
 	// Generates a string of random characters sutable for use
 	// as temporary filenames.
@@ -953,7 +980,7 @@ class filesClass implements filesInterface
 		// that the current paths are valid.
 		$this->checkNamesPaths(202, $basePath, $currentPath, $dirname, $newPath);
 
-		// Check to make sure that $oldDir exists and $newDir doesn't.
+		// Check to make sure that both $dirname and $newPath exists.
 		if (!file_exists($realDirOld))
 			handleError('The selected directory with the name ' . $dirname
 				. ' does not exist.');
@@ -980,7 +1007,7 @@ class filesClass implements filesInterface
 		// that the current paths are valid.
 		$this->checkNamesPaths(200, $basePath, $currentPath, $dirname);
 
-		// Check to make sure that $oldDir exists and $newDir doesn't.
+		// Check to make sure that $dirname exists.
 		if (!file_exists($realPath))
 			handleError('The selected directory with the name ' . $filename
 				. ' does not exist.');
@@ -997,9 +1024,35 @@ class filesClass implements filesInterface
 			handleError('Filesystem Error: Remove file failed.');
 	}
 
+	// Removes a directory.
+	public function directoryRemoveAll($basePath, $currentPath, $dirname)
+	{
+		global $herr;
+		global $vfystr;
+
+		// Build paths
+		$realPath = $this->buildRealPath($basePath, $currentPath, $dirname);
+
+		// Check to make sure that there are no invalid characters and
+		// that the current paths are valid.
+		$this->checkNamesPaths(200, $basePath, $currentPath, $dirname);
+
+		// Check to make sure that $dirname exists.
+		if (!file_exists($realPath))
+			handleError('The selected directory with the name ' . $filename
+				. ' does not exist.');
+
+		// Everything is good, remove the file.
+		$result = $this->directoryDeleteTree($realPath);
+		if ($result == false)
+			handleError('Filesystem Error: Remove file failed.');
+	}
+
 	// Returns a list of files in an array.  If recursive is true,
-	// then files in sub-directories are also returned.
-	public function getFileList($basePath, $currentPath, $recursive = false)
+	// then files in sub-directories are also returned.  The indexMode
+	// parameter is used to indicate if the array indices are numeric
+	// (1), or strings (0).
+	public function getFileList($basePath, $currentPath, $flags)
 	{
 		global $herr;
 		global $vfystr;
@@ -1014,14 +1067,17 @@ class filesClass implements filesInterface
 		// Setup
 		$stack = array();
 		$fileList = array();
-		$flag = $recursive;
-
+		$recursive = (($flags & self::FILELIST_RECURSIVE) != 0) ? true : false;
+		$numericIdx = (($flags & self::FILELIST_NUMINDEX) != 0) ? true : false;
+		$includeDirs = (($flags & self::FILELIST_INCDIRS) != 0) ? true : false;
+		$reverse = (($flags & self::FILELIST_REVERSE) != 0) ? true : false;
 
 		$realPath = $this->buildRealPath($basePath, $currentPath);
 		if (is_dir($realPath)) array_push($stack, $currentPath);
 		while (true)
 		{
-			$currentPath = array_shift($stack);
+			if ($reverse) $currentPath = array_pop($stack);
+				else $currentPath = array_shift($stack);
 			if ($currentPath == NULL) break;
 			$realPath = $this->buildRealPath($basePath, $currentPath);
 			$files = scandir($realPath);
@@ -1036,19 +1092,38 @@ class filesClass implements filesInterface
 				{
 					$realPath = $this->buildRealPath($basePath, $currentPath, $vx);
 					if (is_dir($realPath))
+					{
+						if ($includeDirs)
+						{
+							if ($numericIdx)
+								array_push($fileList, $path);
+							else
+								$fileList[$path] = $path;
+						}
 						array_push($stack, $path);
+					}
 					else
-						$fileList[$path] = $path;
+					{
+						if ($numericIdx)
+							array_push($fileList, $path);
+						else
+							$fileList[$path] = $path;
+					}
 				}
 				else
+				{
+				if ($numericIdx)
+					array_push($fileList, $path);
+				else
 					$fileList[$path] = $path;
+				}
 			}
 		}
 		return $fileList;
 	}
 
 	// Builds a list of files and directories.
-	public function buildDirectoryList($basePath, $currentPath)
+	public function buildDirectoryList($basePath, $currentPath, $message = '')
 	{
 		global $CONFIGVAR;
 		global $vfystr;
@@ -1158,6 +1233,7 @@ class filesClass implements filesInterface
 				'type' => html::TYPE_HEADING,
 				'message1' => 'Path: ',
 				'message2' => $currentPath,
+				'message3' => $message,
 			),
 			array('type' => html::TYPE_TOPB1),
 			array('type' => html::TYPE_WD75OPEN),

@@ -25,39 +25,33 @@ the features/abilities they represent are being used:
 
 // The executable file for the module.  Filename and extension only,
 // no path component.
-$moduleFilename = 'filefinder.php';
+$moduleFilename = 'filemanager.php';
 
 // The name of the module.  It shows in the title bar of the web
 // browser and other places.
-$moduleTitle = 'File Finder';
+$moduleTitle = 'File Manager';
 
 // $moduleId must be a unique positive integer. Module IDs < 1000 are
 // reserved for system use.  Therefore application module IDs will
 // start at 1000.
-$moduleId = 14;
+$moduleId = 1100;
 
 // The capitalized short display name of the module.  This shows up
 // on buttons, and some error messages.
-$moduleDisplayUpper = 'File Finder';
+$moduleDisplayUpper = 'File Manager';
 
 // The lowercase short display name of the module.  This shows up in
 // various messages.
-$moduleDisplayLower = 'file finder';
+$moduleDisplayLower = 'file manager';
 
 // Set to true if this is a system module.
-$moduleSystem = true;
+$moduleSystem = false;
 
-// Flags in the permissions bitmap of what permissions the user
-// has in this module.  Currently not implemented.
-$modulePermissions = array();
-
-// This is to enable the PUT method
+// This is to enable the PUT method.
 $httpMethod_PUT_ENABLE = true;
-
 
 // Some operational constants
 const BLOCKSIZE = 4096;
-const BLOCKBACK = 512;
 
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
@@ -67,7 +61,18 @@ $htmlInjectFile = false;
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
 const BASEDIR = '../libs/';
+const APPSDIR = '../applibs/';
 require_once BASEDIR . 'files.php';
+require_once BASEDIR . 'flag.php';
+require_once APPSDIR . 'dbaseapp.php';
+require_once APPSDIR . 'panels.php';
+require_once APPSDIR . 'loadmodule.php';
+
+// Flags in the permissions bitmap of what permissions the user
+// has in this module.
+$fullcontrol = flag::sessionGetApp(0);
+
+// Now load the module header.
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -80,6 +85,7 @@ function loadInitialContent()
 	global $vfystr;
 	global $herr;
 	global $files;
+	global $fullcontrol;
 
 	// Additonal
 	// This is probably the only time that we pass parameters with
@@ -138,44 +144,71 @@ function loadInitialContent()
 		// properties as the navigation bar, with the addition that you can
 		// use nested associtive arrays to group buttons together.
 		// $funcBar = array();
-		$funcBar = array(
-			'FILE' => 'noAction',
-			array(
-				'Upload' => 'fileUpload',
-				'Download' => 'fileDownload',
-			),
-			array(
-				'View' => 'fileView',
-				'Detail' => 'fileDetail',
-			),
-			array(
-				'Move' => 'fileMove',
-				'Rename' => 'fileRename',
-				'Copy' => 'fileCopy',
-				'Delete' => 'fileDelete',
-			),
-		);
-		$funcBar2 = array(
-			'DIR' => 'noAction',
-			array(
-				'Home' => 'directoryHome',
-				'UP' => 'directoryUp',
-				'DN' => 'directoryDown',
-			),
-			array(
-				'Create' => 'directoryCreate',
-				'Rename' => 'directoryRename',
-				'Move' => 'directoryMove',
-				'Delete' => 'directoryDelete',
-				'Del Tree' => 'directoryDeleteAll',
-			),
-		);
+		if ($fullcontrol)
+		{
+			// Full Control
+			$funcBar = array(
+				'FILE' => 'noAction',
+				array(
+					'Upload' => 'fileUpload',
+					'Download' => 'fileDownload',
+				),
+				array(
+					'View' => 'fileView',
+					'Detail' => 'fileDetail',
+				),
+				array(
+					'Move' => 'fileMove',
+					'Rename' => 'fileRename',
+					'Copy' => 'fileCopy',
+					'Delete' => 'fileDelete',
+				),
+			);
+			$funcBar2 = array(
+				'DIR' => 'noAction',
+				array(
+					'Home' => 'directoryHome',
+					'UP' => 'directoryUp',
+					'DN' => 'directoryDown',
+				),
+				array(
+					'Create' => 'directoryCreate',
+					'Rename' => 'directoryRename',
+					'Move' => 'directoryMove',
+					'Delete' => 'directoryDelete',
+					'Del Tree' => 'directoryDeleteAll',
+				),
+			);
+		}
+		else
+		{
+			// Restricted Permissions
+			$funcBar = array(
+				'FILE' => 'noAction',
+				array(
+					'Download' => 'fileDownload',
+				),
+				array(
+					'View' => 'fileView',
+				),
+			);
+			$funcBar2 = array(
+				'DIR' => 'noAction',
+				array(
+					'Home' => 'directoryHome',
+					'UP' => 'directoryUp',
+					'DN' => 'directoryDown',
+				),
+			);
+		}
 
 		// jsfiles is an associtive array which contains additional
 		// JavaScript filenames that should be included in the head
 		// section of the HTML page.
 		$jsFiles = array(
+			'/js/baseline/common.js',
 			'/js/baseline/files.js',
+			'/js/module/portal.js',
 		);
 
 		// cssfiles is an associtive array which contains additional
@@ -185,6 +218,7 @@ function loadInitialContent()
 			'/css/tooltip-linebreak.css',
 			'/css/tooltip-left.css',
 			'/css/tooltip-mono.css',
+			'/css/portal.css',
 		);
 
 		// The final option, htmlFlags, is an array that holds the names
@@ -197,6 +231,8 @@ function loadInitialContent()
 		// );
 		$htmlFlags = array(
 			'tooltip',
+			'type2',
+			'funchide',
 		);
 
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
@@ -220,7 +256,131 @@ function loadInitialContent()
 // modhead.php.
 function loadAdditionalContent()
 {
-	directoryHome();
+	global $baseUrl;
+	global $dbapp;
+	global $herr;
+	global $moduleTitle;
+	global $moduleDisplayLower;
+	global $panels;
+	global $ajax;
+	global $fullcontrol;
+
+	// For performance reasons, we check to see if the user is a student
+	// first, then we check for an instructor.  If neither, then we fail.
+	$rxa = $dbapp->queryStudentclassStudentAll($_SESSION['userId']);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+		{
+			$rxb = $dbapp->queryCourseInstructAll($_SESSION['userId']);
+			if ($rxb == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				else
+					handleError('You are not enrolled and/or not teaching any courses.');
+			}
+		}
+	}
+	else
+	{
+		$rxb = array();
+		foreach ($rxa as $kxa => $vxa)
+		{
+			$rxc = $dbapp->queryCourse($vxa['courseid']);
+			if ($rxc == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				else
+					handleError('Database Error: (Stored Data Conflict)<br>' .
+						'TABLE: studentclass<br>UserID: ' . $_SESSION['userId'] .
+						'<br>CourseID: ' . $vxa['courseid'] .
+						';--> Missing course information.<br>' .
+						'Contact your administrator');
+			}
+			array_push($rxb, $rxc);
+		}
+	}
+
+	// Generate the selection table.
+	$list = array(
+		'type' => html::TYPE_RADTABLE,
+		'name' => 'select_item',
+		'clickset' => true,
+		'condense' => true,
+		'hover' => true,
+		'mode' => 2,
+		'titles' => array(
+			'Course',
+			'Class',
+			'Section',
+			'Name',
+		),
+		'tdata' => array(),
+		'tooltip' => array(),
+	);
+	foreach ($rxb as $kxb => $vxb)
+	{
+		$tdata = array(
+			$vxb['courseid'],
+			$vxb['courseid'],
+			$vxb['class'],
+			$vxb['section'],
+			$vxb['name'],
+		);
+		$tooltip  = 'Course:  ' . $vxb['courseid'] . '<br>';
+		$tooltip .= 'Class:   ' . $vxb['class'] . '<br>';
+		$tooltip .= 'Section: ' . $vxb['section'] . '<br>';
+		$tooltip .= 'Name:    ' . $vxb['name'] . '<br>';
+		if ($fullcontrol)
+		{
+			$tooltip .= 'Grading Scale: ' . $vxb['scale'] . '<br>';
+			$tooltip .= 'Grading Curve: ' . $vxb['curve'] . '<br>';
+		}
+		array_push($list['tdata'], $tdata);
+		array_push($list['tooltip'], $tooltip);
+	}
+
+	// Generate rest of page. (Title, headers, etc)
+	$data = array(
+		array(
+			'type' => html::TYPE_HEADING,
+			'message1' => 'File Manager',
+			'message3' => 'Click to select course.',
+		),
+		array('type' => html::TYPE_TOPB1),
+		//array('type' => html::TYPE_WD75OPEN),
+		array(
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'select_table',
+		),
+
+		// Enter custom data here.
+		$list,
+
+		//End of custom data
+
+		array('type' => html::TYPE_FORMCLOSE),
+		//array('type' => html::TYPE_WDCLOSE),
+		array('type' => html::TYPE_BOTB1)
+	);
+
+	// Get panel content
+	$navContent = $panels->getLinks();
+	$statusContent = $panels->getStatus();
+	$mainContent = html::pageAutoGenerate($data);
+
+	// Queue content in ajax transmit buffer.
+	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
+	
+	// Render
+	$ajax->sendQueue();
+
 	exit(0);
 }
 
@@ -229,6 +389,7 @@ function loadAdditionalContent()
 function commandProcessor($commandId)
 {
 	global $ajax;
+	global $moduleLoad;
 
 	switch ((int)$commandId)
 	{
@@ -280,6 +441,12 @@ function commandProcessor($commandId)
 		case 37:
 			fileDelete();
 			break;
+		case 90:
+			$moduleLoad->loadModule();
+			break;
+		case 91:
+			showFileList();
+			break;
 		default:
 			// If we get here, then the command is undefined.
 			$ajax->sendCode(ajaxClass::CODE_NOTIMP,
@@ -289,12 +456,57 @@ function commandProcessor($commandId)
 	}
 }
 
+// Builds the global variables and then shows the initial file list.
+function showFileList()
+{
+	global $courseDir;
+	global $courseMsg;
+	global $dbapp;
+	global $herr;
+	global $vfystr;
+
+	// Get course information from database.
+	$course = getSelectedItem();
+	$result = $vfystr->strchk($course, '', '', verifyString::STR_PINTEGER);
+	if ($result == false)
+		handleError($herr->errorGetMessage());
+	$rxa = $dbapp->queryCourse($course);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: Query course data failed. COURSEID='
+				. $course);
+	}
+
+	// Set global course information in the user's session.
+	$_SESSION['courseDir'] = $course;
+	$_SESSION['courseMsg'] = $course . ': ' . $rxa['class'] . '-' . $rxa['section']
+		. ': ' . $rxa['name'];
+
+	// Show the files.
+	directoryHome();
+}
+
+// Checks the user's security
+function securityCheck()
+{
+	global $fullcontrol;
+
+	if (!$fullcontrol)
+		handleError('Security Violation: You do not have permission to perform that action');
+}
+
 // Returns the basePath.
 function getBasePath()
 {
 	global $CONFIGVAR;
 
-	return $CONFIGVAR['server_document_root']['value'];
+	$path = $CONFIGVAR['files_base_path']['value'];
+	$path .= '/' . $CONFIGVAR['files_course']['value'];
+	$path .= '/' . $_SESSION['courseDir'];
+	return $path;
 }
 
 // Returns the currentPath.
@@ -356,10 +568,11 @@ function getPathname()
 function directoryHome()
 {
 	global $files;
+	global $courseMsg;
 
 	$basePath = getBasePath();
 	$currentPath = '/';
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $courseMsg);
 }
 
 // Moves up one directory
@@ -370,7 +583,7 @@ function directoryMoveUp()
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$currentPath = $files->directoryMoveUp($basePath, $currentPath);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Moves down a directory
@@ -382,7 +595,7 @@ function directoryMoveDown()
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$currentPath = $files->directoryMoveDown($basePath, $currentPath, $selectedItem);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Creates a new directory.
@@ -390,11 +603,12 @@ function directoryCreate()
 {
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$dirname = getDirname();
 	$files->directoryCreate($basePath, $currentPath, $dirname);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Renames an existing directory.
@@ -402,12 +616,13 @@ function directoryRename()
 {
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$dirname = getDirname();
 	$files->directoryRename($basePath, $currentPath, $selectedItem, $dirname);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Moves a directory to another location in the tree.
@@ -415,12 +630,13 @@ function directoryMove()
 {
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$pathname = getPathname();
 	$files->directoryMove($basePath, $currentPath, $selectedItem, $pathname);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Removes an existing directory.
@@ -428,23 +644,25 @@ function directoryDelete()
 {
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$files->directoryRemove($basePath, $currentPath, $selectedItem);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
-// Removes an existing directory and all of its contents.
+// Removes an existing directory and everything in it.
 function directoryDeleteAll()
 {
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$files->directoryRemoveAll($basePath, $currentPath, $selectedItem);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Views a text file.
@@ -458,7 +676,7 @@ function fileView()
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$url = $files->fileViewUrl($basePath, $currentPath,
-		$selectedItem, html::getBaseUrl(), '/modules/' .
+		$selectedItem, html::getBaseUrl(), '/application/' .
 		$moduleFilename);
 	$ajax->sendCommand(47, $url);
 }
@@ -469,6 +687,7 @@ function fileDetail()
 	global $ajax;
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
@@ -481,12 +700,13 @@ function fileRename()
 {
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$filename = getFilename();
 	$files->fileRename($basePath, $currentPath, $selectedItem, $filename);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Moves an existing file to a new location.
@@ -494,12 +714,13 @@ function fileMove()
 {
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$pathname = getPathname();
 	$files->fileMove($basePath, $currentPath, $selectedItem, $pathname);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Copies a file.
@@ -507,12 +728,13 @@ function fileCopy()
 {
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$pathname = getPathname();
 	$files->fileCopy($basePath, $currentPath, $selectedItem, $pathname);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Removes a file.
@@ -520,11 +742,12 @@ function fileDelete()
 {
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$files->fileDelete($basePath, $currentPath, $selectedItem);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Uploads the file.
@@ -532,10 +755,11 @@ function fileUpload()
 {
 	global $files;
 
+	securityCheck();
 	$basePath = getBasePath();
 	$currentPath = getCurrentPathX();
 	$files->fileUpload($basePath, $currentPath, 0);
-	echo $files->buildDirectoryList($basePath, $currentPath);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Generates a URL for file download.
@@ -554,7 +778,7 @@ function fileDownload()
 	$currentPath = getCurrentPath();
 	$selectedItem = getSelectedItem();
 	$url = $files->fileDownloadUrl($basePath, $currentPath,
-		$selectedItem, html::getBaseUrl(), '/modules/' .
+		$selectedItem, html::getBaseUrl(), '/application/' .
 		$moduleFilename);
 	$ajax->sendCommand(46, $url);
 }

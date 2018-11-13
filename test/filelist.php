@@ -5,7 +5,8 @@ require_once '../libs/files.php';
 $basePath = '/Servers/webdocs';
 $currentPath = '/';
 
-$fileList = $files->getFileList($basePath, $currentPath, false);
+$flags = 1 | 2 | 4;
+$fileList = $files->getFileList($basePath, $currentPath, $flags);
 
 $accumilator = 0;
 echo '<pre class="xdebug-var-dump">

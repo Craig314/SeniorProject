@@ -96,19 +96,20 @@ function selectItemCheck(item) {
 function selectItemClick(stage, last, item) {
 	switch (stage) {
 		case 1:
-			ajaxServerCommand.sendCommand(10, 'item=' + item);
+			ajaxServerCommand.sendCommand(10, 'select_item=' + item);
 			break;
 		case 2:
-			ajaxServerCommand.sendCommand(11, 'item=' + item);
+			ajaxServerCommand.sendCommand(11, 'select_item=' + item);
 			break;
 		case 3:
-			ajaxServerCommand.sendCommand(12, 'item=' + item);
+			ajaxServerCommand.sendCommand(12, 'select_item=' + item);
 			break;
 		case 4:
-			ajaxServerCommand.sendCommand(13, 'item=' + item);
+			ajaxServerCommand.sendCommand(13, 'select_item=' + item);
 			break;
 		default:
-			ajaxServerCommand.sendCommand(91, 'item=' + item);
+			ajaxServerCommand.sendCommand(91, 'select_item=' + item);
+			showFuncBar();
 	}
 	if (stage >= last) {
 		showFuncBar();
@@ -121,16 +122,16 @@ function selectItemClick(stage, last, item) {
 function selectStage(stage, item) {
 	switch (stage) {
 		case 1:
-			ajaxServerCommand.sendCommand(10, 'item=' + item);
+			ajaxServerCommand.sendCommand(10, 'select_item=' + item);
 			break;
 		case 2:
-			ajaxServerCommand.sendCommand(11, 'item=' + item);
+			ajaxServerCommand.sendCommand(11, 'select_item=' + item);
 			break;
 		case 3:
-			ajaxServerCommand.sendCommand(12, 'item=' + item);
+			ajaxServerCommand.sendCommand(12, 'select_item=' + item);
 			break;
 		case 4:
-			ajaxServerCommand.sendCommand(13, 'item=' + item);
+			ajaxServerCommand.sendCommand(13, 'select_item=' + item);
 			break;
 	}
 	if (stage >= last) {

@@ -87,6 +87,7 @@ interface html_interface
 
 	const TYPE_WD75OPEN		= 50;	// Open a area of 75% width
 	const TYPE_WD50OPEN		= 51;	// Open a area of 50% width
+	const TYPE_WD800PXOPEN	= 52;	// Open a area of 800px width
 	const TYPE_WDCLOSE		= 59;	// Close width area
 	const TYPE_VTAB5		= 60;	// Vertical tab 5%
 	const TYPE_VTAB10		= 61;	// Vertical tab 10%
@@ -137,6 +138,7 @@ interface html_interface
 	static public function border2bottom();
 	static public function width50open();
 	static public function width75open();
+	static public function width800pxOpen();
 	static public function widthClose();
 	static public function verticalTab5();
 	static public function verticalTab10();
@@ -1506,12 +1508,23 @@ class html implements html_interface
 		$bsFeatures = '';
 
 		// Parameters
-		if (isset($data['chkbox']))
+		if (isset($data['mode']))
 		{
-			if ($data['chkbox'] === true)
-				$checkmode = 1;
-			else
-				$checkmode = $data['chkbox'];
+			switch ($data['mode'])
+			{
+				case 0:
+					$checkmode = 0;
+					break;
+				case 1:
+					$checkmode = 1;
+					break;
+				case 2:
+					$checkmode = 2;
+					break;
+				default:
+					$checkmode = 0;
+					break;
+			}
 		}
 		else $checkmode = 0;
 		if (isset($data['name']))
@@ -1690,6 +1703,10 @@ class html implements html_interface
 			$msg2 = ' ' . $data['message2'];
 		else
 			$msg2 = '';
+		if (isset($data['message3']))
+			$msg3 = ' ' . $data['message3'];
+		else
+			$msg3 = '';
 		if (isset($data['warning']))
 			$warn = $data['warning'];
 		else
@@ -1700,6 +1717,11 @@ class html implements html_interface
 		{
 			$html .= "
 		<h1 class=\"text-center\">$msg1<span class=\"color-blue\">$msg2</span></h1>";
+		}
+		if (!empty($msg3))
+		{
+			$html .= "
+		<h4 class=\"text-center\">$msg3</h1>";
 		}
 		if (!empty($warn))
 		{
@@ -1838,12 +1860,9 @@ class html implements html_interface
 		$value = NULL;
 		$stx = NULL;
 		$gix = NULL;
-		$default = NULL;
 		$label = NULL;
 		$lclass = NULL;
 		$fclass = NULL;
-		$lclass = NULL;
-
 		$tooltip = NULL;
 		$icond = NULL;
 		$icons = NULL;
@@ -2226,6 +2245,14 @@ class html implements html_interface
 		return $html;
 	}
 
+	// Create an area that has a width of 800 pixels.
+	static public function width800pxOpen()
+	{
+		$html = "
+<div class=\"width800px\">";
+		return $html;
+	}
+
 	// Closes a previously opened width area.
 	static public function widthClose()
 	{
@@ -2365,6 +2392,9 @@ class html implements html_interface
 						break;
 					case self::TYPE_WD75OPEN:
 						$htmlCollection .= self::width75open();
+						break;
+					case self::TYPE_WD800PXOPEN:
+						$htmlCollection .= self::width800pxOpen();
 						break;
 					case self::TYPE_WDCLOSE:
 						$htmlCollection .= self::widthClose();

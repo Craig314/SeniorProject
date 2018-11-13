@@ -140,6 +140,9 @@ function loadInitialContent()
 		// cascading style sheets that should be included in the head
 		// section of the HTML page.
 		$cssFiles = array(
+			'/css/tooltip-linebreak.css',
+			'/css/tooltip-left.css',
+			'/css/tooltip-mono.css',
 			'/css/portal.js',
 		);
 

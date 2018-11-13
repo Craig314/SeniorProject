@@ -91,6 +91,12 @@ html, body {
 	margin: auto;
 }
 
+.width800px {
+	width: 800px;
+	/* max-width: 800px; */
+	margin: auto;
+}
+
 .pad5left {
 	padding-left: 5%;
 }

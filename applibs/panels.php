@@ -186,8 +186,9 @@ class linkPanel implements linkPanelInterface
 		}
 
 		// Past Due
-		$pastDue = '<h4><b>Assignments<br>Past Due<b></h4><br>';
-		$pastFlag = false;
+		$pastDueTitle = '<h4><b>Assignments<br>Past Due<b></h4><br>';
+		$pastDue = '';
+		$pastCount = 0;
 		$max = time();
 		$min = $max - $CONFIGVAR['assign_past_due_time']['value'];
 		if ($min < 0) $min = 0;
@@ -200,12 +201,16 @@ class linkPanel implements linkPanelInterface
 					handleError($herr->errorGetMessage());
 				continue;
 			}
-			$pastFlag = true;
+			$pastCount += count($rxa);
 			foreach($rxa as $kxa => $vxa)
 			{
 				if ($vxa['lockdate'] > 0)
 				{
-					if ($vxa['lockdate'] < $max) continue;
+					if ($vxa['lockdate'] < $max)
+					{
+						$pastCount--;
+						continue;
+					}
 				}
 				$rxc = $dbapp->queryTurninStudentAssignAll($_SESSION['userId'],
 					$vxa['assignment']);
@@ -214,7 +219,11 @@ class linkPanel implements linkPanelInterface
 					if ($herr->checkState())
 						handleError($herr->errorGetMessage());
 				}
-				else continue;
+				else
+				{
+					$pastCount--;
+					continue;
+				}
 				$pastDue .= '<span class="cursor-pointer" onclick="loadAssignment('
 					. $vxa['assignment'] . ')">';
 				$pastDue .= '<b>' . $vx['class'] . ': ' . $vx['name'] . '</b></br>';
@@ -224,12 +233,14 @@ class linkPanel implements linkPanelInterface
 				$pastDue .= '</span>';
 			}
 		}
-		if ($pastFlag == true)	$pastDue .= '<br>';
+		if ($pastCount > 0)	$pastDue .= '<br>';
 		else $pastDue = 'No assignments past due.<br><br>';
+		$pastDue = $pastDueTitle . $pastDue;
 
 		// Upcoming
-		$upcoming = '<h4><b>Assignments<br>Upcoming <b></h4><br>';
-		$upcomingFlag = false;
+		$upcomingTitle = '<h4><b>Assignments<br>Upcoming <b></h4><br>';
+		$upcoming = '';
+		$upcomingCount = 0;
 		$min = time();
 		$max = $min + $CONFIGVAR['assign_duedate_lookahead']['value'];
 		foreach($rxb as $kx => $vx)
@@ -241,9 +252,21 @@ class linkPanel implements linkPanelInterface
 					handleError($herr->errorGetMessage());
 				continue;
 			}
-			$upcomingFlag = true;
+			$upcomingCount += count($rxa);
 			foreach($rxa as $kxa => $vxa)
 			{
+				$rxc = $dbapp->queryTurninStudentAssignAll($_SESSION['userId'],
+					$vxa['assignment']);
+				if ($rxc == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+				}
+				else
+				{
+					$upcomingCount--;
+					continue;
+				}
 				$upcoming .= '<span class="cursor-pointer" onclick="loadAssignment('
 					. $vxa['assignment'] . ')">';
 				$upcoming .= '<b>' . $vx['class'] . ': ' . $vx['name'] . '</b></br>';
@@ -263,8 +286,9 @@ class linkPanel implements linkPanelInterface
 				$upcoming .= '</span>';
 			}
 		}
-		if ($upcomingFlag == true)	$upcoming .= '<br>';
+		if ($upcomingCount > 0)	$upcoming .= '<br>';
 		else $upcoming = 'No assignments upcoming.';
+		$upcoming = $upcomingTitle . $upcoming;
 
 		return $pastDue . $upcoming;
 	}

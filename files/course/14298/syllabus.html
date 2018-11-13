@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generated-by" content="Markdown PRO, http://markdownpro.com"/>
+<title></title>
+<style type="text/css">
+html,body{margin:0;padding:0;}
+body {padding: 20px}
+h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,cite,code,del,dfn,em,img,q,s,samp,small,strike,strong,sub,sup,tt,var,dd,dl,dt,li,ol,ul,fieldset,form,label,legend,button,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;font-weight:normal;font-style:normal;font-size:100%;line-height:1;font-family:inherit;}
+table{border-collapse:collapse;border-spacing:0;}
+ol,ul{list-style:none;}
+q:before,q:after,blockquote:before,blockquote:after{content:"";}
+html{overflow-y:scroll;font-size:100%;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}
+a:focus{outline:thin dotted;}
+a:hover,a:active{outline:0;}
+article,aside,details,figcaption,figure,footer,header,hgroup,nav,section{display:block;}
+audio,canvas,video{display:inline-block;*display:inline;*zoom:1;}
+audio:not([controls]){display:none;}
+sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline;}
+sup{top:-0.5em;}
+sub{bottom:-0.25em;}
+img{border:0;-ms-interpolation-mode:bicubic;}
+button,input,select,textarea{font-size:100%;margin:0;vertical-align:baseline;*vertical-align:middle;}
+button,input{line-height:normal;*overflow:visible;}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0;}
+button,input[type="button"],input[type="reset"],input[type="submit"]{cursor:pointer;-webkit-appearance:button;}
+input[type="search"]{-webkit-appearance:textfield;-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box;}
+input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;}
+textarea{overflow:auto;vertical-align:top;}
+html,body{background-color:#ffffff;}
+body{margin:0;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:13px;font-weight:normal;line-height:18px;color:#404040;}
+.container{width:940px;margin-left:auto;margin-right:auto;zoom:1;}.container:before,.container:after{display:table;content:"";zoom:1;*display:inline;}
+.container:after{clear:both;}
+.container-fluid{position:relative;min-width:940px;padding-left:20px;padding-right:20px;zoom:1;}.container-fluid:before,.container-fluid:after{display:table;content:"";zoom:1;*display:inline;}
+.container-fluid:after{clear:both;}
+.container-fluid>.sidebar{float:left;width:220px;}
+.container-fluid>.content{margin-left:240px;}
+a{color:#0069d6;text-decoration:none;line-height:inherit;font-weight:inherit;}a:hover{color:#00438a;text-decoration:underline;}
+.pull-right{float:right;}
+.pull-left{float:left;}
+.hide{display:none;}
+.show{display:block;}
+.row{zoom:1;margin-left:-20px;}.row:before,.row:after{display:table;content:"";zoom:1;*display:inline;}
+.row:after{clear:both;}
+p{font-size:13px;font-weight:normal;line-height:18px;margin-bottom:9px;}p small{font-size:11px;color:#bfbfbf;}
+h1,h2,h3,h4,h5,h6{font-weight:bold;color:#404040;}h1 small,h2 small,h3 small,h4 small,h5 small,h6 small{color:#bfbfbf;}
+h1{margin-bottom:18px;font-size:30px;line-height:36px;}h1 small{font-size:18px;}
+h2{font-size:24px;line-height:36px;}h2 small{font-size:14px;}
+h3,h4,h5,h6{line-height:36px;}
+h3{font-size:18px;}h3 small{font-size:14px;}
+h4{font-size:16px;}h4 small{font-size:12px;}
+h5{font-size:14px;}
+h6{font-size:13px;color:#bfbfbf;text-transform:uppercase;}
+ul,ol{margin:0 0 18px 25px;}
+ul ul,ul ol,ol ol,ol ul{margin-bottom:0;}
+ul{list-style:disc;}
+ol{list-style:decimal;}
+li{line-height:18px;color:#808080;}
+ul.unstyled{list-style:none;margin-left:0;}
+dl{margin-bottom:18px;}dl dt,dl dd{line-height:18px;}
+dl dt{font-weight:bold;}
+dl dd{margin-left:9px;}
+hr{margin:20px 0 19px;border:0;border-bottom:1px solid #eee;}
+strong{font-style:inherit;font-weight:bold;}
+em{font-style:italic;font-weight:inherit;line-height:inherit;}
+.muted{color:#bfbfbf;}
+blockquote{margin-bottom:18px;border-left:5px solid #eee;padding-left:15px;}blockquote p{font-size:14px;font-weight:300;line-height:18px;margin-bottom:0;}
+blockquote small{display:block;font-size:12px;font-weight:300;line-height:18px;color:#bfbfbf;}blockquote small:before{content:'\2014 \00A0';}
+address{display:block;line-height:18px;margin-bottom:18px;}
+code,pre{padding:0 3px 2px;font-family:Monaco, Andale Mono, Courier New, monospace;font-size:12px;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;}
+code{padding:1px 3px;}
+pre{background-color:#f5f5f5;display:block;padding:8.5px;margin:0 0 18px;line-height:18px;font-size:12px;border:1px solid #ccc;border:1px solid rgba(0, 0, 0, 0.15);-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;white-space:pre;white-space:pre-wrap;word-wrap:break-word;}
+form{margin-bottom:18px;}
+fieldset{margin-bottom:18px;padding-top:18px;}fieldset legend{display:block;padding-left:150px;font-size:19.5px;line-height:1;color:#404040;*padding:0 0 5px 145px;*line-height:1.5;}
+form .clearfix{margin-bottom:18px;zoom:1;}form .clearfix:before,form .clearfix:after{display:table;content:"";zoom:1;*display:inline;}
+form .clearfix:after{clear:both;}
+label,input,select,textarea{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:13px;font-weight:normal;line-height:normal;}
+label{padding-top:6px;font-size:13px;line-height:18px;float:left;width:130px;text-align:right;color:#404040;}
+form .input{margin-left:150px;}
+input[type=checkbox],input[type=radio]{cursor:pointer;}
+input,textarea,select,.uneditable-input{display:inline-block;width:210px;height:18px;padding:4px;font-size:13px;line-height:18px;color:#808080;border:1px solid #ccc;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;}
+input[type=checkbox],input[type=radio]{width:auto;height:auto;padding:0;margin:3px 0;*margin-top:0;line-height:normal;border:none;}
+input[type=file]{background-color:#ffffff;padding:initial;border:initial;line-height:initial;-webkit-box-shadow:none;-moz-box-shadow:none;box-shadow:none;}
+input[type=button],input[type=reset],input[type=submit]{width:auto;height:auto;}
+select,input[type=file]{height:27px;line-height:27px;*margin-top:4px;}
+select[multiple]{height:inherit;}
+textarea{height:auto;}
+.uneditable-input{background-color:#ffffff;display:block;border-color:#eee;-webkit-box-shadow:inset 0 1px 2px rgba(0, 0, 0, 0.025);-moz-box-shadow:inset 0 1px 2px rgba(0, 0, 0, 0.025);box-shadow:inset 0 1px 2px rgba(0, 0, 0, 0.025);cursor:not-allowed;}
+:-moz-placeholder{color:#bfbfbf;}
+::-webkit-input-placeholder{color:#bfbfbf;}
+input,textarea{-webkit-transition:border linear 0.2s,box-shadow linear 0.2s;-moz-transition:border linear 0.2s,box-shadow linear 0.2s;-ms-transition:border linear 0.2s,box-shadow linear 0.2s;-o-transition:border linear 0.2s,box-shadow linear 0.2s;transition:border linear 0.2s,box-shadow linear 0.2s;-webkit-box-shadow:inset 0 1px 3px rgba(0, 0, 0, 0.1);-moz-box-shadow:inset 0 1px 3px rgba(0, 0, 0, 0.1);box-shadow:inset 0 1px 3px rgba(0, 0, 0, 0.1);}
+input:focus,textarea:focus{outline:0;border-color:rgba(82, 168, 236, 0.8);-webkit-box-shadow:inset 0 1px 3px rgba(0, 0, 0, 0.1),0 0 8px rgba(82, 168, 236, 0.6);-moz-box-shadow:inset 0 1px 3px rgba(0, 0, 0, 0.1),0 0 8px rgba(82, 168, 236, 0.6);box-shadow:inset 0 1px 3px rgba(0, 0, 0, 0.1),0 0 8px rgba(82, 168, 236, 0.6);}
+input[type=file]:focus,input[type=checkbox]:focus,select:focus{-webkit-box-shadow:none;-moz-box-shadow:none;box-shadow:none;outline:1px dotted #666;}
+form div.clearfix.error{background:#fae5e3;padding:10px 0;margin:-10px 0 10px;-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;}form div.clearfix.error>label,form div.clearfix.error span.help-inline,form div.clearfix.error span.help-block{color:#9d261d;}
+form div.clearfix.error input,form div.clearfix.error textarea{border-color:#c87872;-webkit-box-shadow:0 0 3px rgba(171, 41, 32, 0.25);-moz-box-shadow:0 0 3px rgba(171, 41, 32, 0.25);box-shadow:0 0 3px rgba(171, 41, 32, 0.25);}form div.clearfix.error input:focus,form div.clearfix.error textarea:focus{border-color:#b9554d;-webkit-box-shadow:0 0 6px rgba(171, 41, 32, 0.5);-moz-box-shadow:0 0 6px rgba(171, 41, 32, 0.5);box-shadow:0 0 6px rgba(171, 41, 32, 0.5);}
+form div.clearfix.error .input-prepend span.add-on,form div.clearfix.error .input-append span.add-on{background:#f4c8c5;border-color:#c87872;color:#b9554d;}
+table{width:100%;margin-bottom:18px;padding:0;border-collapse:separate;*border-collapse:collapse;font-size:13px;border:1px solid #ddd;-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;}table th,table td{padding:10px 10px 9px;line-height:18px;text-align:left;}
+table th{padding-top:9px;font-weight:bold;vertical-align:middle;border-bottom:1px solid #ddd;}
+table td{vertical-align:top;}
+table th+th,table td+td{border-left:1px solid #ddd;}
+table tr+tr td{border-top:1px solid #ddd;}
+table tbody tr:first-child td:first-child{-webkit-border-radius:4px 0 0 0;-moz-border-radius:4px 0 0 0;border-radius:4px 0 0 0;}
+table tbody tr:first-child td:last-child{-webkit-border-radius:0 4px 0 0;-moz-border-radius:0 4px 0 0;border-radius:0 4px 0 0;}
+table tbody tr:last-child td:first-child{-webkit-border-radius:0 0 0 4px;-moz-border-radius:0 0 0 4px;border-radius:0 0 0 4px;}
+table tbody tr:last-child td:last-child{-webkit-border-radius:0 0 4px 0;-moz-border-radius:0 0 4px 0;border-radius:0 0 4px 0;}
+.zebra-striped tbody tr:nth-child(odd) td{background-color:#f9f9f9;}
+.zebra-striped tbody tr:hover td{background-color:#f5f5f5;}
+.zebra-striped .header{cursor:pointer;}.zebra-striped .header:after{content:"";float:right;margin-top:7px;border-width:0 4px 4px;border-style:solid;border-color:#000 transparent;visibility:hidden;}
+.zebra-striped .header:hover:after{visibility:visible;}
+footer{margin-top:17px;padding-top:17px;border-top:1px solid #eee;}
+.page-header{margin-bottom:17px;border-bottom:1px solid #ddd;-webkit-box-shadow:0 1px 0 rgba(255, 255, 255, 0.5);-moz-box-shadow:0 1px 0 rgba(255, 255, 255, 0.5);box-shadow:0 1px 0 rgba(255, 255, 255, 0.5);}.page-header h1{margin-bottom:8px;}
+.close{float:right;color:#000000;font-size:20px;font-weight:bold;line-height:13.5px;text-shadow:0 1px 0 #ffffff;filter:alpha(opacity=20);-khtml-opacity:0.2;-moz-opacity:0.2;opacity:0.2;}.close:hover{color:#000000;text-decoration:none;filter:alpha(opacity=40);-khtml-opacity:0.4;-moz-opacity:0.4;opacity:0.4;}
+
+pre {
+	padding: 0;
+	margin: 10px 0px 10px;
+	overflow: auto; /*--If the Code exceeds the width, a scrolling is available--*/
+	overflow-Y: hidden;  /*--Hides vertical scroll created by IE--*/
+}
+pre code {
+	margin: 5px;  /*--Left Margin--*/
+	padding: 0px;
+	display: block;
+    line-height: 18px;
+}
+.center { text-align:center}
+.left {text-align:left}
+.right {text-align:right}
+
+</style><style type="text/css">
+body{font-size:14px;line-height:1.6;font-family: Helvetica, arial, freesans, clean, sans-serif;padding: 20px;}
+body>*:first-child{margin-top:0!important;}
+body>*:last-child{margin-bottom:0!important;}
+body a:active {outline: none;}
+body a:hover {text-decoration: underline;}
+body a {color: #4183C4;text-decoration: none;}
+body a.absent{color:#c00;}
+body h1, body h2, h3, h4, h5, h6{margin:20px 0 10px;padding:0;font-weight:bold;-webkit-font-smoothing:antialiased;}
+body h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code{font-size:inherit;}
+body h1{font-size:28px;color:#000;}
+body h2{font-size:24px;border-bottom:1px solid #ccc;color:#000;}
+body h3{font-size:18px;}
+body h4{font-size:16px;}
+body h5{font-size:14px;}
+body h6{color:#777;font-size:14px;}
+body p, blockquote, ul, ol, dl, li, table, pre{margin:15px 0;}
+body hr{background:transparent url('../../images/modules/pulls/dirty-shade.png') repeat-x 0 0;border:0 none;color:#ccc;height:4px;padding:0;}
+body>h2:first-child,>h1:first-child,>h1:first-child+h2,>h3:first-child,>h4:first-child,>h5:first-child,>h6:first-child{margin-top:0;padding-top:0;}
+body h1+p, h2+p, h3+p, h4+p, h5+p, h6+p{margin-top:0;}
+body li p.first{display:inline-block;}
+body ul, ol{padding-left:30px;}
+body ul li>:first-child, ol li>:first-child{margin-top:0;}
+body ul li>:last-child, ol li>:last-child{margin-bottom:0;}
+body dl{padding:0;}
+body dl dt{font-size:14px;font-weight:bold;font-style:italic;padding:0;margin:15px 0 5px;}
+body dl dt:first-child{padding:0;}
+body dl dt>:first-child{margin-top:0;}
+body dl dt>:last-child{margin-bottom:0;}
+body dl dd{margin:0 0 15px;padding:0 15px;}
+body dl dd>:first-child{margin-top:0;}
+body dl dd>:last-child{margin-bottom:0;}
+body blockquote{border-left:4px solid #DDD;padding:0 15px;color:#777;}
+body blockquote>:first-child{margin-top:0;}
+body blockquote>:last-child{margin-bottom:0;}
+body table{padding:0;}
+body table tr{border-top:1px solid #ccc;background-color:#fff;margin:0;padding:0;}
+body table tr:nth-child(2n){background-color:#f8f8f8;}
+body table tr th{font-weight:bold;}
+body table tr th, table tr td{border:1px solid #ccc;text-align:left;margin:0;padding:6px 13px;}
+body table tr th>:first-child, table tr td>:first-child{margin-top:0;}
+body table tr th>:last-child, table tr td>:last-child{margin-bottom:0;}
+body img{max-width:100%;}
+body span.frame{display:block;overflow:hidden;}
+body span.frame>span{border:1px solid #ddd;display:block;float:left;overflow:hidden;margin:13px 0 0;padding:7px;width:auto;}
+body span.frame span img{display:block;float:left;}
+body span.frame span span{clear:both;color:#333;display:block;padding:5px 0 0;}
+body span.align-center{display:block;overflow:hidden;clear:both;}
+body span.align-center>span{display:block;overflow:hidden;margin:13px auto 0;text-align:center;}
+body span.align-center span img{margin:0 auto;text-align:center;}
+body span.align-right{display:block;overflow:hidden;clear:both;}
+body span.align-right>span{display:block;overflow:hidden;margin:13px 0 0;text-align:right;}
+body span.align-right span img{margin:0;text-align:right;}
+body span.float-left{display:block;margin-right:13px;overflow:hidden;float:left;}
+body span.float-left span{margin:13px 0 0;}
+body span.float-right{display:block;margin-left:13px;overflow:hidden;float:right;}
+body span.float-right>span{display:block;overflow:hidden;margin:13px auto 0;text-align:right;}
+body code, tt{margin:0 2px;padding:0 5px;white-space:nowrap;border:1px solid #eaeaea;background-color:#f8f8f8;border-radius:3px;}
+body pre>code{margin:0;padding:0;white-space:pre;border:none;background:transparent;}
+body .highlight pre, pre{background-color:#f8f8f8;border:1px solid #ccc;font-size:13px;line-height:19px;overflow:auto;padding:6px 10px;border-radius:3px;}
+body pre code, pre tt{background-color:transparent;border:none;}
+</style></head>
+<body>
+<h2 id="toc_0">CSC 152/252 – Cryptography</h2>
+
+<p><strong>Meetings:</strong> The class meeting and final exam times can be found at the Sacramento State schedule of classes webpage (<a href="http://www.csus.edu/class-schedule/">http://www.csus.edu/class-schedule/</a>) and on your Student Center (<a href="https://my.csus.edu/">https://my.csus.edu/</a>). Any deviation will be posted as a Piazza announcement.</p>
+
+<p><strong>Instructor:</strong> Ted Krovetz. Office: 5012 Riverside Hall. Email: <a href="mailto:tdk@csus.edu">tdk@csus.edu</a>. Web: <a href="http://krovetz.net/csus">http://krovetz.net/csus</a>. Office Hours: See <a href="http://krovetz.net/oh">http://krovetz.net/oh</a> for a list of times. It is changed occasionally, so check before coming. No appointment necessary.</p>
+
+<p><strong>Texts:</strong> We will only use freely available materials such as from the following books.</p>
+
+<p><em>Serious Cryptography: A Practical Introduction to Modern Encryption</em>, Jean-Philippe Aumasson, No Starch Press, 2017. Available free to Sac State students at <a href="http://proquest.safaribooksonline.com.proxy.lib.csus.edu/9781492067511">http://proquest.safaribooksonline.com.proxy.lib.csus.edu/9781492067511</a>.</p>
+
+<p><em>Understanding Cryptography</em>, Paar and Pelzl, Springer, 2010. We will use free materials from <a href="http://www.crypto-textbook.com">http://www.crypto-textbook.com</a>.</p>
+
+<p><em>Cryptography, An Introduction, Third Edition</em>, Nigel Smart, self-published, 2009. Available at <a href="http://krovetz.net/free/SmartCryptoIntro.pdf">http://krovetz.net/free/SmartCryptoIntro.pdf</a>.</p>
+
+<p><em>Crypto 101</em>, Laurens Van Houtven, self-published, 2017. Available at <a href="https://www.crypto101.io">https://www.crypto101.io</a>.</p>
+
+<p><strong>Webpage:</strong> Handouts, homework assignments, and score reporting will be available on Piazza. Sign up for free at <a href="http://piazza.com/csus/cscx52">http://piazza.com/csus/cscx52</a>.</p>
+
+<p><strong>Catalog Description:</strong> Introduction to design and analysis of cryptographic systems. Symmetric cryptography:  Block ciphers and secure hash functions.  Asymmetric cryptography: Key exchange and public-key systems. Authentication and encryption in an adversarial model. Simple cryptanalysis.  Protocol design and analysis.</p>
+
+<p><strong>Goals:</strong> To give an appreciation of (i) the basic use and construction of cryptographic primitives, (ii) the complexity-theoretic assumptions made in their use, (iii) the fragility of secure network protocols, and (iv) experience using cryptography and cryptographic toolkits in programming.</p>
+
+<p><strong>Prerequisite:</strong> CSC 60, CSC 130; and STAT 50 or ENGR 115; or fully-classified graduate student. These courses provide C programming, data structures, algorithm analysis and probability.</p>
+
+<p><strong>Announcements, Questions and Feedback:</strong> Electronic communication will take place using Piazza. You will need to get a free Piazza account and use it to access announcements and ask questions. Students are encouraged to answer each other&#39;s questions so long as solutions to homework are not given (ie, explanations and hints are okay). Course feedback is also encouraged -- if something about the course frustrates you, please let me know. Piazza allows anonymous posting, if you prefer it.</p>
+
+<p><strong>Homework:</strong> Homework will be assigned via Piazza. A new assignment will appear shortly after each previous one is due. Unless stated otherwise on an assignment, you may solve the homework on your own or in groups, using whatever resources help you understand the problems, but each student must prepare written solutions on their own. No copying is allowed from any source. This means that none of your solutions should be created as a group and copied to each individual. Instead this means that you may work in close proximity to one another, discussing problems and solutions, but that each final submission must be written individually. For each problem, please list any sources of help (eg, people, other texts, websites, etc). Failure to do so may be considered plagiarism. The more work you complete individually, the better your eventual understanding will be.</p>
+
+<p>All programs will be submitted to a similarity checker to flag unreasonably similar solutions and tested for correct input-output behavior. Any incorrect output will result in a No-Credit grade for the program. Those getting No-Credit will be given the testing data and may resubmit their code for up to 50% credit.</p>
+
+<p>Your written homework is a required component of the course but will normally not be graded. It will form a portfolio that may be examined by me at the end of the semester. If in my subjective opinion you have not made a good effort on your homework, I may reduce your grade. I am most likely to look at your homework if your quizzes,  exams and programs would assign you a borderline raw score; in which case well-done homework will cause an up-rounding and poorly-done homework will cause a down-rounding.</p>
+
+<p>You will need to self-assess whether you did your homework correctly by comparing your work to my published solutions. I am also happy to go over your work with you during office hours.</p>
+
+<p><strong>Exams &amp; Quizzes:</strong> There will be no midterm exams. Instead there will be a quiz shortly after each homework is due. Your grade will be based entirely on your homework, quizzes and final exam. No make-up quizzes will be allowed. Your lowest quiz will be dropped to accommodate any unforeseen absence. For the final exam, you will be allowed one double-sided letter-sized sheet of hand-written notes.</p>
+
+<p><strong>Grading:</strong> The Quizzes and the final will together be worth 80% of your grade. The final will be worth the same as three quizzes. The exact weighting of each quiz and exam will therefore depend on how many quizzes we have during the semester. The remaining 20% will be allocated to homework (your programs and maybe a few written problems). Your weighted average will determine your grade: A for 90+, A- for 85+, B+ for 80+, B for 75+, B- for 70+, C+ for 65+, C for 60+, and C- for 55+. Some curving may take place when course grades are assigned, but this should not be counted on. A failing grade may be given if you get less than 55% on the final exam and your grade may be reduced significantly if I (subjectively) believe your homework assignments were done poorly.</p>
+
+<p><strong>Advice:</strong> If you wish to do well in this class try to do all of the following. (i) Attend class. Although attendance is not taken during lecture, those who skip class usually do less well. (ii) Ask and answer questions in class. One of the best ways to learn is through a dialogue guided by questions and answers. And, you should ask questions when something does not make sense. Do not be afraid -- you will benefit through your participation and the class will be more dynamic and interesting. (iii) Ask questions outside of class. Office hours and the online forum are usually underused. (iv) Do your homework early. Only through practice will you be able to do similar problems on an exam. (v) Study worked-out solutions whether supplied by me or found in our textbook. Study and emulate them until you understand.</p>
+
+<p><strong>Privacy:</strong> To maintain the privacy of your educational record, you will establish a four-digit number that you should keep private and use for all identification purposes on homework and exams. If you forget your four-digit code, come to office hours to recover it.</p>
+
+<p><strong>Academic Integrity:</strong> In this class you are allowed to collaborate with other students up to a point. No written work -- including programs -- can be copied. You may discuss problems and design solutions collaboratively, but once you understand how to do the work you should finish it on your own. Any significant help that you get, whether from a person or from online, must be acknowledged prominently in a comment near the solution or resulting code. Failure to do so may result in loss of credit and a report to Academic Affairs. Under no circumstance should you copy or allow another to copy your solution. If you see someone else&#39;s solution, do not write your own immediately -- that would be considered copying -- instead try to understand the other solution and don&#39;t write your own until you have forgotten the details. Read <a href="http://www.ecs.csus.edu/wcm/csc/academic/academicintegrity.html">http://www.ecs.csus.edu/wcm/csc/academic/academicintegrity.html</a></p>
+
+<p><strong>Regrading:</strong> If you believe you lost points on some work even though your solution was correct, resubmit the entire work, within a week of when it was first returned to the class, to the instructor with a letter describing your concern in detail. Double check that your proposed solution was correct before resubmission.</p>
+
+<p><strong>CSC 252:</strong> Students enrolled in CSC 252 will do the same assignments and exams as students in CSC 152 but will be expected to do superior work. CSC 252 students may be asked to do additional readings and reading summaries. CSC 152 course grades will be determined independently of CSC 252 students, and CSC 252 students will be given the grade they would have gotten had they been in the CSC 152 section.</p>
+
+</body>
+</html>

@@ -93,6 +93,9 @@ function getConfirmation(type, method) {
 		case 1:
 			tn = ' file';
 			break;
+		case 2:
+			tn = ' directory\nand all files contained within';
+			break;
 		default:
 			tn = ' ';
 	}
@@ -210,6 +213,18 @@ $('#directoryDelete').on('click', function() {
 	conf = getConfirmation(0, 1);
 	if (conf == true) {
 		ajaxServerCommand.sendCommand(26, params);
+	}
+});
+
+// Button click handler for deleting a directory and its contents.
+$('#directoryDeleteAll').on('click', function() {
+	var params;
+	var conf;
+
+	params = getParameters();
+	conf = getConfirmation(2, 1);
+	if (conf == true) {
+		ajaxServerCommand.sendCommand(27, params);
 	}
 });
 
