@@ -2,7 +2,7 @@
 -- Host:                         127.0.0.1
 -- Server version:               5.7.22-log - MySQL Community Server (GPL)
 -- Server OS:                    Win64
--- HeidiSQL Version:             9.5.0.5280
+-- HeidiSQL Version:             9.5.0.5196
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -10,6 +10,273 @@
 /*!50503 SET NAMES utf8mb4 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+
+
+-- Dumping database structure for application
+CREATE DATABASE IF NOT EXISTS `application` /*!40100 DEFAULT CHARACTER SET utf8 */;
+USE `application`;
+
+-- Dumping structure for table application.assignment
+CREATE TABLE IF NOT EXISTS `assignment` (
+  `assignment` int(11) NOT NULL AUTO_INCREMENT COMMENT 'The assignment number for the course.',
+  `courseid` int(11) NOT NULL COMMENT 'The unique course ID number.',
+  `name` varchar(30) NOT NULL COMMENT 'The name of the assignment.',
+  `desc` varchar(512) DEFAULT NULL COMMENT 'A type in description for the assignment.',
+  `descfile` varchar(256) DEFAULT NULL COMMENT 'A description file for the assignment that the ',
+  `allowext` varchar(128) DEFAULT NULL COMMENT 'A list of allowed extensions for student submissions.',
+  `duedate` bigint(20) NOT NULL COMMENT 'Assignment due date.',
+  `lockdate` bigint(20) DEFAULT NULL COMMENT 'The date where students can no longer submit assignments.',
+  `gradeweight` int(11) DEFAULT NULL COMMENT 'The total grade weight of the assignment.',
+  `gwgroup` int(11) DEFAULT '0' COMMENT 'The grade weight group if the course has one.',
+  `curve` int(11) NOT NULL DEFAULT '0' COMMENT 'Any curve that the instructor sets for the assignment.',
+  `points` int(11) NOT NULL DEFAULT '0' COMMENT 'The numbere of points the assignment is worth.',
+  `exempt` int(11) NOT NULL DEFAULT '0' COMMENT 'Indicates if this assignment is exempt from the total grade.',
+  `maxturnin` int(11) NOT NULL DEFAULT '3' COMMENT 'The maximum number of submissions that a student can make.',
+  PRIMARY KEY (`assignment`),
+  KEY `assignment` (`assignment`),
+  KEY `FK1_asssignment_courseid_course_courseid` (`courseid`),
+  KEY `FK2_assignment_gwgroup_weightgroup_group` (`gwgroup`),
+  KEY `duedate` (`duedate`),
+  CONSTRAINT `FK1_asssignment_courseid_course_courseid` FOREIGN KEY (`courseid`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE,
+  CONSTRAINT `FK2_assignment_gwgroup_weightgroup_group` FOREIGN KEY (`gwgroup`) REFERENCES `weightgroup` (`group`) ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COMMENT='The assignments that the instructor assigns to students.';
+
+-- Dumping data for table application.assignment: ~5 rows (approximately)
+/*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
+INSERT INTO `assignment` (`assignment`, `courseid`, `name`, `desc`, `descfile`, `allowext`, `duedate`, `lockdate`, `gradeweight`, `gwgroup`, `curve`, `points`, `exempt`, `maxturnin`) VALUES
+	(1, 20284, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540763960, NULL, 10, 0, 0, 10, 0, 3),
+	(2, 14298, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540763960, NULL, 10, 0, 0, 10, 0, 3),
+	(3, 21924, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540995920, NULL, 10, 0, 0, 10, 0, 3),
+	(4, 21924, 'Assignment 2', 'Assignment 2', NULL, NULL, 1541427920, NULL, 10, 0, 0, 10, 0, 3),
+	(5, 14298, 'Assignment 2', 'Assignment 2', NULL, NULL, 1541687190, NULL, 10, 0, 0, 10, 0, 3);
+/*!40000 ALTER TABLE `assignment` ENABLE KEYS */;
+
+-- Dumping structure for table application.assignstep
+CREATE TABLE IF NOT EXISTS `assignstep` (
+  `assignment` int(11) NOT NULL COMMENT 'The assignment number.',
+  `step` int(11) NOT NULL COMMENT 'The step number.',
+  `date` bigint(20) NOT NULL COMMENT 'The date the step should be completed.',
+  `desc` varchar(512) NOT NULL COMMENT 'A description of the step.',
+  `turninreq` int(11) NOT NULL DEFAULT '1' COMMENT 'Indicates if a turnin is required for this step.',
+  `maxturnin` int(11) NOT NULL DEFAULT '3' COMMENT 'The maximum allowed submissions that a student can make.',
+  PRIMARY KEY (`assignment`,`step`),
+  KEY `step` (`step`),
+  CONSTRAINT `FK1_assignstep_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Steps or milestones the assignment requires for completetion.';
+
+-- Dumping data for table application.assignstep: ~4 rows (approximately)
+/*!40000 ALTER TABLE `assignstep` DISABLE KEYS */;
+INSERT INTO `assignstep` (`assignment`, `step`, `date`, `desc`, `turninreq`, `maxturnin`) VALUES
+	(5, 1, 1541108753, 'Assignment 2 Step 1', 0, 3),
+	(5, 2, 1541195453, 'Assignment 2 Step 2', 0, 3),
+	(5, 3, 1541282153, 'Assignment 2 Step 3', 1, 3),
+	(5, 4, 1541368853, 'Assignment 2 Step 4', 0, 3);
+/*!40000 ALTER TABLE `assignstep` ENABLE KEYS */;
+
+-- Dumping structure for table application.course
+CREATE TABLE IF NOT EXISTS `course` (
+  `courseid` int(11) NOT NULL COMMENT 'The unique ID number of the course.',
+  `class` varchar(12) NOT NULL COMMENT 'The course code.  Ex: CSC 190',
+  `section` int(11) NOT NULL COMMENT 'The course section number.',
+  `name` varchar(50) NOT NULL COMMENT 'The name of the course.',
+  `syllabus` varchar(50) DEFAULT NULL COMMENT 'The name of the course syllabus file.',
+  `instructor` int(11) NOT NULL COMMENT 'The userid of the course instructor.',
+  `scale` int(11) DEFAULT NULL COMMENT 'The grading scale for this course.',
+  `curve` int(11) DEFAULT NULL COMMENT 'The grading curve for this course.',
+  PRIMARY KEY (`courseid`),
+  UNIQUE KEY `callid` (`courseid`),
+  KEY `instructor` (`instructor`),
+  KEY `FK2_course_scale_gradescale_scale` (`scale`),
+  CONSTRAINT `FK1_course_instructor_users_userid` FOREIGN KEY (`instructor`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE,
+  CONSTRAINT `FK2_course_scale_gradescale_scale` FOREIGN KEY (`scale`) REFERENCES `gradescale` (`scale`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the course that a student takes.';
+
+-- Dumping data for table application.course: ~7 rows (approximately)
+/*!40000 ALTER TABLE `course` DISABLE KEYS */;
+INSERT INTO `course` (`courseid`, `class`, `section`, `name`, `syllabus`, `instructor`, `scale`, `curve`) VALUES
+	(14298, 'CSC-152', 1, 'Cryptography', '', 1000, 0, NULL),
+	(19376, 'CSC-151', 1, 'Compiler Construction', '', 1001, 0, NULL),
+	(20284, 'CSC-152', 2, 'Cryptography', '', 1000, 0, NULL),
+	(21924, 'CSC-130', 1, 'Data Structures and Algorithms', '', 1000, 0, NULL),
+	(21925, 'CSC-130', 2, 'Data Structures and Algorithms', '', 1000, 0, NULL),
+	(83745, 'CSC-131', 1, 'Software Engineering', '', 1000, 0, NULL),
+	(83746, 'CSC-131', 2, 'Software Engineering', '', 1001, 0, NULL);
+/*!40000 ALTER TABLE `course` ENABLE KEYS */;
+
+-- Dumping structure for table application.filename
+CREATE TABLE IF NOT EXISTS `filename` (
+  `studentid` int(11) NOT NULL COMMENT 'The student''s user ID.',
+  `assignment` int(11) NOT NULL COMMENT 'The assignment this file belongs to.',
+  `step` int(11) NOT NULL COMMENT 'The assignment step this file belongs to.',
+  `subcount` int(11) NOT NULL COMMENT 'The assignment turnin number this file belongs to.',
+  `filenumber` int(11) NOT NULL COMMENT 'The filenumber the file is.',
+  `studentfile` varchar(256) NOT NULL COMMENT 'The filename that the student submitted.',
+  `sysfile` varchar(256) NOT NULL COMMENT 'The system assigned filename.',
+  PRIMARY KEY (`studentid`,`assignment`,`step`,`subcount`,`filenumber`),
+  KEY `FK2_filename_assignment_assignment_assignment` (`assignment`),
+  KEY `FK3_filename_step_assignstep_step` (`step`),
+  KEY `FK4_filename_subcount_turnin_subcount` (`subcount`),
+  CONSTRAINT `FK1_filename_studentid_users_userid` FOREIGN KEY (`studentid`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE,
+  CONSTRAINT `FK2_filename_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE,
+  CONSTRAINT `FK3_filename_step_assignstep_step` FOREIGN KEY (`step`) REFERENCES `assignstep` (`step`) ON UPDATE CASCADE,
+  CONSTRAINT `FK4_filename_subcount_turnin_subcount` FOREIGN KEY (`subcount`) REFERENCES `turnin` (`subcount`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Contains the filenames of files that the student submits.';
+
+-- Dumping data for table application.filename: ~0 rows (approximately)
+/*!40000 ALTER TABLE `filename` DISABLE KEYS */;
+/*!40000 ALTER TABLE `filename` ENABLE KEYS */;
+
+-- Dumping structure for table application.grades
+CREATE TABLE IF NOT EXISTS `grades` (
+  `studentid` int(11) NOT NULL COMMENT 'The student''s userid.',
+  `assignment` int(11) NOT NULL COMMENT 'The assignment.',
+  `course` int(11) NOT NULL COMMENT 'The course the assignment is associated with.',
+  `comment` varchar(512) DEFAULT NULL COMMENT 'Instructor''s comments',
+  `grade` int(11) DEFAULT NULL COMMENT 'The grade.',
+  PRIMARY KEY (`studentid`,`assignment`),
+  KEY `FK3_grades_assignment_assignment_assignment` (`assignment`),
+  KEY `FK3_grades_course_course_courseid` (`course`),
+  CONSTRAINT `FK1_grades_studentid_users_userid` FOREIGN KEY (`studentid`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE,
+  CONSTRAINT `FK2_grades_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE,
+  CONSTRAINT `FK3_grades_course_course_courseid` FOREIGN KEY (`course`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Student grades table';
+
+-- Dumping data for table application.grades: ~0 rows (approximately)
+/*!40000 ALTER TABLE `grades` DISABLE KEYS */;
+/*!40000 ALTER TABLE `grades` ENABLE KEYS */;
+
+-- Dumping structure for table application.gradescale
+CREATE TABLE IF NOT EXISTS `gradescale` (
+  `scale` int(11) NOT NULL AUTO_INCREMENT COMMENT 'The grade scale ID.',
+  `instructor` int(11) NOT NULL COMMENT 'The instructor this scale belongs to.',
+  `name` varchar(32) NOT NULL COMMENT 'The name of this grading scale.',
+  `desc` varchar(512) NOT NULL COMMENT 'The description of this grading scale.',
+  `grade_ap` int(11) DEFAULT NULL COMMENT 'Grade A+',
+  `grade_a` int(11) DEFAULT NULL COMMENT 'Grade A',
+  `grade_am` int(11) DEFAULT NULL COMMENT 'Grade A-',
+  `grade_bp` int(11) DEFAULT NULL COMMENT 'Grade B+',
+  `grade_b` int(11) DEFAULT NULL COMMENT 'Grade B',
+  `grade_bm` int(11) DEFAULT NULL COMMENT 'Grade B-',
+  `grade_cp` int(11) DEFAULT NULL COMMENT 'Grade C+',
+  `grade_c` int(11) DEFAULT NULL COMMENT 'Grade C',
+  `grade_cm` int(11) DEFAULT NULL COMMENT 'Grade C-',
+  `grade_dp` int(11) DEFAULT NULL COMMENT 'Grade D+',
+  `grade_d` int(11) DEFAULT NULL COMMENT 'Grade D',
+  `grade_dm` int(11) DEFAULT NULL COMMENT 'Grade D-',
+  PRIMARY KEY (`scale`),
+  KEY `FK1_gradescale_instructor_users_userid` (`instructor`),
+  CONSTRAINT `FK1_gradescale_instructor_users_userid` FOREIGN KEY (`instructor`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='The instructor''s grade scale.';
+
+-- Dumping data for table application.gradescale: ~1 rows (approximately)
+/*!40000 ALTER TABLE `gradescale` DISABLE KEYS */;
+INSERT INTO `gradescale` (`scale`, `instructor`, `name`, `desc`, `grade_ap`, `grade_a`, `grade_am`, `grade_bp`, `grade_b`, `grade_bm`, `grade_cp`, `grade_c`, `grade_cm`, `grade_dp`, `grade_d`, `grade_dm`) VALUES
+	(0, 0, 'Default Grade Scale', 'Default grade scale when there is no instructor assigned to a course.', 100, 92, 90, 87, 83, 80, 77, 73, 70, 67, 63, 60);
+/*!40000 ALTER TABLE `gradescale` ENABLE KEYS */;
+
+-- Dumping structure for table application.studentclass
+CREATE TABLE IF NOT EXISTS `studentclass` (
+  `studentid` int(11) NOT NULL,
+  `courseid` int(11) NOT NULL,
+  PRIMARY KEY (`studentid`,`courseid`),
+  KEY `FK2_studentclass_courseid_course_courseid` (`courseid`),
+  CONSTRAINT `FK1_studentclass_studentid_users_userid` FOREIGN KEY (`studentid`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE,
+  CONSTRAINT `FK2_studentclass_courseid_course_courseid` FOREIGN KEY (`courseid`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Mapping table to map students to their classes.';
+
+-- Dumping data for table application.studentclass: ~2 rows (approximately)
+/*!40000 ALTER TABLE `studentclass` DISABLE KEYS */;
+INSERT INTO `studentclass` (`studentid`, `courseid`) VALUES
+	(2000, 14298),
+	(2000, 21924);
+/*!40000 ALTER TABLE `studentclass` ENABLE KEYS */;
+
+-- Dumping structure for table application.turnin
+CREATE TABLE IF NOT EXISTS `turnin` (
+  `studentid` int(11) NOT NULL COMMENT 'The student''s user ID.',
+  `assignment` int(11) NOT NULL COMMENT 'The assignment number',
+  `step` int(11) NOT NULL COMMENT 'Indicates what step of the assignment was turned in.',
+  `subcount` int(11) NOT NULL COMMENT 'The index of how many times the student turned the assignment in.',
+  `course` int(11) NOT NULL COMMENT 'The course the assignment is associated with.',
+  `timedate` bigint(20) NOT NULL COMMENT 'The time/date of the turnin.',
+  PRIMARY KEY (`studentid`,`assignment`,`subcount`,`step`),
+  KEY `FK2_turnin_assignment_assignment_assignment` (`assignment`),
+  KEY `step` (`step`),
+  KEY `subcount` (`subcount`),
+  KEY `FK3_turnin_course` (`course`),
+  CONSTRAINT `FK1_turnin_studentid_users_userid` FOREIGN KEY (`studentid`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE,
+  CONSTRAINT `FK2_turnin_assignment_assignment_assignment` FOREIGN KEY (`assignment`) REFERENCES `assignment` (`assignment`) ON UPDATE CASCADE,
+  CONSTRAINT `FK3_turnin_course` FOREIGN KEY (`course`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE,
+  CONSTRAINT `FK4_turnin_step_assignstep_step` FOREIGN KEY (`step`) REFERENCES `assignstep` (`step`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Maintains a log of assignments that the student has turned in.';
+
+-- Dumping data for table application.turnin: ~0 rows (approximately)
+/*!40000 ALTER TABLE `turnin` DISABLE KEYS */;
+INSERT INTO `turnin` (`studentid`, `assignment`, `step`, `subcount`, `course`, `timedate`) VALUES
+	(2000, 5, 4, 1, 83746, 1541768157);
+/*!40000 ALTER TABLE `turnin` ENABLE KEYS */;
+
+-- Dumping structure for table application.weightgroup
+CREATE TABLE IF NOT EXISTS `weightgroup` (
+  `group` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Grade weight group ID.',
+  `instructor` int(11) NOT NULL COMMENT 'The instructor that this weight group belongs to.',
+  `weight` int(11) NOT NULL COMMENT 'Weight to total overall course grade.',
+  `desc` varchar(512) DEFAULT NULL COMMENT 'A description of this weight group.',
+  `name` varchar(32) DEFAULT NULL COMMENT 'The name of this weight group.',
+  PRIMARY KEY (`group`),
+  KEY `FK1_weightgroup_instructor_users_userid` (`instructor`),
+  CONSTRAINT `FK1_weightgroup_instructor_users_userid` FOREIGN KEY (`instructor`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='The grade weight group definition.';
+
+-- Dumping data for table application.weightgroup: ~1 rows (approximately)
+/*!40000 ALTER TABLE `weightgroup` DISABLE KEYS */;
+INSERT INTO `weightgroup` (`group`, `instructor`, `weight`, `desc`, `name`) VALUES
+	(0, 0, 0, 'THis grade weight group is used when there is no weight group.', 'No Grade Weight Group');
+/*!40000 ALTER TABLE `weightgroup` ENABLE KEYS */;
+
+-- Dumping structure for trigger application.trig_assignstep_step
+SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+DELIMITER //
+CREATE TRIGGER `trig_assignstep_step` BEFORE INSERT ON `assignstep` FOR EACH ROW BEGIN
+		SET NEW.step = (
+			SELECT IFNULL(MAX(step), 0) + 1
+			FROM assignstep
+			WHERE assignment = NEW.assignment
+			);
+end//
+DELIMITER ;
+SET SQL_MODE=@OLDTMP_SQL_MODE;
+
+-- Dumping structure for trigger application.trig_filename_filenumber
+SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+DELIMITER //
+CREATE TRIGGER `trig_filename_filenumber` BEFORE INSERT ON `filename` FOR EACH ROW BEGIN
+		SET NEW.filenumber = (
+			SELECT IFNULL(MAX(filenumber), 0) + 1
+			FROM filename
+			WHERE studentid = NEW.studentid
+			AND assignment = NEW.assignment
+			AND step = NEW.step
+			AND subcount = NEW.subcount
+			);
+end//
+DELIMITER ;
+SET SQL_MODE=@OLDTMP_SQL_MODE;
+
+-- Dumping structure for trigger application.trig_turnin_subcount
+SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+DELIMITER //
+CREATE TRIGGER `trig_turnin_subcount` BEFORE INSERT ON `turnin` FOR EACH ROW BEGIN
+		SET NEW.subcount= (
+			SELECT IFNULL(MAX(subcount), 0) + 1
+			FROM turnin
+			WHERE studentid = NEW.studentid
+			AND assignment = NEW.assignment
+			AND step = NEW.step
+			);
+end//
+DELIMITER ;
+SET SQL_MODE=@OLDTMP_SQL_MODE;
 
 
 -- Dumping database structure for configuration
@@ -28,12 +295,12 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`setting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains configuration information about the application.\r\nThe following numerical ranges are defined:\r\n0-9  Server\r\n10-19 HTML\r\n20-29 SSL\r\n30-49 Security\r\n50-59 Session\r\n60-69 Time/Timezone\r\n70-79 Account/Profile\r\n1000+ Application Specific';
 
--- Dumping data for table configuration.config: ~52 rows (approximately)
+-- Dumping data for table configuration.config: ~60 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
-	(0, 0, 'server_document_root', 'Appliation Root Directory', '/Servers/webdocs', 'This sets the application root directory on the server.', 1),
-	(1, 0, 'server_hostname', 'Server Hostname', 'localhost', 'This is the server hostname.  It is used to build the base\r\nURL which is used throughout the application.', 1),
-	(2, 2, 'server_secure', 'Use HTTPS', '0', 'The flag which indicates that the encrypted HTTPS protocol is to be used.', 1),
+	(0, 0, 'server_document_root', 'Appliation Root Directory', '/usr/local/www/apache24/data', 'This sets the application root directory on the server.', 1),
+	(1, 0, 'server_hostname', 'Server Hostname', 'strata.danielrudy.org', 'This is the server hostname.  It is used to build the base\r\nURL which is used throughout the application.', 1),
+	(2, 2, 'server_secure', 'Use HTTPS', '1', 'The flag which indicates that the encrypted HTTPS protocol is to be used.', 1),
 	(3, 1, 'server_http_port', 'HTTP Port Number', '22080', 'The network port number that the application is to use\r\nwhen using the unencrypted HTTP protocol.  Default is\r\n80.', 1),
 	(4, 1, 'server_https_port', 'HTTPS Port Number', '443', 'The network port number that the application is to use\r\nwhen using the encrypted HTTPS protocol. Default is\r\n443.', 1),
 	(10, 1, 'html_default_label_size', 'Default HTML Label Size', '3', 'Default size of field text labels on web forms.', 0),
@@ -62,7 +329,7 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(40, 1, 'security_hashtime_max', 'Password Hashtime Maximum', '500', 'Maximum jitter time for password hashing.', 0),
 	(41, 1, 'security_login_failure_lockout', 'Allowed Login Failure Attempts', '5', 'The maximum number of login failure attempts before the account is locked out.', 1),
 	(42, 1, 'security_lockout_time', 'Account Lockout Time', '900', 'The amount of time the account is locked out after the\r\nnumber of login failure attempts have been exceeded.', 1),
-	(50, 2, 'session_regen_enable', 'Session Regenerate Enable', '1', 'Enables or disables session ID regeneration.', 1),
+	(50, 2, 'session_regen_enable', 'Session Regenerate Enable', '0', 'Enables or disables session ID regeneration.', 1),
 	(51, 1, 'session_regen_time', 'Session Regenerate Timeout', '30', 'The time interval between session ID regeneration.\r\nThis helps to prevent session fixation and session\r\nhijacking.', 1),
 	(52, 1, 'session_expire_time', 'Session Expire Timeout', '60', 'The time in seconds that the old session before ID regeneration is still valid.', 1),
 	(53, 1, 'session_nonce_len', 'Session Nonce Length', '32', 'The length of the session nonce in bytes.', 0),
@@ -78,17 +345,18 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(78, 2, 'admin_allow_alts', 'Allow Alternate Admins', '1', 'Allows users other than Admin to also be administrators.', 1),
 	(80, 2, 'oauth_enable', 'OAuth Login Enabled', '0', 'Specifies whether OAuth is a login method.', 1),
 	(90, 2, 'openid_enable', 'OpenID Login Enabled', '0', 'Specifies whether OpenID is a login method.', 1),
+	(100, 1, 'files_max_upload_size', 'Maximum upload file size', '4194304', 'The maximum file size, in bytes, that the system will accept for uploaded files.', 1),
+	(101, 1, 'files_random_filename_length', 'Random Filename Length', '16', 'The number of bytes used to generate random filenames.  The bytes are converted into base64, so the filename will be about 33 percent longer then the number specified.', 1),
+	(102, 1, 'download_token_length', 'Download Token Length', '16', 'The number of bytes used to generate a random download token.  The raw bytes are coverted to base64 encoding.', 1),
 	(1000, 1, 'assign_duedate_lookahead', 'Assignment Due Date Look Ahead Time', '1209600', 'The assignment due date look ahead time for the status panel', 1),
 	(1001, 1, 'assign_past_due_time', 'Assignment Past Due Time', '604800', 'The amount of time in seconds to display past due assignments.', 1),
 	(1002, 1, 'assign_priority_high', 'Assignment Priority High', '86400', 'The amount of time before the due date where the assignment has high priority.', 1),
 	(1003, 1, 'assign_priority_medium', 'Assignment Priority Medium', '259200', 'The amount of time before the due date where the assignment has medium priority.', 1),
 	(1004, 1, 'assign_priority_low', 'Assignment Priority Low', '604800', 'The amount of time before the due date where the assignment has low priority.', 1),
-	(1020, 0, 'files_base_path', 'File Base Path', '/Servers/webdocs/files', 'The base path for user files and directories.  For security reasons, this should exist outside of the web server document root.', 1),
+	(1020, 0, 'files_base_path', 'File Base Path', '/usr/local/www/apache24/data/files', 'The base path for user files and directories.  For security reasons, this should exist outside of the web server document root.', 1),
 	(1021, 0, 'files_course', 'Course Files Path', 'course', 'This is where the files for various courses are stored.  Courses have sub-directories inside this directory, and is added onto the base path.', 1),
 	(1022, 0, 'files_turned_in', 'Turned in Files Location', 'turnin', 'This is the directory where student file submissions for assignments are uploaded too.', 1),
-	(1037, 1, 'files_random_filename_length', 'Random Filename Length', '16', 'The number of bytes used to generate random filenames.  The bytes are converted into base64, so the filename will be about 33 percent longer then the number specified.', 1),
-	(1038, 3, 'files_allowed_extensions', 'Upload Files Allowed Extensions', 'pdf zip doc docx xls xlsx ppt pptx pub xps odt ods odp odf odc', 'A space separated list of allowed extensions for uploaded files.  Can be overridden by the instructor on a per-assignment basis.', 1),
-	(1039, 1, 'files_max_upload_size', 'Maximum upload file size', '4194304', 'The maximum file size, in bytes, that the system will accept for uploaded files.', 1),
+	(1039, 3, 'files_allowed_extensions', 'Upload Files Allowed Extensions', 'pdf zip doc docx xls xlsx ppt pptx pub xps odt ods odp odf odc', 'A space separated list of allowed extensions for uploaded files.  Can be overridden by the instructor on a per-assignment basis.', 1),
 	(1040, 1, 'app_profile_instruct', 'Instructor Profile ID', '100', 'The profile ID that course instructors use.', 0),
 	(1041, 1, 'app_profile_student', 'Student Profile ID', '200', 'The profile ID that students use.', 0);
 /*!40000 ALTER TABLE `config` ENABLE KEYS */;
@@ -101,13 +369,12 @@ CREATE TABLE IF NOT EXISTS `flagdesc_app` (
   PRIMARY KEY (`flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the names and descriptions of application flags from the userdata.profile table.  The flag attribute is the bit position of the flag.';
 
--- Dumping data for table configuration.flagdesc_app: ~4 rows (approximately)
+-- Dumping data for table configuration.flagdesc_app: ~2 rows (approximately)
 /*!40000 ALTER TABLE `flagdesc_app` DISABLE KEYS */;
 INSERT INTO `flagdesc_app` (`flag`, `name`, `description`) VALUES
-	(0, 'Test Flag A1', 'This flag is for testing purposes only&period;'),
-	(1, 'Test Flag A2', 'This flag is for testing purposes only&period;'),
-	(2, 'Test Flag A3', 'This flag is for testing purposes only&period;'),
-	(8, 'Test Flag A8', 'This flag is for testing purposes only&period;');
+	(0, 'Files Full Control', 'If this flag is set&comma; the user is allowed to upload&comma; rename&comma; or delete files and directories on the server&period;'),
+	(1, 'Course Editing Full Control', 'If this flag is set then the user is allowed to insert&comma; update&comma; and delete information pertaining to a course&period;'),
+	(2, 'Course Editing Instructor', 'If this flag is set&comma; then the user can edit course information that is useful for an instructor&period;');
 /*!40000 ALTER TABLE `flagdesc_app` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.flagdesc_core
@@ -118,16 +385,8 @@ CREATE TABLE IF NOT EXISTS `flagdesc_core` (
   PRIMARY KEY (`flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the names and descriptions of core system flags from the userdata.profile table.  The flag attribute is the bit position of the flag.';
 
--- Dumping data for table configuration.flagdesc_core: ~7 rows (approximately)
+-- Dumping data for table configuration.flagdesc_core: ~1 rows (approximately)
 /*!40000 ALTER TABLE `flagdesc_core` DISABLE KEYS */;
-INSERT INTO `flagdesc_core` (`flag`, `name`, `description`) VALUES
-	(0, 'Test Flag S1', 'This flag is for testing purposes only&period;'),
-	(1, 'Test Flag S2', 'This flag is for testing purposes only&period;'),
-	(2, 'Test Flag S3', 'This flag is for testing purposes only&period;'),
-	(3, 'Test Flag S4', 'This flag is for testing purposes only&period;'),
-	(4, 'Test Flag S5', 'This flag is for testing purposes only&period;'),
-	(25, 'Test Flag S6', 'This flag is for testing purposes only&period;'),
-	(26, 'Test Flag S7', 'This flag is for testing purposes only&period;');
 /*!40000 ALTER TABLE `flagdesc_core` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.modaccess
@@ -158,7 +417,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~17 rows (approximately)
+-- Dumping data for table configuration.module: ~18 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
 	(1, 'Grid Portal', 'Views the available modules in grid format.', 'gridportal.php', 'icon_grid', 1, 1, 1, 0),
@@ -176,6 +435,7 @@ INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`,
 	(24, 'User Editor', 'Edits the user database', 'useredit.php', 'icon_users2', 1, 0, 1, 0),
 	(30, 'Change Password', 'Allows a user to change their login password&period;', 'passwd.php', 'icon_padlock', 1, 1, 1, 0),
 	(31, 'User Data Editor', 'Allows the user to edit some of their own information&period;', 'userdata.php', 'icon_user', 1, 1, 1, 0),
+	(1100, 'File Manager', 'Manages online course files and materials&period;', 'filemanager.php', 'icon_harddisk', 1, 1, 0, 0),
 	(1500, 'Grades', 'Grades', 'grades.php', 'icon_circle_green', 1, 1, 0, 0),
 	(1600, 'Assignments', 'Assignments', 'assignments.php', 'icon_circle_blue', 1, 1, 0, 0);
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
@@ -243,7 +503,7 @@ INSERT INTO `profile` (`profileid`, `name`, `description`, `portal`, `bitmap_cor
 	(0, 'NONE', NULL, 1, NULL, NULL),
 	(1, 'Vendor', 'Profile for use only by the application vendor.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
 	(2, 'Admin', 'Profile for use only by the application admin.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
-	(100, 'Instructor', 'The profile for course instructors&period;', 2, _binary 0x00000000000000000000000000000000, _binary 0x00000000000000000000000000000000),
+	(100, 'Instructor', 'The profile for course instructors&period;', 2, _binary 0x00000000000000000000000000000000, _binary 0x05000000000000000000000000000000),
 	(200, 'Student', 'The profile for students&period;', 2, _binary 0x00000000000000000000000000000000, _binary 0x00000000000000000000000000000000),
 	(435, 'Test Profile', 'This profile is for development testing purposes&period;', 2, _binary 0x02000006000000000000000000000000, _binary 0x00010000000000000000000000000000);
 /*!40000 ALTER TABLE `profile` ENABLE KEYS */;
@@ -267,7 +527,7 @@ CREATE TABLE IF NOT EXISTS `contact` (
   CONSTRAINT `FK_contact_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the user contact information.';
 
--- Dumping data for table userdata.contact: ~9 rows (approximately)
+-- Dumping data for table userdata.contact: ~8 rows (approximately)
 /*!40000 ALTER TABLE `contact` DISABLE KEYS */;
 INSERT INTO `contact` (`userid`, `name`, `haddr`, `maddr`, `email`, `hphone`, `cphone`, `wphone`) VALUES
 	(0, 'No User', NULL, NULL, NULL, NULL, NULL, NULL),
@@ -297,16 +557,16 @@ CREATE TABLE IF NOT EXISTS `login` (
   CONSTRAINT `FK_login_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the user''s login data.';
 
--- Dumping data for table userdata.login: ~9 rows (approximately)
+-- Dumping data for table userdata.login: ~8 rows (approximately)
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
 	(0, 0, 0, 0, 0, -1, 'SHA256', 100, '0000000000000000000000000000000000000000000000000000000000000000', '0000000000000000000000000000000000000000000000000000000000000000'),
-	(1, 0, 1532714506, 1541099591, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 0, 1541625858, 1542128837, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, 0, 0, 1536731231, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
 	(34, 0, 1541017469, 1537509577, 1, 2147483647, 'SHA256', 100, '62b1c831bcabd2235af77b7d607199cebbe13f2e2383d690c5eb6cb8e1f1a9da', '35ff44e1a99b3fa565a6b9c11624bff018437d465fe125c206b4a9fee6f44e1a'),
 	(1000, 0, 0, 1541017383, 0, 2147483647, 'SHA256', 100, '3d85c8641e61e8b8c5ddb6b2b52f717736415cad7ceae3486fa835d59b18a6f8', 'db8812f0f4d975c2ea9172ea0611169dc3ff27475b5057ca21762d16402c61bc'),
 	(1001, 0, 0, 0, 0, 2147483647, 'SHA256', 100, 'fae2455c525bf8364cda5a95bd38287461ee8ca3662ecfa1285bdb0141e73592', '15452a7755e9d68edff36d20d573b662ac2f8b037cb67629437a4f8cc4681a4c'),
-	(2000, 0, 1540995065, 1541063653, 0, 2147483647, 'SHA256', 100, '61942ac2e51e43516d325b4aa4cd33f9c3d829f666cbac140a200452df3f9373', '6ead0b2e7c114c0bdbcf55595cc7115af2a436669381fb51c77a2b4af12a37e1'),
+	(2000, 0, 1541183684, 1542128892, 0, 2147483647, 'SHA256', 100, '61942ac2e51e43516d325b4aa4cd33f9c3d829f666cbac140a200452df3f9373', '6ead0b2e7c114c0bdbcf55595cc7115af2a436669381fb51c77a2b4af12a37e1'),
 	(2001, 0, 0, 0, 0, 2147483647, 'SHA256', 100, '6f0724ece7ba6ac9296c1e32fc6e1054e45a493ff684a8cab049fc8e8b10d0ef', '5922976a8119338be7716654f7cb8726ff21d129cf853f8d9ef4d5143ada1f86'),
 	(2003, 0, 0, 0, 0, 2147483647, 'SHA256', 100, '9c2b3ddfc3d1e8caf1ca5797eda8eb27fb431f1b5031f1fa1918da972b181689', '956430a38a95241f3175eae6e3ff1e4f3c5080fb13935a7e0c48e50b43b72717');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
@@ -367,7 +627,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   CONSTRAINT `FK_users_profile` FOREIGN KEY (`profileid`) REFERENCES `configuration`.`profile` (`profileid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table maps the user''s login name to their User ID and Profile ID.';
 
--- Dumping data for table userdata.users: ~9 rows (approximately)
+-- Dumping data for table userdata.users: ~8 rows (approximately)
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` (`userid`, `username`, `profileid`, `method`, `active`, `orgid`) VALUES
 	(0, 'NONE', 0, 0, 0, 'NoUser'),

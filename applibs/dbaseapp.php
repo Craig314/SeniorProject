@@ -25,17 +25,17 @@ interface database_application_interface
 	public function queryAssignmentRangeDue($course, $min, $max);
 	public function updateAssignment($assign, $name, $desc, $descfile,
 		$afext, $duedate, $lockdate, $grdw, $grdwgrp, $curve, $points,
-		$exempt, $completed);
+		$exempt, $maxturnin);
 	public function insertAssignment($course, $name, $desc, $descfile,
 		$afext, $duedate, $lockdate, $grdw, $grdwgrp, $curve, $points,
-		$exempt, $completed);
+		$exempt, $maxturnin);
 	public function deleteAssignment($assign, $course);
 	
 	// Assignment-Step Table
 	public function queryAssignstep($assign, $step);
 	public function queryAssignstepAssignAll($assign);
-	public function updateAssignstep($assign, $step, $date, $desc, $completed);
-	public function insertAssignstep($assign, $step, $date, $desc, $completed);
+	public function updateAssignstep($assign, $step, $date, $desc, $maxturnin);
+	public function insertAssignstep($assign, $step, $date, $desc, $maxturnin);
 	public function deleteAssignstep($assign, $step);
 	public function deleteAssignstepAll($assign);
 	
@@ -158,7 +158,7 @@ class database_application implements database_application_interface
 	// Updates an assignment.
 	public function updateAssignment($assign, $name, $desc, $descfile,
 		$afext, $duedate, $lockdate, $grdw, $grdwgrp, $curve, $points,
-		$exempt, $completed)
+		$exempt, $maxturnin)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.assignment';
@@ -173,7 +173,7 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('curve', $curve, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('points', $points, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('exempt', $exempt, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('completed', $completed, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('maxturnin', $maxturnin, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'assignment', $assign,
 			databaseCore::PTINT, $qxa));
 	}
@@ -181,7 +181,7 @@ class database_application implements database_application_interface
 	// Inserts a new assignment.
 	public function insertAssignment($course, $name, $desc, $descfile,
 		$afext, $duedate, $lockdate, $grdw, $grdwgrp, $curve, $points,
-		$exempt, $completed)
+		$exempt, $maxturnin)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.assignment';
@@ -197,7 +197,7 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('curve', $curve, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('points', $points, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('exempt', $exempt, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('completed', $completed, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('maxturnin', $maxturnin, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
@@ -239,7 +239,7 @@ class database_application implements database_application_interface
 	}
 
 	// Updates an assignment step.
-	public function updateAssignstep($assign, $step, $date, $desc, $completed)
+	public function updateAssignstep($assign, $step, $date, $desc, $maxturnin)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.assignstep';
@@ -247,12 +247,12 @@ class database_application implements database_application_interface
 		$qxk = $dbcore->buildArray('step', $step, databaseCore::PTINT, $qxk);
 		$qxa = $dbcore->buildArray('date', $date, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('complete', $completed, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('maxturnin', $maxturnin, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdateMutiple($table, $qxk, $qxa));
 	}
 
 	// Inserts a assignment step.
-	public function insertAssignstep($assign, $step, $date, $desc, $completed)
+	public function insertAssignstep($assign, $step, $date, $desc, $maxturnin)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.assignstep';
@@ -260,7 +260,7 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('step', $step, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('date', $date, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('complete', $completed, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('maxturnin', $maxturnin, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
