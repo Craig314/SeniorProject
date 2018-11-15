@@ -405,6 +405,9 @@ function customCmdProc(cmd, txt) {
 		case 48:
 			window.alert(txt);
 			break;
+		case 49:
+			showFuncBar();
+			break;
 		default:
 			window.alert("Unknown command " + cmd + " returned by server.");
 	}

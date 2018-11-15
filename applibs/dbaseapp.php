@@ -46,8 +46,9 @@ interface database_application_interface
 	public function updateCourseAdmin($course, $class, $sect, $name,
 		$syllabus, $instruct, $scale, $curve);
 	public function updateCourseInstruct($course, $instruct, $scale);
-	public function updateCourse($course, $syllabus, $scale, $curve);
-	public function insert($course, $class, $sect, $name, $syllabus, $instruct,
+	public function updateCourse($course, $class, $sect, $name, $syllabus,
+		$instruct, $scale, $curve);
+	public function insertCourse($course, $class, $sect, $name, $syllabus, $instruct,
 		$scale, $curve);
 	public function deleteCourse($course);
 
@@ -62,6 +63,7 @@ interface database_application_interface
 	public function deleteFilenameStep($student, $assign, $step);
 	public function deleteFilenameCount($student, $assign, $step, $count);
 	public function deleteFilenameStudent($student);
+	public function deleteFilenameAssignAll($assign);
 
 	// Grades Table
 	public function queryGradesAssign($student, $assign);
@@ -73,9 +75,10 @@ interface database_application_interface
 	public function deleteGrades($student, $assign, $course);
 	public function deleteGradesAssign($assign, $course);
 	public function deleteGradesStudent($student);
+	public function deleteGradesCourse($course);
 
 	// Grade-Scale Table
-	public function queryGradescale($scale, $instruct);
+	public function queryGradescale($scale);
 	public function queryGradescaleAll($instruct);
 	public function updateGradescale($scale, $instruct, $name, $desc, $gap, $ga, $gam,
 		$gbp, $gb, $gbm, $gcp, $gc, $gcm, $gdp, $gd, $gdm);
@@ -99,6 +102,7 @@ interface database_application_interface
 	public function deleteTurninStudentStep($student, $assign, $course, $step);
 	public function deleteTurninStudentCount($student, $assign, $course, $step, $count);
 	public function deleteTurninStudentAll($student);
+	public function deleteTurninCourseAll($course);
 
 	// Weight-Group Table
 	public function queryWeightgroup($group, $instruct);
@@ -109,6 +113,7 @@ interface database_application_interface
 
 	// Meta Functions
 	public function metaDeleteUser($userid);
+	public function metaDeleteCourse($course);
 	
 }
 
@@ -349,8 +354,9 @@ class database_application implements database_application_interface
 			databaseCore::PTINT, $qxa));
 	}
 
-	// Updates information for a course. (Instructor)
-	public function updateCourse($course, $syllabus, $scale, $curve)
+	// Updates information for a course.
+	public function updateCourse($course, $class, $sect, $name, $syllabus,
+		$instruct, $scale, $curve)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.course';
@@ -366,12 +372,12 @@ class database_application implements database_application_interface
 	}
 
 	// Inserts a course.
-	public function insert($course, $class, $sect, $name, $syllabus, $instruct,
+	public function insertCourse($course, $class, $sect, $name, $syllabus, $instruct,
 		$scale, $curve)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.course';
-		$qxa = $dbcore->buildArray('courseid', $course, databaseCore::PT);
+		$qxa = $dbcore->buildArray('courseid', $course, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('class', $class, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('section', $sect, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
@@ -503,6 +509,15 @@ class database_application implements database_application_interface
 		return($dbcore->launchDelete($table, 'studentid', $student, databaseCore::PTINIT));
 	}
 
+	// Deletes all filenames associated with an assignment.
+	public function deleteFilenameAssignAll($assign)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.filename';
+		return($dbcore->launchDeleteSingle($table, 'assignment', $assign,
+			databaseCore::PTINIT));
+	}
+
 
 	/* ******** GRADES TABLE ******** */
 
@@ -603,6 +618,14 @@ class database_application implements database_application_interface
 		$table = $this->tablebase . '.grades';
 		return($dbcore->launchDeleteSingle($table, 'studentid', $student, databaseCore::PTINT));
 	}
+	
+	// Delete all grades associated with a course.
+	public function deleteGradesCourse($course)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.grades';
+		return($dbcore->launchDeleteSingle($table, 'course', $course, databaseCore::PTINT));
+	}
 
 
 	/* ******** GRADESCALE TABLE ******** */
@@ -611,13 +634,12 @@ class database_application implements database_application_interface
 	   courses that they teach. */
 
 	// Queries an instructor's grade scale.
-	public function queryGradescale($scale, $instruct)
+	public function queryGradescale($scale)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.gradescale';
 		$column = '*';
 		$qxa = $dbcore->buildArray('scale', $scale, databaseCore::PTINT);
-		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT, $qxa);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
 	}
 
@@ -842,6 +864,15 @@ class database_application implements database_application_interface
 			databaseCore::PINT));
 	}
 
+	// Delete all turnin data for a course.
+	public function deleteTurninCourseAll($course)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.turnin';
+		return($dbcore->launchDeleteSingle($table, 'course', $course,
+			databaseCore::PINT));
+	}
+
 
 	/* ******** WEIGHTGROUP TABLE ******** */
 
@@ -1026,7 +1057,78 @@ class database_application implements database_application_interface
 		}
 	}
 
+	// Meta Function: Delete Course
+	public function metaDeleteCourse($course)
+	{
+		global $dbcore;
+		global $herr;
 
+		// Open the transaction.
+		$result = $dbcore->transOpen();
+		if ($result == false) return false;
+		$result = true;
+
+		// Query all assignments for the given course.
+		$rxa = $this->queryAssignmentCourseAll($course);
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+			{
+				$dbcore->transRollback();
+				handleError($herr->errorGetMessage());
+			}
+			else
+			{
+				$dbcore->transRollback();
+				handleError('Database Error: Unable to open delete course transaction.');
+			}
+		}
+
+		// Remove data from tables.
+		foreach ($rxa as $kx => $vx)
+		{
+			$result = ($this->deleteFilenameAssignAll($rxa['assignment'])) ? $result : false;
+		}
+		$result = ($this->deleteTurninCourseAll($course)) ? $result : false;
+		$result = ($this->deleteGradesCourse($course)) ? $result : false;
+		foreach ($rxa as $kx => $vx)
+		{
+			$result = ($this->deleteAssignstepAll($rxa['assignment'])) ? $result : false;
+		}
+		$result = ($this->delete($course)) ? $result : false;
+		foreach ($rxa as $kx => $vx)
+		{
+			$result = ($this->deleteAssignment($rxa['assignment'], $course)) ? $result : false;
+		}
+		$result = ($this->deleteStudentclassCourse($course)) ? $result : false;
+		$result = ($this->deleteCourse($course)) ? $result : false;
+
+		// Either commit or rollback the changes.
+		if ($result == true)
+		{
+			$result = $dbcore->transCommit();
+			if ($result == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				else
+					handleError('Database Error: Delete course commit failed.');
+			}
+			return true;
+		}
+		else
+		{
+			$result = $dbcore->transRollback();
+			if ($result == false)
+			{
+				if ($herr->checkState())
+					handleError($herr->errorGetMessage());
+				else
+					handleError('Database Error: Delete course rollback failed.');
+			}
+			return false;
+		}
+	}
 }
 
 // Auto-instantiate the class

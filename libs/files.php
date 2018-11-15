@@ -32,6 +32,7 @@ require_once 'vfystr.php';
 require_once 'error.php';
 require_once 'html.php';
 require_once 'timedate.php';
+require_once 'utility.php';
 
 
 interface filesInterface
@@ -629,7 +630,7 @@ class filesClass implements filesInterface
 	{
 		// Check the download token
 		if (!isset($_SESSION[$token]))
-			handleError('Security Violation: Invalid download token.');
+			printErrorImmediate('Security Violation: Invalid download token.');
 		$realPath = $_SESSION[$token];
 		unset($_SESSION[$token]);
 
@@ -637,7 +638,7 @@ class filesClass implements filesInterface
 		if (file_exists($realPath)) {
 			header('Content-Description: File Transfer');
 			header('Content-Type: application/octet-stream');
-			header('Content-Disposition: attachment; filename=' . basename($realPath));
+			header('Content-Disposition: attachment; filename="' . basename($realPath) . '"');
 			header('Expires: 0');
 			header('Cache-Control: must-revalidate');
 			header('Pragma: public');
@@ -671,9 +672,9 @@ class filesClass implements filesInterface
 	// Instructs the client to view the file.
 	public function fileView($token)
 	{
-		// Check the download token
+		// Check the view token
 		if (!isset($_SESSION[$token]))
-			handleError('Security Violation: Invalid file viewing token.');
+			printErrorImmediate('Security Violation: Invalid file viewing token.');
 		$realPath = $_SESSION[$token];
 		unset($_SESSION[$token]);
 
@@ -681,7 +682,7 @@ class filesClass implements filesInterface
 		if (file_exists($realPath)) {
 			$ctype = mimeTypes::determineMime($realPath);
 			header('Content-Type: ' . $ctype);
-			header('Content-Disposition: inline');
+			header('Content-Disposition: inline; filename="' . basename($realPath) . '"');
 			header('Expires: 0');
 			header('Cache-Control: must-revalidate');
 			header('Pragma: public');

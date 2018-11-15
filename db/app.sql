@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS `course` (
   `class` varchar(12) NOT NULL COMMENT 'The course code.  Ex: CSC 190',
   `section` int(11) NOT NULL COMMENT 'The course section number.',
   `name` varchar(50) NOT NULL COMMENT 'The name of the course.',
-  `syllabus` varchar(50) DEFAULT NULL COMMENT 'The name of the course syllabus file.',
+  `syllabus` varchar(256) DEFAULT NULL COMMENT 'The name of the course syllabus file.',
   `instructor` int(11) NOT NULL COMMENT 'The userid of the course instructor.',
   `scale` int(11) DEFAULT NULL COMMENT 'The grading scale for this course.',
   `curve` int(11) DEFAULT NULL COMMENT 'The grading curve for this course.',
@@ -91,12 +91,13 @@ CREATE TABLE IF NOT EXISTS `course` (
   CONSTRAINT `FK2_course_scale_gradescale_scale` FOREIGN KEY (`scale`) REFERENCES `gradescale` (`scale`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the course that a student takes.';
 
--- Dumping data for table application.course: ~7 rows (approximately)
+-- Dumping data for table application.course: ~8 rows (approximately)
 /*!40000 ALTER TABLE `course` DISABLE KEYS */;
 INSERT INTO `course` (`courseid`, `class`, `section`, `name`, `syllabus`, `instructor`, `scale`, `curve`) VALUES
 	(14298, 'CSC-152', 1, 'Cryptography', '', 1000, 0, NULL),
 	(19376, 'CSC-151', 1, 'Compiler Construction', '', 1001, 0, NULL),
-	(20284, 'CSC-152', 2, 'Cryptography', '', 1000, 0, NULL),
+	(20284, 'CSC-152', 2, 'Cryptography', '', 1000, 0, 0),
+	(21474, 'PHIL-103', 1, 'Ethics for Business and Computer Science', '', 1001, 0, 0),
 	(21924, 'CSC-130', 1, 'Data Structures and Algorithms', '', 1000, 0, NULL),
 	(21925, 'CSC-130', 2, 'Data Structures and Algorithms', '', 1000, 0, NULL),
 	(83745, 'CSC-131', 1, 'Software Engineering', '', 1000, 0, NULL),
@@ -184,11 +185,13 @@ CREATE TABLE IF NOT EXISTS `studentclass` (
   CONSTRAINT `FK2_studentclass_courseid_course_courseid` FOREIGN KEY (`courseid`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Mapping table to map students to their classes.';
 
--- Dumping data for table application.studentclass: ~2 rows (approximately)
+-- Dumping data for table application.studentclass: ~4 rows (approximately)
 /*!40000 ALTER TABLE `studentclass` DISABLE KEYS */;
 INSERT INTO `studentclass` (`studentid`, `courseid`) VALUES
 	(2000, 14298),
-	(2000, 21924);
+	(2000, 19376),
+	(2000, 21924),
+	(2000, 83746);
 /*!40000 ALTER TABLE `studentclass` ENABLE KEYS */;
 
 -- Dumping structure for table application.turnin
@@ -417,27 +420,29 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~18 rows (approximately)
+-- Dumping data for table configuration.module: ~20 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
 	(1, 'Grid Portal', 'Views the available modules in grid format.', 'gridportal.php', 'icon_grid', 1, 1, 1, 0),
 	(2, 'Link Portal', 'Views the available modules in link format.', 'linkportal.php', 'icon_chain2', 1, 1, 1, 0),
-	(3, 'Application Portal', 'The application landing page that most users see&period;  Similar to link portal but with additional content in the main panel&period;', 'appportal.php', 'icon_chart', 1, 1, 0, 0),
+	(3, 'Application Portal', 'The application landing page that most users see&period;  Similar to link portal but with additional content in the main panel&period;', 'appportal.php', 'icon_calendar3', 1, 1, 0, 0),
 	(10, 'Module Data Editor', 'Edits module data in the database.', 'modedit.php', 'icon_gears', 1, 0, 1, 1),
 	(11, 'Configuration Editor', 'Edits the application configuration parameters&period;&NewLine;This allows inserting and deleting of configuration&NewLine;items in the database&period;', 'configedit.php', 'icon_tools3', 1, 0, 1, 1),
 	(12, 'System Flags', 'This module edits the system flags which&NewLine;are used by the various user profiles&period;', 'sysflag.php', 'icon_checklist', 1, 0, 1, 1),
-	(13, 'Application Flags', 'This module edits the application flags which are used by the various user profiles&period;', 'appflag.php', 'icon_checklist', 1, 0, 1, 1),
-	(14, 'File Finder', 'Allows access to the server file system&period;', 'filefinder.php', 'icon_harddisk', 1, 0, 1, 1),
+	(13, 'Application Flags', 'This module edits the application flags which are used by the various user profiles&period;', 'appflag.php', 'icon_checklist2', 1, 0, 1, 1),
+	(14, 'File Finder', 'Allows access to the server file system&period;', 'filefinder.php', 'icon_file_manager5', 1, 0, 1, 1),
 	(20, 'Parameter Editor', 'Edits the configuration parameter values for the application&period;&NewLine;This only allows changing the configuration parameter values&period;', 'paramedit.php', 'icon_tools4', 1, 0, 1, 0),
-	(21, 'Profile Editor', 'Edits the available profiles that defines&NewLine;what access rights a user has&period;', 'profedit.php', 'icon_keys', 1, 0, 1, 0),
+	(21, 'Profile Editor', 'Edits the available profiles that defines what access rights a user has&period;', 'profedit.php', 'icon_profile2', 1, 0, 1, 0),
 	(22, 'OAuth Provider Edit', 'Edits the known list of external OAuth authentication providers&period;', 'oauthedit.php', 'icon_oauth', 1, 0, 1, 0),
 	(23, 'OpenID Provider Edit', 'Edits the known list of external OpenID authentication providers&period;', 'openidedit.php', 'icon_openid', 1, 0, 1, 0),
 	(24, 'User Editor', 'Edits the user database', 'useredit.php', 'icon_users2', 1, 0, 1, 0),
 	(30, 'Change Password', 'Allows a user to change their login password&period;', 'passwd.php', 'icon_padlock', 1, 1, 1, 0),
-	(31, 'User Data Editor', 'Allows the user to edit some of their own information&period;', 'userdata.php', 'icon_user', 1, 1, 1, 0),
-	(1100, 'File Manager', 'Manages online course files and materials&period;', 'filemanager.php', 'icon_harddisk', 1, 1, 0, 0),
-	(1500, 'Grades', 'Grades', 'grades.php', 'icon_circle_green', 1, 1, 0, 0),
-	(1600, 'Assignments', 'Assignments', 'assignments.php', 'icon_circle_blue', 1, 1, 0, 0);
+	(31, 'User Data Editor', 'Allows the user to edit some of their own information&period;', 'userdata.php', 'icon_user_female', 1, 1, 1, 0),
+	(1100, 'File Manager', 'Manages online course files and materials&period;', 'filemanager.php', 'icon_file_manager', 1, 1, 0, 0),
+	(1101, 'Courses', 'Allows editing and viewing of courses&period;', 'course.php', 'icon_course', 1, 1, 0, 0),
+	(1102, 'Enrollment', 'Edits the course enrollment&period;', 'enrollment.php', 'icon_enrollment2', 1, 0, 0, 0),
+	(1500, 'Grades', 'Grades', 'grades.php', 'icon_grade', 1, 1, 0, 0),
+	(1600, 'Assignments', 'Assignments', 'assignments.php', 'icon_homework', 1, 1, 0, 0);
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.oauth
@@ -561,12 +566,12 @@ CREATE TABLE IF NOT EXISTS `login` (
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
 	(0, 0, 0, 0, 0, -1, 'SHA256', 100, '0000000000000000000000000000000000000000000000000000000000000000', '0000000000000000000000000000000000000000000000000000000000000000'),
-	(1, 0, 1541625858, 1542128837, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 0, 1541625858, 1542294473, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, 0, 0, 1536731231, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
 	(34, 0, 1541017469, 1537509577, 1, 2147483647, 'SHA256', 100, '62b1c831bcabd2235af77b7d607199cebbe13f2e2383d690c5eb6cb8e1f1a9da', '35ff44e1a99b3fa565a6b9c11624bff018437d465fe125c206b4a9fee6f44e1a'),
 	(1000, 0, 0, 1541017383, 0, 2147483647, 'SHA256', 100, '3d85c8641e61e8b8c5ddb6b2b52f717736415cad7ceae3486fa835d59b18a6f8', 'db8812f0f4d975c2ea9172ea0611169dc3ff27475b5057ca21762d16402c61bc'),
 	(1001, 0, 0, 0, 0, 2147483647, 'SHA256', 100, 'fae2455c525bf8364cda5a95bd38287461ee8ca3662ecfa1285bdb0141e73592', '15452a7755e9d68edff36d20d573b662ac2f8b037cb67629437a4f8cc4681a4c'),
-	(2000, 0, 1541183684, 1542128892, 0, 2147483647, 'SHA256', 100, '61942ac2e51e43516d325b4aa4cd33f9c3d829f666cbac140a200452df3f9373', '6ead0b2e7c114c0bdbcf55595cc7115af2a436669381fb51c77a2b4af12a37e1'),
+	(2000, 0, 1541183684, 1542287531, 0, 2147483647, 'SHA256', 100, '61942ac2e51e43516d325b4aa4cd33f9c3d829f666cbac140a200452df3f9373', '6ead0b2e7c114c0bdbcf55595cc7115af2a436669381fb51c77a2b4af12a37e1'),
 	(2001, 0, 0, 0, 0, 2147483647, 'SHA256', 100, '6f0724ece7ba6ac9296c1e32fc6e1054e45a493ff684a8cab049fc8e8b10d0ef', '5922976a8119338be7716654f7cb8726ff21d129cf853f8d9ef4d5143ada1f86'),
 	(2003, 0, 0, 0, 0, 2147483647, 'SHA256', 100, '9c2b3ddfc3d1e8caf1ca5797eda8eb27fb431f1b5031f1fa1918da972b181689', '956430a38a95241f3175eae6e3ff1e4f3c5080fb13935a7e0c48e50b43b72717');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;

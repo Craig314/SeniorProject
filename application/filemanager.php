@@ -121,6 +121,8 @@ function loadInitialContent()
 		global $moduleFilename;
 		global $moduleTitle;
 		global $baseUrl;
+		global $vendor;
+		global $admin;
 
 		// The moduleTitle, baseUrl, and moduleFilename are mandatory
 		// parameters and cannot be ommitted.  The moduleTitle sets
@@ -144,7 +146,7 @@ function loadInitialContent()
 		// properties as the navigation bar, with the addition that you can
 		// use nested associtive arrays to group buttons together.
 		// $funcBar = array();
-		if ($fullcontrol)
+		if ($fullcontrol || $vendor || $admin)
 		{
 			// Full Control
 			$funcBar = array(
@@ -264,44 +266,56 @@ function loadAdditionalContent()
 	global $panels;
 	global $ajax;
 	global $fullcontrol;
+	global $vendor;
+	global $admin;
 
-	// For performance reasons, we check to see if the user is a student
-	// first, then we check for an instructor.  If neither, then we fail.
-	$rxa = $dbapp->queryStudentclassStudentAll($_SESSION['userId']);
-	if ($rxa == false)
+	if ($vendor || $admin)
 	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessage());
-		else
-		{
-			$rxb = $dbapp->queryCourseInstructAll($_SESSION['userId']);
-			if ($rxb == false)
-			{
-				if ($herr->checkState())
-					handleError($herr->errorGetMessage());
-				else
-					handleError('You are not enrolled and/or not teaching any courses.');
-			}
-		}
+		// The vendor and admin has access to all courses.  Therefore,
+		// the course selection is skipped and they drop directly into
+		// the file manager.
+		vendorAccess();
 	}
 	else
 	{
-		$rxb = array();
-		foreach ($rxa as $kxa => $vxa)
+		// For performance reasons, we check to see if the user is a student
+		// first, then we check for an instructor.  If neither, then we fail.
+		$rxa = $dbapp->queryStudentclassStudentAll($_SESSION['userId']);
+		if ($rxa == false)
 		{
-			$rxc = $dbapp->queryCourse($vxa['courseid']);
-			if ($rxc == false)
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
 			{
-				if ($herr->checkState())
-					handleError($herr->errorGetMessage());
-				else
-					handleError('Database Error: (Stored Data Conflict)<br>' .
-						'TABLE: studentclass<br>UserID: ' . $_SESSION['userId'] .
-						'<br>CourseID: ' . $vxa['courseid'] .
-						';--> Missing course information.<br>' .
-						'Contact your administrator');
+				$rxb = $dbapp->queryCourseInstructAll($_SESSION['userId']);
+				if ($rxb == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+					else
+						handleError('You are not enrolled and/or not teaching any courses.');
+				}
 			}
-			array_push($rxb, $rxc);
+		}
+		else
+		{
+			$rxb = array();
+			foreach ($rxa as $kxa => $vxa)
+			{
+				$rxc = $dbapp->queryCourse($vxa['courseid']);
+				if ($rxc == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+					else
+						handleError('Database Error: (Stored Data Conflict)<br>' .
+							'TABLE: studentclass<br>UserID: ' . $_SESSION['userId'] .
+							'<br>CourseID: ' . $vxa['courseid'] .
+							';--> Missing course information.<br>' .
+							'Contact your administrator');
+				}
+				array_push($rxb, $rxc);
+			}
 		}
 	}
 
@@ -464,26 +478,36 @@ function showFileList()
 	global $dbapp;
 	global $herr;
 	global $vfystr;
+	global $vendor;
+	global $admin;
 
-	// Get course information from database.
-	$course = getSelectedItem();
-	$result = $vfystr->strchk($course, '', '', verifyString::STR_PINTEGER);
-	if ($result == false)
-		handleError($herr->errorGetMessage());
-	$rxa = $dbapp->queryCourse($course);
-	if ($rxa == false)
+	if ($vendor || $admin)
 	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessage());
-		else
-			handleError('Database Error: Query course data failed. COURSEID='
-				. $course);
+		$_SESSION['courseDir'] = '';
+		$_SESSION['courseMsg'] = 'Administrative Access: All Courses';
 	}
+	else
+	{
+		// Get course information from database.
+		$course = getSelectedItem();
+		$result = $vfystr->strchk($course, '', '', verifyString::STR_PINTEGER);
+		if ($result == false)
+			handleError($herr->errorGetMessage());
+		$rxa = $dbapp->queryCourse($course);
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('Database Error: Query course data failed. COURSEID='
+					. $course);
+		}
 
-	// Set global course information in the user's session.
-	$_SESSION['courseDir'] = $course;
-	$_SESSION['courseMsg'] = $course . ': ' . $rxa['class'] . '-' . $rxa['section']
-		. ': ' . $rxa['name'];
+		// Set global course information in the user's session.
+		$_SESSION['courseDir'] = $course;
+		$_SESSION['courseMsg'] = $course . ': ' . $rxa['class'] . '-' . $rxa['section']
+			. ': ' . $rxa['name'];
+	}
 
 	// Show the files.
 	directoryHome();
@@ -506,6 +530,7 @@ function getBasePath()
 	$path = $CONFIGVAR['files_base_path']['value'];
 	$path .= '/' . $CONFIGVAR['files_course']['value'];
 	$path .= '/' . $_SESSION['courseDir'];
+	$path = str_replace('//', '/', $path);
 	return $path;
 }
 
@@ -564,15 +589,45 @@ function getPathname()
 	return $pathname;
 }
 
+// This is executed only once on the initial load for
+// vendor and admin access.
+function vendorAccess()
+{
+	global $ajax;
+	global $files;
+	global $panels;
+
+	// Setup
+	$_SESSION['courseDir'] = '';
+	$_SESSION['courseMsg'] = 'Administrative Access: All Courses';
+	$basePath = getBasePath();
+	$currentPath = '/';
+
+	// Get panel content
+	$navContent = $panels->getLinks();
+	$statusContent = $panels->getStatus();
+	$mainContent = $files->buildDirectoryList($basePath, $currentPath,
+		$_SESSION['courseMsg']);
+
+	// Queue content in ajax transmit buffer.
+	$ajax->loadQueueCommand(49);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
+	
+	// Render
+	$ajax->sendQueue();
+	exit(0);
+}
+
 // Sets the current directory to /.
 function directoryHome()
 {
 	global $files;
-	global $courseMsg;
 
 	$basePath = getBasePath();
 	$currentPath = '/';
-	echo $files->buildDirectoryList($basePath, $currentPath, $courseMsg);
+	echo $files->buildDirectoryList($basePath, $currentPath, $_SESSION['courseMsg']);
 }
 
 // Moves up one directory

@@ -29,7 +29,7 @@ interface flagInterface
 
 class flag implements flagInterface
 {
-	static private $mask = array(
+	private static $mask = array(
 		0 => 0x01,
 		1 => 0x02,
 		2 => 0x04,
@@ -50,7 +50,7 @@ class flag implements flagInterface
 		$byte = (integer)($flag / 8) + 1;
 		$bit = $flag % 8;
 		$bitArray = unpack('C*', $_SESSION['flagApp']);
-		$result = $mask[$bit] & $bitArray[$byte];
+		$result = self::$mask[$bit] & $bitArray[$byte];
 		if ($result) return true;
 		return false;
 	}
@@ -59,13 +59,15 @@ class flag implements flagInterface
 	// True if set, false if not, NULL if there was an error.
 	static public function sessionGetSys($flag)
 	{
+		global $mask;
+
 		if ($flag < 0 || $flag >= FLAG_COUNT_SYSTEM)
 			return NULL;
 		if (!isset($_SESSION['flagSys'])) return NULL;
 		$byte = (integer)($flag / 8) + 1;
 		$bit = $flag % 8;
 		$bitArray = unpack('C*', $_SESSION['flagSys']);
-		$result = $mask[$bit] & $bitArray[$byte];
+		$result = self::$mask[$bit] & $bitArray[$byte];
 		if ($result) return true;
 		return false;
 	}
