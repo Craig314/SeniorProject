@@ -326,6 +326,18 @@ function bannerShowHeader($title, $subtitle, $message, $token)
 <html lang="en-US">
 	<head>
 		<title>Login Banner</title>
+		<!-- Favirotie Icons (Shows up next to the URL in the browser address bar)
+			 Generated from https://realfavicongenerator.net/ -->
+			 <link rel="apple-touch-icon" sizes="180x180" href="<?php echo $url; ?>/images/favicons/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="<?php echo $url; ?>/images/favicons/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="<?php echo $url; ?>/images/favicons/favicon-16x16.png">
+		<link rel="manifest" href="<?php echo $url; ?>/images/favicons/site.webmanifest">
+		<link rel="mask-icon" href="<?php echo $url; ?>/images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+		<link rel="shortcut icon" href="<?php echo $url; ?>/images/favicons/favicon.ico">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="msapplication-config" content="<?php echo $url; ?>/images/favicons/browserconfig.xml">
+		<meta name="theme-color" content="#ffffff">
+		<!-- The rest of the headers -->
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/baseline/ajax.js"></script>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/module/banner.js"></script>
 		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/css/bootstrap.css">
