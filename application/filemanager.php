@@ -67,12 +67,6 @@ require_once BASEDIR . 'flag.php';
 require_once APPSDIR . 'dbaseapp.php';
 require_once APPSDIR . 'panels.php';
 require_once APPSDIR . 'loadmodule.php';
-
-// Flags in the permissions bitmap of what permissions the user
-// has in this module.
-$fullcontrol = flag::sessionGetApp(0);
-
-// Now load the module header.
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -85,7 +79,6 @@ function loadInitialContent()
 	global $vfystr;
 	global $herr;
 	global $files;
-	global $fullcontrol;
 
 	// Additonal
 	// This is probably the only time that we pass parameters with
@@ -146,7 +139,7 @@ function loadInitialContent()
 		// properties as the navigation bar, with the addition that you can
 		// use nested associtive arrays to group buttons together.
 		// $funcBar = array();
-		if ($fullcontrol || $vendor || $admin)
+		if (flag::sessionGetApp(0) || $vendor || $admin)
 		{
 			// Full Control
 			$funcBar = array(
@@ -265,7 +258,6 @@ function loadAdditionalContent()
 	global $moduleDisplayLower;
 	global $panels;
 	global $ajax;
-	global $fullcontrol;
 	global $vendor;
 	global $admin;
 
@@ -349,7 +341,7 @@ function loadAdditionalContent()
 		$tooltip .= 'Class:   ' . $vxb['class'] . '<br>';
 		$tooltip .= 'Section: ' . $vxb['section'] . '<br>';
 		$tooltip .= 'Name:    ' . $vxb['name'] . '<br>';
-		if ($fullcontrol)
+		if (flag::sessionGetApp(0))
 		{
 			$tooltip .= 'Grading Scale: ' . $vxb['scale'] . '<br>';
 			$tooltip .= 'Grading Curve: ' . $vxb['curve'] . '<br>';
@@ -516,9 +508,11 @@ function showFileList()
 // Checks the user's security
 function securityCheck()
 {
-	global $fullcontrol;
+	global $vendor;
+	global $admin;
 
-	if (!$fullcontrol)
+	if ($vendor || $admin) return;
+	if (!flag::sessionGetApp(0))
 		handleError('Security Violation: You do not have permission to perform that action');
 }
 

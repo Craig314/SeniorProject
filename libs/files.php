@@ -89,6 +89,10 @@ class filesClass implements filesInterface
 		if (!empty($name))
 			$realPath .= '/' . $name;
 		$realPath = str_replace('//', '/', $realPath);
+		$realPath = str_replace('//', '/', $realPath);
+		$realPath = str_replace('//', '/', $realPath);
+		$realPath = str_replace('//', '/', $realPath);
+		$realPath = str_replace('//', '/', $realPath);
 		return $realPath;
 	}
 
@@ -188,45 +192,43 @@ class filesClass implements filesInterface
 
 		// Check to make sure that the user isn't trying to break out
 		// of the virtual file tree.
-		$realPath = $this->buildRealPath($basePath, $currentPath, $name1);
-		$result = $this->checkDirectory($basePath, $realPath);
+		$realPath1 = $this->buildRealPath($basePath, $currentPath, $name1);
+		$result = $this->checkDirectory($basePath, $realPath1);
 		if ($result == false)
 			handleError('Filesystem Error: You are not allowed to exit the' .
 				' virtual directory tree.');
 		if (!empty($name2))
 		{
 			// If the second name was specified.
-			$realPath = $this->buildRealPath($basePath, $currentPath, $name2);
-			$result = $this->checkDirectory($basePath, $realPath);
+			$realPath2 = $this->buildRealPath($basePath, $currentPath, $name2);
+			$result = $this->checkDirectory($basePath, $realPath2);
 			if ($result == false)
 				handleError('Filesystem Error: You are not allowed to exit the' .
 					' virtual directory tree.');
 		}
 
 		// Check source type.
-		/*
 		switch ($type)
 		{
 			case 0:
-				if (!file_exists($name1))
+				if (!file_exists($realPath1))
 					handleError('Filesystem Error: Selected file does' .
 						' not exist.');
-				if (!is_file($name1))
-					handleError('Filesystem Error: Selected file does' .
-						' not exist.');
+				if (!is_file($realPath1))
+					handleError('Filesystem Error: This command can only' .
+						' be used with files.');
 				break;
 			case 1:
-				if (!file_exists($name1))
+				if (!file_exists($realPath1))
 					handleError('Filesystem Error: Selected directory does' .
 						' not exist.');
-				if (!is_dir($name1))
+				if (!is_dir($realPath1))
 					handleError('Filesystem Error: This command can only' .
 						' be used with directories.');
 				break;
 			default:
 				break;
 		}
-		*/
 	}
 
 	// Helper function to remove a directory tree.
