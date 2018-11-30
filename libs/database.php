@@ -247,6 +247,7 @@ class databaseCore implements databaseCoreInterface
 			$flag = true;
 		}
 		$stmt = $this->sqlconn->prepare($request);
+		
 		if ($stmt == false) return($this->handleError($this->sqlconn));
 		$count = 1;
 		foreach($qxa as $fx => $vx)

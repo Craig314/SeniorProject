@@ -70,6 +70,7 @@ interface database_application_interface
 	public function queryGradesAssign($student, $assign);
 	public function queryGradesCourse($course);
 	public function queryGradesStudent($student, $course);
+	public function queryGradesInstructAssign($course, $assign);
 	public function queryGradesAll($student);
 	public function updateGrades($student, $assign, $comment, $grade);
 	public function insertGrades($student, $assign, $course, $comment, $grade);
@@ -565,6 +566,16 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('studentid', $student, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('course', $course, databaseCore::PTINT, $qxa);
 		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	public function queryGradesInstructAssign($course, $assign)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.grades';
+		$column = '*';
+		$qxa = $dbcore->buildArray('course', $course, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('assignment', $assign, databaseCore::PTINT, $qxa);
+		return($dbcore->launchQueryMultiple($table, $column, $qxa));
 	}
 
 	public function queryGradesAll($student)

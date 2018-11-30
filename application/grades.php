@@ -409,13 +409,13 @@ function showStage2()
 	global $list;
 
 	$key = getPostValue('select_item');
+	$_SESSION['courseid'] = $key;
 
 	$rxa = $dbapp->queryAssignmentCourseAll($key);
 
 	$list = array(
 		'type' => html::TYPE_RADTABLE,
 		'name' => 'select_item',
-		'chkbox' => 2,
 		'clickset' => true,
 		'condense' => true,
 		'hover' => true,
@@ -504,28 +504,31 @@ function showStage3() {
 	global $dbapp;
 	global $list;
 
-	$key = getPostValue('select_item');
+	$assignment = getPostValue('select_item');
+	$course = $_SESSION['courseid'];
 
-	$rxa = $dbapp->queryGradesAssign($key);
+	//var_dump($course);
+	#$rxa = $dbapp->queryGradesAssign($key);
+	$rxa = $dbapp->queryGradesInstructAssign($course, $assignment);
+	//var_dump($rxa);
 
 	$list = array(
 		'type' => html::TYPE_RADTABLE,
 		'name' => 'select_item',
-		'chkbox' => 2,
 		'clickset' => true,
 		'condense' => true,
 		'hover' => true,
 		'titles' => array(
-			'Assign ID',
-			'Name',
-			'Due Date',
-			'Max Points',
+			'StudentID',
+			'Assignment',
+			'Comments',
+			'Grade',
 		),
 		'tdata' => array(),
 		'tooltip' => array(),
 		'stage' => 3,
 		'stagelast' => 4,
-		'mode' => 2,
+		'mode' => 0,
 	);
 
 	foreach ($rxa as $kxa => $vxa)
@@ -557,7 +560,7 @@ function showStage3() {
 		// Enter custom data here.
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'List of Students'
+			'name' => 'List of Students\' Grades'
 		),
 		$list,
 
@@ -835,7 +838,7 @@ function formPage($mode, $rxa)
 			$warn = '';
 			$btnset = html::BTNTYP_UPDATE;
 			$action = 'submitUpdate()';
-			$hideValue = '';
+			$hideValue = $rxa['courseid'];
 			$disable = false;
 			$default = true;
 			$key = true;
