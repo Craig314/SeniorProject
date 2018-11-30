@@ -191,7 +191,7 @@ function loadAdditionalContent()
 
 	if ($vendor || $admin)
 	{
-		$list = loadAdditonalAdmin();
+		$list = loadAdditionalAdmin();
 	}
 	else
 	{
@@ -236,7 +236,7 @@ function loadAdditionalContent()
 }
 
 // This generates a listing that a normal user sees.
-function loadAdditonalUser()
+function loadAdditionalUser()
 {
 	global $herr;
 	global $dbapp;
@@ -298,7 +298,7 @@ function loadAdditonalUser()
 }
 
 // This generates a listing that an admin or vendor sees.
-function loadAdditonalAdmin()
+function loadAdditionalAdmin()
 {
 	global $herr;
 	global $dbapp;
