@@ -206,7 +206,7 @@ function formPage($mode, $rxa)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
-		if ($_SESSION['userId'] != $rxb[''])
+		if ($_SESSION['userId'] != $rxb['instructor'])
 			handleError('Security Violation: You are not enrolled in the requested course.');
 	}
 	$rxc = $dbuser->queryContact($rxb['instructor']);

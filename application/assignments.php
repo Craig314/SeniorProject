@@ -241,18 +241,21 @@ function loadAdditionalContent()
 			'tdata' => array(),
 			'tooltip' => array(),
 		);
-		foreach ($rxd as $kxb => $vxb)
+		if (is_array($rxd))
 		{
-			$tdata = array(
-				// These are the values that show up under the columns above.
-				// The *FIRST* value is the value that is sent when a row
-				// is selected.  AKA Key Field.
-				$vxb['assignment'],
-				$vxb['name'],
-				timedate::unix2canonical($vxb['duedate']),
-			);
-			array_push($list['tdata'], $tdata);
-			array_push($list['tooltip'], $vx['description']);
+			foreach ($rxd as $kxb => $vxb)
+			{
+				$tdata = array(
+					// These are the values that show up under the columns above.
+					// The *FIRST* value is the value that is sent when a row
+					// is selected.  AKA Key Field.
+					$vxb['assignment'],
+					$vxb['name'],
+					timedate::unix2canonical($vxb['duedate']),
+				);
+				array_push($list['tdata'], $tdata);
+				array_push($list['tooltip'], $vxb['description']);
+			}
 		}
 
 		// Add onto data array.

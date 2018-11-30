@@ -75,7 +75,7 @@ $htmlInjectFile = false;
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
 // Freeform execute stops at modhead.php
-//const BASEDIR = '../libs/';
+const BASEDIR = '../libs/';
 const BASEAPP = '../applibs/';
 require_once BASEAPP . 'dbutils.php';
 require_once BASEDIR . 'dbaseuser.php';
