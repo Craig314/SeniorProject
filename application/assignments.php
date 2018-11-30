@@ -252,7 +252,7 @@ function loadAdditionalContent()
 				timedate::unix2canonical($vxb['duedate']),
 			);
 			array_push($list['tdata'], $tdata);
-			array_push($list['tooltip'], $vx['description']);
+			array_push($list['tooltip'], $vxb['description']);
 		}
 
 		// Add onto data array.
