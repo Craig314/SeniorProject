@@ -634,7 +634,7 @@ class filesClass implements filesInterface
 		if (!isset($_SESSION["$token"]))
 			printErrorImmediate('Security Violation: Invalid download token.');
 		$realPath = $_SESSION["$token"];
-		unset($_SESSION["$token"]);
+		//unset($_SESSION["$token"]);
 
 		// Send the file
 		if (file_exists($realPath)) {
@@ -678,7 +678,7 @@ class filesClass implements filesInterface
 		if (!isset($_SESSION["$token"]))
 			printErrorImmediate('Security Violation: Invalid file viewing token.');
 		$realPath = $_SESSION["$token"];
-		unset($_SESSION["$token"]);
+		//unset($_SESSION["$token"]);
 
 		// Send the file
 		if (file_exists($realPath)) {
