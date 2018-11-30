@@ -733,22 +733,17 @@ function deleteRecordAction()
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
 	global $dbapp;
+	global $vendor;
+	global $admin;
 
 	// Gather data...
 	$key = getPostValue('hidden');
-	$id = getPostValue('scale');		// XXX Set This
 
 	// ...and check it.
 	if ($key == NULL)
 		handleError('Missing ' . $moduleDisplayLower . ' module selection data.');
-	if ($id == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
 	if (!is_numeric($key))
 		handleError('Malformed key sequence.');
-	if (!is_numeric($id))
-		handleError('Malformed key sequence.');
-	if ($key != $id)
-		handleError('Database key mismatch.');
 	
 	// Now remove the record from the database.
 	$rxa = $dbapp->queryGradescale($key);
@@ -846,8 +841,7 @@ function formPage($mode, $rxa)
 			switch($mode)
 			{
 				case MODE_UPDATE;
-					$warning = 'You are updating the default grading scale.<br>' .
-						'All courses and assignments using it will be affected.';
+					$warning = 'You are not allowed to change the default grading scale.';
 					break;
 				case MODE_DELETE;
 					$warning = 'You are not allowed to delete the default grading scale.';
