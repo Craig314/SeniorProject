@@ -1289,6 +1289,7 @@ function generateFieldCheck($returnType = 0)
 			'noblank' => true,
 			'max' => 2147483647,
 			'min' => 0,
+			'optional' => true,
 		),
 
 	);

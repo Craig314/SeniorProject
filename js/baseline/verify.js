@@ -137,6 +137,7 @@ var verifyData = ({
 		// Retrieve the field object id.
 		fieldObject = document.getElementById(item.name);
 		if (fieldObject == null) {
+			if (item.optional) return true;
 			console.warn('verifyData.launchVerify: Missing field.  FIELD=' + item.name);
 			writeError('Missing field from server.  Contact your administrator.');
 			return false;
