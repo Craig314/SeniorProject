@@ -142,7 +142,7 @@ function loadInitialContent()
 			'/css/tooltip-linebreak.css',
 			'/css/tooltip-left.css',
 			'/css/tooltip-mono.css',
-			'/css/portal.js',
+			'/css/portal.css',
 		);
 
 		// The final option, htmlFlags, is an array that holds the names

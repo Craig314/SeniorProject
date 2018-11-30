@@ -252,7 +252,7 @@ function loadAdditionalContent()
 				timedate::unix2canonical($vxb['duedate']),
 			);
 			array_push($list['tdata'], $tdata);
-			//array_push($list['tooltip'], $vx['description']);
+			array_push($list['tooltip'], $vx['description']);
 		}
 
 		// Add onto data array.
@@ -508,7 +508,7 @@ function formPage($mode, $rxa)
 	$aname = generateField(html::TYPE_TEXT, '', 'Name', 4,
 		$rxa['name'], 'The name of the assignment', $default, $disable);
 	$adesc = generateField(html::TYPE_AREA, '', 'Description', 6,
-		$rxa['desc'], 'The description of the assignment.', $default,
+		$rxa['description'], 'The description of the assignment.', $default,
 		$disable);
 	$adesc['rows'] = 6;
 	$adue = generateField(html::TYPE_TEXT, '', 'Due Date/Time', 3,
@@ -544,10 +544,10 @@ function formPage($mode, $rxa)
 				timedate::unix2canonical($vx['date']),
 				'The time/date that this step should be completed by.',
 				$default, $disable);
-			if (!empty($vx['desc']))
+			if (!empty($vx['description']))
 			{
 				$asdesc = generateField(html::TYPE_AREA, '', 'Description', 6,
-					$vx['desc'], 'The description of this step.', $default,
+					$vx['description'], 'The description of this step.', $default,
 					$disable);
 				$asdesc['rows'] = 6;
 			}

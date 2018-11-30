@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   `assignment` int(11) NOT NULL AUTO_INCREMENT COMMENT 'The assignment number for the course.',
   `courseid` int(11) NOT NULL COMMENT 'The unique course ID number.',
   `name` varchar(30) NOT NULL COMMENT 'The name of the assignment.',
-  `desc` varchar(512) DEFAULT NULL COMMENT 'A type in description for the assignment.',
+  `description` varchar(512) DEFAULT NULL COMMENT 'A type in description for the assignment.',
   `descfile` varchar(256) DEFAULT NULL COMMENT 'A description file for the assignment that the ',
   `allowext` varchar(128) DEFAULT NULL COMMENT 'A list of allowed extensions for student submissions.',
   `duedate` bigint(20) NOT NULL COMMENT 'Assignment due date.',
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `assignment` (
 
 -- Dumping data for table application.assignment: ~5 rows (approximately)
 /*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
-INSERT INTO `assignment` (`assignment`, `courseid`, `name`, `desc`, `descfile`, `allowext`, `duedate`, `lockdate`, `gradeweight`, `gwgroup`, `curve`, `points`, `exempt`, `maxturnin`) VALUES
+INSERT INTO `assignment` (`assignment`, `courseid`, `name`, `description`, `descfile`, `allowext`, `duedate`, `lockdate`, `gradeweight`, `gwgroup`, `curve`, `points`, `exempt`, `maxturnin`) VALUES
 	(1, 20284, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540763960, NULL, 10, 0, 0, 10, 0, 3),
 	(2, 14298, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540763960, NULL, 10, 0, 0, 10, 0, 3),
 	(3, 21924, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540995920, NULL, 10, 0, 0, 10, 0, 3),
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS `assignstep` (
   `assignment` int(11) NOT NULL COMMENT 'The assignment number.',
   `step` int(11) NOT NULL COMMENT 'The step number.',
   `date` bigint(20) NOT NULL COMMENT 'The date the step should be completed.',
-  `desc` varchar(512) NOT NULL COMMENT 'A description of the step.',
+  `description` varchar(512) NOT NULL COMMENT 'A description of the step.',
   `turninreq` int(11) NOT NULL DEFAULT '1' COMMENT 'Indicates if a turnin is required for this step.',
   `maxturnin` int(11) NOT NULL DEFAULT '3' COMMENT 'The maximum allowed submissions that a student can make.',
   PRIMARY KEY (`assignment`,`step`),
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS `assignstep` (
 
 -- Dumping data for table application.assignstep: ~4 rows (approximately)
 /*!40000 ALTER TABLE `assignstep` DISABLE KEYS */;
-INSERT INTO `assignstep` (`assignment`, `step`, `date`, `desc`, `turninreq`, `maxturnin`) VALUES
+INSERT INTO `assignstep` (`assignment`, `step`, `date`, `description`, `turninreq`, `maxturnin`) VALUES
 	(5, 1, 1541108753, 'Assignment 2 Step 1', 0, 3),
 	(5, 2, 1541195453, 'Assignment 2 Step 2', 0, 3),
 	(5, 3, 1541282153, 'Assignment 2 Step 3', 1, 3),
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `course` (
   CONSTRAINT `FK2_course_scale_gradescale_scale` FOREIGN KEY (`scale`) REFERENCES `gradescale` (`scale`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the course that a student takes.';
 
--- Dumping data for table application.course: ~8 rows (approximately)
+-- Dumping data for table application.course: ~7 rows (approximately)
 /*!40000 ALTER TABLE `course` DISABLE KEYS */;
 INSERT INTO `course` (`courseid`, `class`, `section`, `name`, `syllabus`, `instructor`, `scale`, `curve`) VALUES
 	(14298, 'CSC-152', 1, 'Cryptography', '', 1000, 0, NULL),
@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS `gradescale` (
   `scale` int(11) NOT NULL AUTO_INCREMENT COMMENT 'The grade scale ID.',
   `instructor` int(11) NOT NULL COMMENT 'The instructor this scale belongs to.',
   `name` varchar(32) NOT NULL COMMENT 'The name of this grading scale.',
-  `desc` varchar(512) NOT NULL COMMENT 'The description of this grading scale.',
+  `description` varchar(512) NOT NULL COMMENT 'The description of this grading scale.',
   `grade_ap` int(11) DEFAULT NULL COMMENT 'Grade A+',
   `grade_a` int(11) DEFAULT NULL COMMENT 'Grade A',
   `grade_am` int(11) DEFAULT NULL COMMENT 'Grade A-',
@@ -167,12 +167,14 @@ CREATE TABLE IF NOT EXISTS `gradescale` (
   PRIMARY KEY (`scale`),
   KEY `FK1_gradescale_instructor_users_userid` (`instructor`),
   CONSTRAINT `FK1_gradescale_instructor_users_userid` FOREIGN KEY (`instructor`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='The instructor''s grade scale.';
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='The instructor''s grade scale.';
 
 -- Dumping data for table application.gradescale: ~1 rows (approximately)
 /*!40000 ALTER TABLE `gradescale` DISABLE KEYS */;
-INSERT INTO `gradescale` (`scale`, `instructor`, `name`, `desc`, `grade_ap`, `grade_a`, `grade_am`, `grade_bp`, `grade_b`, `grade_bm`, `grade_cp`, `grade_c`, `grade_cm`, `grade_dp`, `grade_d`, `grade_dm`) VALUES
-	(0, 0, 'Default Grade Scale', 'Default grade scale when there is no instructor assigned to a course.', 100, 92, 90, 87, 83, 80, 77, 73, 70, 67, 63, 60);
+INSERT INTO `gradescale` (`scale`, `instructor`, `name`, `description`, `grade_ap`, `grade_a`, `grade_am`, `grade_bp`, `grade_b`, `grade_bm`, `grade_cp`, `grade_c`, `grade_cm`, `grade_dp`, `grade_d`, `grade_dm`) VALUES
+	(0, 0, 'Default Grade Scale', 'Default grade scale when there is no instructor assigned to a course.', 100, 92, 90, 87, 83, 80, 77, 73, 70, 67, 63, 60),
+	(1, 1000, 'Some Scale Teacher One', 'This is a grading scale used by Teacher One&period;', 0, 92, 90, 87, 83, 80, 77, 73, 70, 67, 63, 60),
+	(2, 1001, 'Teach Two Scale', 'Grade scale for teacher two&period;', 0, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40);
 /*!40000 ALTER TABLE `gradescale` ENABLE KEYS */;
 
 -- Dumping structure for table application.studentclass
@@ -224,7 +226,7 @@ CREATE TABLE IF NOT EXISTS `weightgroup` (
   `group` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Grade weight group ID.',
   `instructor` int(11) NOT NULL COMMENT 'The instructor that this weight group belongs to.',
   `weight` int(11) NOT NULL COMMENT 'Weight to total overall course grade.',
-  `desc` varchar(512) DEFAULT NULL COMMENT 'A description of this weight group.',
+  `description` varchar(512) DEFAULT NULL COMMENT 'A description of this weight group.',
   `name` varchar(32) DEFAULT NULL COMMENT 'The name of this weight group.',
   PRIMARY KEY (`group`),
   KEY `FK1_weightgroup_instructor_users_userid` (`instructor`),
@@ -233,7 +235,7 @@ CREATE TABLE IF NOT EXISTS `weightgroup` (
 
 -- Dumping data for table application.weightgroup: ~1 rows (approximately)
 /*!40000 ALTER TABLE `weightgroup` DISABLE KEYS */;
-INSERT INTO `weightgroup` (`group`, `instructor`, `weight`, `desc`, `name`) VALUES
+INSERT INTO `weightgroup` (`group`, `instructor`, `weight`, `description`, `name`) VALUES
 	(0, 0, 0, 'THis grade weight group is used when there is no weight group.', 'No Grade Weight Group');
 /*!40000 ALTER TABLE `weightgroup` ENABLE KEYS */;
 
@@ -361,7 +363,9 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(1022, 0, 'files_turned_in', 'Turned in Files Location', 'turnin', 'This is the directory where student file submissions for assignments are uploaded too.', 1),
 	(1039, 3, 'files_allowed_extensions', 'Upload Files Allowed Extensions', 'pdf zip doc docx xls xlsx ppt pptx pub xps odt ods odp odf odc', 'A space separated list of allowed extensions for uploaded files.  Can be overridden by the instructor on a per-assignment basis.', 1),
 	(1040, 1, 'app_profile_instruct', 'Instructor Profile ID', '100', 'The profile ID that course instructors use.', 0),
-	(1041, 1, 'app_profile_student', 'Student Profile ID', '200', 'The profile ID that students use.', 0);
+	(1041, 1, 'app_profile_student', 'Student Profile ID', '200', 'The profile ID that students use.', 0),
+	(1050, 1, 'default_gradescale', 'Default Grading Scale', '0', 'The default grading scale that is used if nothing is selected.', 1),
+	(1051, 1, 'gradescale_mode', 'Grade Scale Mode', '0', 'Determines the type of grading scale in use. 0: Fractional grades (B+, B-, etc...) 1: Whole grades (A, B, C, etc...)', 1);
 /*!40000 ALTER TABLE `config` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.flagdesc_app
@@ -404,6 +408,8 @@ CREATE TABLE IF NOT EXISTS `modaccess` (
 
 -- Dumping data for table configuration.modaccess: ~0 rows (approximately)
 /*!40000 ALTER TABLE `modaccess` DISABLE KEYS */;
+INSERT INTO `modaccess` (`moduleid`, `profileid`) VALUES
+	(1501, 100);
 /*!40000 ALTER TABLE `modaccess` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.module
@@ -420,7 +426,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~20 rows (approximately)
+-- Dumping data for table configuration.module: ~18 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
 	(1, 'Grid Portal', 'Views the available modules in grid format.', 'gridportal.php', 'icon_grid', 1, 1, 1, 0),
@@ -442,6 +448,7 @@ INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`,
 	(1101, 'Courses', 'Allows editing and viewing of courses&period;', 'course.php', 'icon_course', 1, 1, 0, 0),
 	(1102, 'Enrollment', 'Edits the course enrollment&period;', 'enrollment.php', 'icon_enrollment2', 1, 0, 0, 0),
 	(1500, 'Grades', 'Grades', 'grades.php', 'icon_grade', 1, 1, 0, 0),
+	(1501, 'Grading Scale', 'Allows creating&comma; viewing&comma; and editing of grading scales&period;', 'gradescale.php', 'icon_grade3', 1, 0, 0, 0),
 	(1600, 'Assignments', 'Assignments', 'assignments.php', 'icon_homework', 1, 1, 0, 0);
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 
@@ -566,7 +573,7 @@ CREATE TABLE IF NOT EXISTS `login` (
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
 	(0, 0, 0, 0, 0, -1, 'SHA256', 100, '0000000000000000000000000000000000000000000000000000000000000000', '0000000000000000000000000000000000000000000000000000000000000000'),
-	(1, 0, 1541625858, 1542294473, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 0, 1541625858, 1543528433, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, 0, 0, 1536731231, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
 	(34, 0, 1541017469, 1537509577, 1, 2147483647, 'SHA256', 100, '62b1c831bcabd2235af77b7d607199cebbe13f2e2383d690c5eb6cb8e1f1a9da', '35ff44e1a99b3fa565a6b9c11624bff018437d465fe125c206b4a9fee6f44e1a'),
 	(1000, 0, 0, 1541017383, 0, 2147483647, 'SHA256', 100, '3d85c8641e61e8b8c5ddb6b2b52f717736415cad7ceae3486fa835d59b18a6f8', 'db8812f0f4d975c2ea9172ea0611169dc3ff27475b5057ca21762d16402c61bc'),

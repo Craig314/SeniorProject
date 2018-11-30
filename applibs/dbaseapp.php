@@ -79,7 +79,8 @@ interface database_application_interface
 
 	// Grade-Scale Table
 	public function queryGradescale($scale);
-	public function queryGradescaleAll($instruct);
+	public function queryGradescaleInstructAll($instruct);
+	public function queryGradescaleAll();
 	public function updateGradescale($scale, $instruct, $name, $desc, $gap, $ga, $gam,
 		$gbp, $gb, $gbm, $gcp, $gc, $gcm, $gdp, $gd, $gdm);
 	public function insertGradescale($scale, $instruct, $name, $desc, $gap, $ga, $gam,
@@ -168,7 +169,7 @@ class database_application implements database_application_interface
 		global $dbcore;
 		$table = $this->tablebase . '.assignment';
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTINT);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('descfile', $descfile, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('allowext', $afext, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('duedate', $duedate, databaseCore::PTINT, $qxa);
@@ -192,7 +193,7 @@ class database_application implements database_application_interface
 		$table = $this->tablebase . '.assignment';
 		$qxa = $dbcore->buildArray('course', $course, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('descfile', $descfile, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('allowext', $afext, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('duedate', $duedate, databaseCore::PTINT, $qxa);
@@ -251,7 +252,7 @@ class database_application implements database_application_interface
 		$qxk = $dbcore->buildArray('assignment', $assign, databaseCore::PTINT);
 		$qxk = $dbcore->buildArray('step', $step, databaseCore::PTINT, $qxk);
 		$qxa = $dbcore->buildArray('date', $date, databaseCore::PTINT);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('maxturnin', $maxturnin, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdateMutiple($table, $qxk, $qxa));
 	}
@@ -264,7 +265,7 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('assignment', $assign, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('step', $step, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('date', $date, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('maxturnin', $maxturnin, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
@@ -644,13 +645,21 @@ class database_application implements database_application_interface
 	}
 
 	// Queries all grade scales belonging to the specified instructor.
-	public function queryGradescaleAll($instruct)
+	public function queryGradescaleInstructAll($instruct)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.gradescale';
 		$column = '*';
 		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT);
 		return($dbcore->launchQueryMultiple($table, $column, $qxa));
+	}
+
+	public function queryGradescaleAll()
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.gradescale';
+		$column = '*';
+		return($dbcore->launchQueryDumpTable($table, $column));
 	}
 
 	// Updates an instructor's gradescale.
@@ -662,7 +671,7 @@ class database_application implements database_application_interface
 		$qxk = $dbcore->buildArray('scale', $scale, databaseCore::PTINT);
 		$qxk = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT, $qxk);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('grade_ap', $gap, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('grade_a', $ga, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('grade_am', $gam, databaseCore::PTINT, $qxa);
@@ -687,7 +696,7 @@ class database_application implements database_application_interface
 		$qxa = $dbcore->buildArray('scale', $scale, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('grade_ap', $gap, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('grade_a', $ga, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('grade_am', $gam, databaseCore::PTINT, $qxa);
@@ -907,7 +916,7 @@ class database_application implements database_application_interface
 		global $dbcore;
 		$table = $this->tablebase . '.weightgroup';
 		$qxa = $dbcore->buildArray('weight', $weight, databaseCore::PTINT);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'group', $group,
 			databaseCore::PTINT, $qxa));
@@ -920,7 +929,7 @@ class database_application implements database_application_interface
 		$table = $this->tablebase . '.weightgroup';
 		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('weight', $weight, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('desc', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}

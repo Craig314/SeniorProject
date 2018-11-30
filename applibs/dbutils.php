@@ -9,10 +9,10 @@ PHP Web Application Database Utilities
 
 */
 
-const BASEDIR = '../libs/';
-require_once BASEDIR . 'database.php';
-require_once BASEDIR . 'dbaseconf.php';
-require_once BASEDIR . 'dbaseuser.php';
+const BASEDIR2 = '../libs/';
+require_once BASEDIR2 . 'database.php';
+require_once BASEDIR2 . 'dbaseconf.php';
+require_once BASEDIR2 . 'dbaseuser.php';
 require_once 'dbaseapp.php';
 
 
@@ -22,7 +22,6 @@ function getUsersByProfile($profid)
 {
 	global $dbuser;
 	global $herr;
-	global $dbuser;
 
 	$rxa = $dbuser->queryUsersProfId($profid);
 	if ($rxa == false)
@@ -51,6 +50,26 @@ function getUsersByProfile($profid)
 	}
 
 	return $result;
+}
+
+// Returns the name of a signle user based on user id.
+function getUserName($userid)
+{
+	global $dbuser;
+	global $herr;
+
+	$rxa = $dbuser->queryContact($userid);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: User contact information missing.'
+				. '<br>USERID=' . $userid
+				. '<br>Contact your administrator.');
+	}
+
+	return $rxa;
 }
 
 
