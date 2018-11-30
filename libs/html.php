@@ -1637,7 +1637,7 @@ class html implements html_interface
 							$html .= "
 				<tr $tooltip>";
 						break;
-					case 2:
+					case 2:		//If Mode = 2, then switch stages
 						$name = 'id="' . $data['name'] . '_' . $keydata . '"';
 						$html .= "
 				<tr $tooltip onclick=\"selectItemClick('$stage', '$stageLast', '$keydata');\">";

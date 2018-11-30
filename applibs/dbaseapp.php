@@ -43,6 +43,7 @@ interface database_application_interface
 	public function queryCourse($course);
 	public function queryCourseAll();
 	public function queryCourseInstructAll($instruct);
+	public function queryCourseStudentAll($student);
 	public function updateCourseAdmin($course, $class, $sect, $name,
 		$syllabus, $instruct, $scale, $curve);
 	public function updateCourseInstruct($course, $instruct, $scale);
@@ -324,6 +325,16 @@ class database_application implements database_application_interface
 		$table = $this->tablebase . '.course';
 		$column = '*';
 		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT);
+		return($dbcore->launchQueryMultiple($table, $column, $qxa));
+	}
+
+	// Queries all courses a specific student is enrolled in
+	//Queries studentclass table
+	public function queryCourseStudentAll($student) {
+		global $dbcore;
+		$table = $this->tablebase . '.studentclass';
+		$column = '*';
+		$qxa = $dbcore->buildArray('studentid', $student, databaseCore::PTINT);
 		return($dbcore->launchQueryMultiple($table, $column, $qxa));
 	}
 
