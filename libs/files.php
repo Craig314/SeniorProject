@@ -286,7 +286,7 @@ class filesClass implements filesInterface
 		if ($token == false)
 			handleError('OpenSSL Error: Failed to generate download token.');
 		$token = str_replace('=', '', $token);
-		$_SESSION[$token] = $realPath;
+		$_SESSION["$token"] = $realPath;
 
 		// Return the token
 		return $token;
@@ -631,10 +631,10 @@ class filesClass implements filesInterface
 	public function fileDownload($token)
 	{
 		// Check the download token
-		if (!isset($_SESSION[$token]))
+		if (!isset($_SESSION["$token"]))
 			printErrorImmediate('Security Violation: Invalid download token.');
-		$realPath = $_SESSION[$token];
-		unset($_SESSION[$token]);
+		$realPath = $_SESSION["$token"];
+		unset($_SESSION["$token"]);
 
 		// Send the file
 		if (file_exists($realPath)) {
@@ -675,10 +675,10 @@ class filesClass implements filesInterface
 	public function fileView($token)
 	{
 		// Check the view token
-		if (!isset($_SESSION[$token]))
+		if (!isset($_SESSION["$token"]))
 			printErrorImmediate('Security Violation: Invalid file viewing token.');
-		$realPath = $_SESSION[$token];
-		unset($_SESSION[$token]);
+		$realPath = $_SESSION["$token"];
+		unset($_SESSION["$token"]);
 
 		// Send the file
 		if (file_exists($realPath)) {
