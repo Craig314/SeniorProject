@@ -191,7 +191,7 @@ function loadAdditionalContent()
 
 	if ($vendor || $admin)
 	{
-		$list = loadAdditonalAdmin();
+		$list = loadAdditionalAdmin();
 	}
 	else
 	{
@@ -236,7 +236,7 @@ function loadAdditionalContent()
 }
 
 // This generates a listing that a normal user sees.
-function loadAdditonalUser()
+function loadAdditionalUser()
 {
 	global $herr;
 	global $dbapp;
@@ -298,7 +298,7 @@ function loadAdditonalUser()
 }
 
 // This generates a listing that an admin or vendor sees.
-function loadAdditonalAdmin()
+function loadAdditionalAdmin()
 {
 	global $herr;
 	global $dbapp;
@@ -563,7 +563,7 @@ function updateRecordAction()
 	if (!$vendor && !$admin)
 	{
 		// All other users.
-		if ($key == $CONFIGVAR['']['value'])
+		if ($key == $CONFIGVAR['default_gradescale']['value'])
 		{
 			handleError('Security Violation: You are not allowed to edit the ' .
 				'default grade scale.');
@@ -1289,6 +1289,7 @@ function generateFieldCheck($returnType = 0)
 			'noblank' => true,
 			'max' => 2147483647,
 			'min' => 0,
+			'optional' => true,
 		),
 
 	);
