@@ -94,18 +94,23 @@ function selectItemCheck(item) {
 // clicking anywhere in the row, this function immediately
 // sends the selection to the server for processing.
 function selectItemClick(stage, last, item) {
+	console.log(stage);
 	switch (stage) {
-		case 1:
-			ajaxServerCommand.sendCommand(10, 'select_item=' + item);
-			break;
-		case 2:
+		case "1":
+			console.log(item);
 			ajaxServerCommand.sendCommand(11, 'select_item=' + item);
 			break;
-		case 3:
+		case "2":
+			console.log(item);
+			console.log("Sending code 12");
 			ajaxServerCommand.sendCommand(12, 'select_item=' + item);
 			break;
-		case 4:
+		case "3":
+			console.log(item);
 			ajaxServerCommand.sendCommand(13, 'select_item=' + item);
+			break;
+		case "4":
+			ajaxServerCommand.sendCommand(91, 'select_item=' + item);
 			break;
 		default:
 			ajaxServerCommand.sendCommand(91, 'select_item=' + item);

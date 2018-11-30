@@ -56,7 +56,6 @@ $moduleSystem = false;
 $modulePermissions = array();
 
 
-
 // These are the data editing modes.
 const MODE_VIEW		= 0;
 const MODE_UPDATE	= 1;
@@ -80,7 +79,10 @@ const BASEAPP = '../applibs/';
 require_once BASEAPP . 'panels.php';
 require_once BASEAPP . 'loadmodule.php';
 require_once BASEAPP . 'dbaseapp.php';
+require_once BASEDIR . 'timedate.php';
 require_once BASEDIR . 'modhead.php';
+
+$list = false;
 
 // Called when the client sends a GET request to the server.
 // This call comes from modhead.php.
@@ -155,6 +157,7 @@ function loadInitialContent()
 		$htmlFlags = array(
 			'tooltip',
 			'type2',
+			'funchide',
 		);
 
 		//html::loadTemplatePage($moduleTitle, $htmlUrl, $moduleFilename,
@@ -194,157 +197,40 @@ function loadAdditionalContent()
 
 	global $panels;
 	global $ajax;
+	
+	global $list;
 
+	//hideFuncBar();
 	// Get data from database.
 
-	$list = false;
-
-	// If the currently logged user is vendor or admin, then show all courses
-	if ($vendor || $admin)
-	{
-		//$rxa = $dbapp->queryCourseAll();	//Querying the database
-		$rxa = $dbapp->queryCourseAll();
-		if ($rxa == false)
-		{
-			if ($herr->checkState())
-				handleError($herr->errorGetMessage());
-			else
-				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
-
-		}
-	}
-	else
-	{
-		//Checks the course query is for a student first.
-		$rxb = $dbapp->queryStudentclassStudentAll($_SESSION['userId']);
-		if ($rxb == false)	//If false then there is an error or query is for an instructor's courses.
-		{
-			if ($herr->checkState())
-				handleError($herr->errorGetMessage());
-			else
-			{
-				//Handling case that user is an instructor
-				$rxa = $dbapp->queryCourseInstructAll($_SESSION['userId']);	// 
-				if ($rxa == false)
-				{
-					if ($herr->checkState())
-						handleError($herr->errorGetMessage());
-					else
-						handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
-				}
-				//var_dump($rxa);
-
-			}
-		}
-		else
-		{
-			//Handle case that user is a student
-			//$rxa = array();
-			$rxa = $dbapp->queryGradesAll($_SESSION['userId']);
-			if($rxa == false)
-			{
-				if ($herr->checkState())
-						handleError($herr->errorGetMessage());
-				else
-					handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
-			}
-			else {
-				// Generate Selection Table.
-				$list = array(
-					'type' => html::TYPE_RADTABLE,
-					'name' => 'select_item',
-					'clickset' => true,
-					'condense' => true,
-					'hover' => true,
-					'titles' => array(
-						// Add column titles here
-						'Assignment',
-						'Course',
-						'Comment',
-						'Grade',
-					),
-					'tdata' => array(),
-					'tooltip' => array(),
-				);
-				foreach ($rxa as $kx => $vx)
-				{
-					//foreach ($kx as $vx) {
-						$tdata = array(
-							// These are the values that show up under the columns above.
-							// The *FIRST* value is the value that is sent when a row
-							// is selected.  AKA Key Field.
-							$vx['assignment'],
-							$vx['assignment'],
-							$vx['course'],
-							$vx['comment'],
-							$vx['grade'],
-						);
-						array_push($list['tdata'], $tdata);
-						//array_push($list['tooltip'], $vx['description']);
-					//}
-				}
-			}
-		}
-	}
-
-	if($list == false) 
-	{
-		$list = array(
-			'type' => html::TYPE_BOTB1,
-			'data' => 'There are no ' . $moduleDisplayLower . '\'s in the database to query.',
-		);
-	}
-
-	// Generate rest of page. (Title, headers, etc)
-	$data = array(
-		array(
-			'type' => html::TYPE_HEADING,
-			'message1' => 'Grades',
-			'message2' => 'Test',	// Delete if not needed.
-			'warning' => 'Still in development',
+	//$list = false;
+	$list = array(
+		'type' => html::TYPE_RADTABLE,
+		'name' => 'select_item',
+		'clickset' => true,
+		'condense' => true,
+		'hover' => true,
+		'titles' => array(
+			'Course ID',
+			'Class',
+			'Section',
+			'Name',
 		),
-		array('type' => html::TYPE_TOPB1),
-		array('type' => html::TYPE_WD75OPEN),
-		array(
-			'type' => html::TYPE_FORMOPEN,
-			'name' => 'select_table',
-		),
-
-		// Enter custom data here.
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Current Grades'
-		),
-		$list,
-
-		//End of custom data
-
-		array('type' => html::TYPE_FORMCLOSE),
-		array('type' => html::TYPE_WDCLOSE),
-		array('type' => html::TYPE_BOTB1)
+		'tdata' => array(),
+		'tooltip' => array(),
+		'stage' => 1,
+		'stagelast' => 4,
+		'mode' => 2,
 	);
 
-	// Get panel content
-	$navContent = $panels->getLinks();
-	$statusContent = $panels->getStatus();
-	$mainContent = html::pageAutoGenerate($data);
-	//$testContent = html::insertRadioButtons($data);
-
-	// Queue content in ajax transmit buffer.
-	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
-	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
-	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
-	
-	//Don't need this if using loadQueueCommand
-	
-	//$ajax->writePanelsImmediate($navContent, $statusContent, $mainContent);
-	
-	// Render
-	$ajax->sendQueue();
-
-	// Render
-	//echo html::pageAutoGenerate($data);
-	exit(0);
+	if($list['tdata'] == false) 
+	{
+		/*$list = array(
+			'type' => html::TYPE_BOTB1,
+			'data' => 'There are no ' . $moduleDisplayLower . '\'s in the database to query.',
+		);*/
+		showStage1();
+	}
 }
 
 // Called when the initial command processor doesn't have the
@@ -353,6 +239,8 @@ function commandProcessor($commandId)
 {
 	global $moduleLoad;
 	global $ajax;
+
+	global $list;
 
 	switch ((int)$commandId)
 	{
@@ -377,8 +265,28 @@ function commandProcessor($commandId)
 		case 7:	// Submit Delete
 			deleteRecordAction();
 			break;
+		case 10:
+			$list['stage'] = 1;
+			showStage1();
+			break;
+		case 11:
+			$list['stage'] = 2;
+			showStage2();
+			break;
+		case 12:
+			$list['stage'] = 3;
+			showStage3();
+			break;
+		case 13:
+			$list['stage'] = 4;
+			showStage4();
+			break;
 		case 90:		// Load Module
 			$moduleLoad->loadModule();
+			break;
+		case 91:
+			$list['stage'] = 2;
+			showStage2();
 			break;
 		default:
 			// If we get here, then the command is undefined.
@@ -388,6 +296,289 @@ function commandProcessor($commandId)
 			exit(1);
 			break;
 	}
+}
+
+function showStage1() {
+	global $baseUrl;
+
+	global $dbapp;	//Need to use dbaseapp.php functions
+	global $herr;   
+
+	global $baseUrl;
+	global $dbconf;
+	global $moduleTitle;
+	global $moduleDisplayLower;
+	global $dbuser;
+	global $admin;
+	global $vendor;
+
+	global $panels;
+	global $ajax;
+
+	global $list;
+
+	// If the currently logged user is vendor or admin, then show all courses
+	if ($vendor || $admin)
+	{
+		//$rxa = $dbapp->queryCourseAll();	//Querying the database
+		$rxa = $dbapp->queryCourseAll();
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+
+		}
+	}
+	//Check if instructor
+	else if ($dbapp->queryCourseInstructAll($_SESSION['userId']) == true)
+	{
+		$rxa = $dbapp->queryCourseInstructAll($_SESSION['userId']);
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+		}
+		foreach ($rxa as $kxa => $vxa)
+		{
+			$tdata = array(
+				$vxa['courseid'],
+				$vxa['courseid'],
+				$vxa['class'],
+				$vxa['section'],
+				$vxa['name'],
+			);
+			array_push($list['tdata'], $tdata);
+		}
+	}
+	//Check if student
+	else if ($dbapp->queryStudentclassStudentAll($_SESSION['userId']) == true) {
+		$rxa = $dbapp->queryCourseStudentAll($_SESSION['userId']);
+	}
+	//Else nothing to query
+	else {
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+	}
+
+	$data = array(
+		array(
+			'type' => html::TYPE_HEADING,
+			'message1' => 'Grades',
+			'message2' => 'Test',	// Delete if not needed.
+			'warning' => 'Still in development',
+		),
+		array('type' => html::TYPE_TOPB1),
+		array('type' => html::TYPE_WD75OPEN),
+		array(
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'select_table',
+		),
+
+		// Enter custom data here.
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Your Courses'
+		),
+		$list,
+
+		//End of custom data
+
+		array('type' => html::TYPE_FORMCLOSE),
+		array('type' => html::TYPE_WDCLOSE),
+		array('type' => html::TYPE_BOTB1)
+	);
+
+	// Get panel content
+	//$navContent = $panels->getLinks();
+	//$statusContent = $panels->getStatus();
+	$mainContent = html::pageAutoGenerate($data);
+	//$testContent = html::insertRadioButtons($data);
+
+	echo $mainContent;
+}
+
+function showStage2()
+{
+	global $dbapp;
+	global $list;
+
+	$key = getPostValue('select_item');
+
+	$rxa = $dbapp->queryAssignmentCourseAll($key);
+
+	$list = array(
+		'type' => html::TYPE_RADTABLE,
+		'name' => 'select_item',
+		'chkbox' => 2,
+		'clickset' => true,
+		'condense' => true,
+		'hover' => true,
+		'titles' => array(
+			'Assign ID',
+			'Name',
+			'Due Date',
+			'Max Points',
+		),
+		'tdata' => array(),
+		'tooltip' => array(),
+		'stage' => 2,
+		'stagelast' => 4,
+		'mode' => 2,
+	);
+
+
+	foreach ($rxa as $kxa => $vxa)
+	{
+		$tdata = array(
+			$vxa['assignment'],
+			$vxa['assignment'],
+			$vxa['name'],
+			timedate::unix2canonical($vxa['duedate']),
+			$vxa['points'],
+		);
+		array_push($list['tdata'], $tdata);
+	}
+
+
+	$data = array(
+		array(
+			'type' => html::TYPE_HEADING,
+			'message1' => 'Grades',
+			'message2' => 'Test',	// Delete if not needed.
+			'warning' => 'Still in development',
+		),
+		array('type' => html::TYPE_TOPB1),
+		array('type' => html::TYPE_WD75OPEN),
+		array(
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'select_table',
+		),
+
+		// Enter custom data here.
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Graded Assignments'
+		),
+		$list,
+
+		//End of custom data
+
+		array('type' => html::TYPE_FORMCLOSE),
+		array('type' => html::TYPE_WDCLOSE),
+		array('type' => html::TYPE_BOTB1)
+	);
+	// Get panel content
+	//$navContent = $panels->getLinks();
+	//$statusContent = $panels->getStatus();
+	$mainContent = html::pageAutoGenerate($data);
+	//$testContent = html::insertRadioButtons($data);
+
+	echo $mainContent;
+	//exit(0);
+	
+	// Queue content in ajax transmit buffer.
+	/*$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
+	
+	//Don't need this if using loadQueueCommand
+	
+	//$ajax->writePanelsImmediate($navContent, $statusContent, $mainContent);
+	
+	// Render
+	$ajax->sendQueue();*/
+
+	// Render
+	//echo html::pageAutoGenerate($data);
+	//exit(0);
+
+}
+
+function showStage3() {
+	global $dbapp;
+	global $list;
+
+	$key = getPostValue('select_item');
+
+	$rxa = $dbapp->queryGradesAssign($key);
+
+	$list = array(
+		'type' => html::TYPE_RADTABLE,
+		'name' => 'select_item',
+		'chkbox' => 2,
+		'clickset' => true,
+		'condense' => true,
+		'hover' => true,
+		'titles' => array(
+			'Assign ID',
+			'Name',
+			'Due Date',
+			'Max Points',
+		),
+		'tdata' => array(),
+		'tooltip' => array(),
+		'stage' => 3,
+		'stagelast' => 4,
+		'mode' => 2,
+	);
+
+	foreach ($rxa as $kxa => $vxa)
+	{
+		$tdata = array(
+			$vxa['studentid'],
+			$vxa['studentid'],
+			$vxa['assignment'],
+			$vxa['comment'],
+			$vxa['grade'],
+		);
+		array_push($list['tdata'], $tdata);
+	}
+
+	$data = array(
+		array(
+			'type' => html::TYPE_HEADING,
+			'message1' => 'Grades',
+			'message2' => 'Test',	// Delete if not needed.
+			'warning' => 'Still in development',
+		),
+		array('type' => html::TYPE_TOPB1),
+		array('type' => html::TYPE_WD75OPEN),
+		array(
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'select_table',
+		),
+
+		// Enter custom data here.
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'List of Students'
+		),
+		$list,
+
+		//End of custom data
+
+		array('type' => html::TYPE_FORMCLOSE),
+		array('type' => html::TYPE_WDCLOSE),
+		array('type' => html::TYPE_BOTB1)
+	);
+
+	// Get panel content
+	//$navContent = $panels->getLinks();
+	//$statusContent = $panels->getStatus();
+	$mainContent = html::pageAutoGenerate($data);
+	//$testContent = html::insertRadioButtons($data);
+
+	echo $mainContent;
+}
+
+function showStage4() {
+
 }
 
 // Helper function for the view functions below that loads information
