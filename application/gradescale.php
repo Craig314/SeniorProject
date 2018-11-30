@@ -563,7 +563,7 @@ function updateRecordAction()
 	if (!$vendor && !$admin)
 	{
 		// All other users.
-		if ($key == $CONFIGVAR['']['value'])
+		if ($key == $CONFIGVAR['default_gradescale']['value'])
 		{
 			handleError('Security Violation: You are not allowed to edit the ' .
 				'default grade scale.');
