@@ -2190,30 +2190,38 @@ class html implements html_interface
 				foreach($kxr as $kxc)
 				{
 					$colconf = $data['titles'][$count];
-					switch($colconf['type'])
+					if (isset($colconf['type']))
 					{
-						case 0:
-							$html .= "
-					<td class=\"text-center\">$kxc</td>";
-							break;
-						case 1:
-							$fnamexx = $colconf['prefix'] . '_' . $kxc;
-							$iname = 'name="' . $fnamexx . '" id="' . $fnamexx . '"';
-							if (is_array($data['value']))
-								$value = 'value="' . $data['value'][$index][$count] . '"';
-							else
-								$value = '';
-							$html .= "
-					<td class=\"text-center\">
-						<input type=\"text\" $size $iname $value $disabled>
-					</td>";
-							break;
-						default:
-							$html .= "
-					<td class=\"text-center\">$kxc</td>";
-							break;
+						switch($colconf['type'])
+						{
+							case 0:
+								$html .= "
+						<td class=\"text-center\">$kxc</td>";
+								break;
+							case 1:
+								if (isset($colconf['prefix'])) $fname = $colconf['prefix'] . '_' . $kxc;
+								else $fname = $kxc;
+								$iname = 'name="' . $fname . '" id="' . $fname . '"';
+								if (is_array($data['value']))
+									$value = 'value="' . $data['value'][$index][$count] . '"';
+								else
+									$value = '';
+								$html .= "
+						<td class=\"text-center\">
+							<input type=\"text\" $size $iname $value $disabled>
+						</td>";
+								break;
+							default:
+								$html .= "
+						<td class=\"text-center\">$kxc</td>";
+								break;
+						}
 					}
-
+					else
+					{
+						$html .= "
+						<td class=\"text-center\">$kxc</td>";
+					}
 					$count++;
 				}
 				$html .= "

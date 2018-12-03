@@ -549,7 +549,6 @@ function content()
 			'name' => 'Block 9: Data Table',
 		),
 		array('type' => html::TYPE_DATATAB,
-			'name' => 'ClickSelectionTable',
 			'size' => 1,
 			'hover' => true,
 			'condense' => true,
