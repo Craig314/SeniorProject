@@ -549,19 +549,19 @@ function content()
 			'name' => 'Block 9: Data Table',
 		),
 		array('type' => html::TYPE_DATATAB,
-			'size' => 1,
+			'size' => 1,		// input box size, applies to all input boxes.
 			'hover' => true,
 			'condense' => true,
 			'clickset' => true,
 			'titles' => array(
 				array(
-					'name' => 'Data 1',
-					'type' => 1,
-					'prefix' => 'data',
+					'name' => 'Data 1',		// Column title
+					'type' => 1,			// Column type.  1 = input box
+					'prefix' => 'data',		// Recommended.  Used to prefix on tdata below.
 				),
 				array(
 					'name' => 'Data 2',
-					'type' => 0,
+					'type' => 0,			// 0 = normal text
 				),
 				array(
 					'name' => 'Data 3',
@@ -583,12 +583,12 @@ function content()
 			),
 			'tdata' => array(
 				array(
-					'one',
+					'one',		// with prefix above, the field id becomes data_one
 					'1.1',
 					'1.2',
 					'1.3',
 					'1.4',
-					'one',
+					'one',		// With prefix above, thie field ID becomes xdata_one
 				),
 				array(
 					'two',
@@ -619,6 +619,7 @@ function content()
 				// The 0-3 is for each row.
 				0 => array(
 					4, 0, 0, 0, 0, 11,	// <- data for each column in the row.
+										// The zeros are place holders.
 				),
 				1 => array(
 					3, 0, 0, 0, 0, 12,
@@ -626,7 +627,7 @@ function content()
 				2 => array(
 					2, 0, 0, 0, 0, 13,
 				),
-				3 => array(
+				3 => array(		// Alternative method specifies the column directly.
 					0 => 1,
 					5 => 14,
 				),
