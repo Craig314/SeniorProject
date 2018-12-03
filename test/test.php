@@ -167,7 +167,7 @@ function content()
 			'date_todaybtn' => true,
 			'date_clearbtn' => true,
 			//'date_format' => 'dd/mm/yyyy',
-			//'value' => time(),
+			'value' => time(),
 			//'disable' => true,
 		),
 		array(
@@ -377,13 +377,30 @@ function content()
 		),
 		array('type' => html::TYPE_FSETCLOSE),
 
+		array(
+			'type' => html::TYPE_FSETOPEN,
+			'name' => 'Block 5: Radio Buttons',
+		),
+		array(
+			'type' => html::TYPE_RADIO,
+			'name' => 'RadioButtons',
+			'data' => array(
+				'Button 1' => 'btn1',
+				'Button 2' => 'btn2',
+				'Button 3' => 'btn3',
+				'Button 4' => 'btn4',
+			),
+		),
+		array('type' => html::TYPE_FSETCLOSE),
+		array('type' => html::TYPE_VTAB5),
 
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Block 5: Radio Selection Table',
+			'name' => 'Block 6: Radio Selection Table',
 		),
 		array('type' => html::TYPE_RADTABLE,
 			'name' => 'RadioSelectionTable',
+			'mode' => 0,
 			'hover' => true,
 			'condense' => true,
 			'clickset' => true,
@@ -429,10 +446,11 @@ function content()
 
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Block 6: Checkbox Selection Table',
+			'name' => 'Block 7: Checkbox Selection Table',
 		),
 		array('type' => html::TYPE_RADTABLE,
 			'name' => 'CheckSelectionTable',
+			'mode' => 1,
 			'hover' => true,
 			'condense' => true,
 			'chkbox' => true,
@@ -478,10 +496,11 @@ function content()
 
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Block 7: Click Selection Table',
+			'name' => 'Block 8: Click Selection Table',
 		),
 		array('type' => html::TYPE_RADTABLE,
 			'name' => 'ClickSelectionTable',
+			'mode' => 2,
 			'hover' => true,
 			'condense' => true,
 			'chkbox' => 2,
@@ -491,7 +510,6 @@ function content()
 				'Data 2',
 				'Data 3',
 				'Data 4',
-				'Data 5',
 			),
 			'tdata' => array(
 				array(
@@ -528,19 +546,98 @@ function content()
 
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Block 8: Radio Buttons',
+			'name' => 'Block 9: Data Table',
 		),
-		array(
-			'type' => html::TYPE_RADIO,
-			'name' => 'RadioButtons',
-			'data' => array(
-				'Button 1' => 'btn1',
-				'Button 2' => 'btn2',
-				'Button 3' => 'btn3',
-				'Button 4' => 'btn4',
+		array('type' => html::TYPE_DATATAB,
+			'name' => 'ClickSelectionTable',
+			'size' => 1,
+			'hover' => true,
+			'condense' => true,
+			'clickset' => true,
+			'titles' => array(
+				array(
+					'name' => 'Data 1',
+					'type' => 1,
+					'prefix' => 'data',
+				),
+				array(
+					'name' => 'Data 2',
+					'type' => 0,
+				),
+				array(
+					'name' => 'Data 3',
+					'type' => 0,
+				),
+				array(
+					'name' => 'Data 4',
+					'type' => 0,
+				),
+				array(
+					'name' => 'Data 5',
+					'type' => 0,
+				),
+				array(
+					'name' => 'Data 6',
+					'type' => 1,
+					'prefix' => 'xdata',
+				),
+			),
+			'tdata' => array(
+				array(
+					'one',
+					'1.1',
+					'1.2',
+					'1.3',
+					'1.4',
+					'one',
+				),
+				array(
+					'two',
+					'2.1',
+					'2.2',
+					'2.3',
+					'2.4',
+					'two',
+				),
+				array(
+					'three',
+					'3.1',
+					'3.2',
+					'3.3',
+					'3.4',
+					'three',
+				),
+				array(
+					'four',
+					'4.1',
+					'4.2',
+					'4.3',
+					'4.4',
+					'four',
+				),
+			),
+			'value' => array(
+				// The 0-3 is for each row.
+				0 => array(
+					4, 0, 0, 0, 0, 11,	// <- data for each column in the row.
+				),
+				1 => array(
+					3, 0, 0, 0, 0, 12,
+				),
+				2 => array(
+					2, 0, 0, 0, 0, 13,
+				),
+				3 => array(
+					0 => 1,
+					5 => 14,
+				),
 			),
 		),
 		array('type' => html::TYPE_FSETCLOSE),
+
+
+
+
 		array(
 			'type' => html::TYPE_SBUTTON,
 			'width' => 4,

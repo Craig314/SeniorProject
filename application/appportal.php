@@ -110,6 +110,7 @@ function loadInitialContent()
 		$jsFiles = array(
 			'/js/module/portal.js',
 			'/js/baseline/function.js',
+			'/js/baseline/files.js',
 			'/js/application/landing.js',
 			'/APIs/fullcalendar/lib/moment.min.js',
 			'/APIs/fullcalendar/fullcalendar.min.js',

@@ -72,6 +72,8 @@ interface html_interface
 	const TYPE_DATETIME		= 17;	// Date & Time input field
 	const TYPE_BARPROG		= 18;	// Progress bar
 	const TYPE_BARMETER		= 19;	// Meter (gauge) bar
+	const TYPE_MESSAGE		= 20;	// Text message type, paragraph.
+	const TYPE_DATATAB		= 21;	// Data Table
 
 	const TYPE_FORMOPEN		= 30;	// Open form with name
 	const TYPE_FORMCLOSE	= 31;	// Close form
@@ -126,6 +128,8 @@ interface html_interface
 	static public function insertFieldDateTime($data);
 	static public function insertProgressBar($data);
 	static public function insertMeterBar($data);
+	static public function insertMessage($data);
+	static public function insertDataTable($data);
 
 	// Other HTML Constructs
 	static public function openForm($data);
@@ -791,7 +795,7 @@ class html implements html_interface
 		<div class=\"row\">
 			<div class=\"form-group\">
 				<span $lclass></span>
-				<button $bname $action class=\"btn btn-default\">Upload</button>
+				<input type=\"button\" $bname $action class=\"btn btn-default\" value=\"Upload\">
 			</div>
 		</div>";
 		}
@@ -809,7 +813,7 @@ class html implements html_interface
 		<div class=\"row\">
 			<div class=\"form-group\">
 				<span $lclass></span>
-				<button $bname $action class=\"btn btn-default\">Upload</button>
+				<input type=\"button\" $bname $action class=\"btn btn-default\" value=\"Upload\">
 			</div>
 		</div>";
 		}
@@ -1907,7 +1911,7 @@ class html implements html_interface
 		}
 
 		// Combine
-		$printout = $name . $value . $default . $event . $tooltip . $disabled;
+		$printout = $name . $value . $event . $tooltip . $disabled;
 
 		// Date Picker Options
 		$datePickOptions = 'data-provide="datepicker"';
@@ -2090,6 +2094,136 @@ class html implements html_interface
 				</div>
 			</div>
 		</div>";
+		return $html;
+	}
+
+	// Inserts a message into the HTML.
+	// The message must be preformatted.
+	// The only parameter is message which is the message.
+	static public function insertMessage($data)
+	{
+		$msg = $data['message'];
+		$html = "
+		<div class=\"row\">
+			<p>$msg</p>
+		</div>";
+		return $html;
+	}
+
+	// Inserts a data table with input fields.  This is similar to the
+	// selection tables, but you do not click on this.  It allows large
+	// amounts of form data to be inputed in a table format.
+	// Note that in the column definition, each column is an array.
+	// titles = array(
+	// 	'name' => 'Column Name',
+	// 	'type' => 'Comumn Type: 0 = normal; 1 = input field',
+	// 	'prefix' => 'If type = 1, then this is the field name prefix',
+	// );
+	// Default values are a 2D array, 0 based, which matches the table
+	// layout.
+	static public function insertDataTable($data)
+	{
+		$tooltip = NULL;
+		$html = '';
+		$bsFeatures = '';
+		$disabled = NULL;
+		$fclass = NULL;
+
+		// Parameters
+		self::helperDisabled($data, $disabled);
+		self::helperFieldSizeText($data, $fclass);
+		if (isset($data['stripe'])) $bsFeatures .= ' table-striped';
+		if (isset($data['condense'])) $bsFeatures .= ' table-condensed';
+		if (isset($data['hover'])) $bsFeatures .= ' table-hover';
+		if (isset($data['border'])) $bsFeatures .= ' table-bordered';
+		if (isset($data['size'])) $size = 'size=' . $data['size'];
+			else $size = '';
+
+
+		// Title Row
+		if (isset($data['titles']))
+		{
+			$html .= "
+		<table class=\"table $bsFeatures\">
+			<thead> 
+				<tr>";
+			foreach($data['titles'] as $kx => $vx)
+			{
+				$html .= "
+					<th class\"text-center\">" . $vx['name'] . "</th>";
+			}
+			$html .= "
+				</tr>
+			</thead>";
+		}
+
+		// Table Data
+		if (isset($data['tdata']))
+		{
+			$html .= "
+			<tbody>";
+
+			// Row
+			$index = 0;
+			foreach($data['tdata'] as $kxr)
+			{
+				if (!empty($data['tooltip']))
+				{
+					if (is_array($data['tooltip']))
+					{
+						if (!empty($data['tooltip'][$index]))
+						{
+							$ttText = $data['tooltip'][$index];
+							$tooltip = ' data-toggle="tooltip" data-html="true" title="'
+								. $ttText . '"'; 
+						}
+						else $tooltip = '';
+					}
+					else $tooltip = '';
+				}
+				else $tooltip = '';
+				$html .= "
+				<tr $tooltip>";
+
+				// Column
+				$count = 0;
+				foreach($kxr as $kxc)
+				{
+					$colconf = $data['titles'][$count];
+					switch($colconf['type'])
+					{
+						case 0:
+							$html .= "
+					<td class=\"text-center\">$kxc</td>";
+							break;
+						case 1:
+							$fnamexx = $colconf['prefix'] . '_' . $kxc;
+							$iname = 'name="' . $fnamexx . '" id="' . $fnamexx . '"';
+							if (is_array($data['value']))
+								$value = 'value="' . $data['value'][$index][$count] . '"';
+							else
+								$value = '';
+							$html .= "
+					<td class=\"text-center\">
+						<input type=\"text\" $size $iname $value $disabled>
+					</td>";
+							break;
+						default:
+							$html .= "
+					<td class=\"text-center\">$kxc</td>";
+							break;
+					}
+
+					$count++;
+				}
+				$html .= "
+				</tr>";
+				$index++;
+			}
+			$html .= "
+			</tbody>
+		</table>";
+		}
 		return $html;
 	}
 
@@ -2356,6 +2490,12 @@ class html implements html_interface
 						break;
 					case self::TYPE_BARMETER:
 						$htmlCollection .= self::insertMeterBar($vx);
+						break;
+					case self::TYPE_MESSAGE:
+						$htmlCollection .= self::insertMessage($vx);
+						break;
+					case self::TYPE_DATATAB:
+						$htmlCollection .= self::insertDataTable($vx);
 						break;
 					case self::TYPE_FORMOPEN:
 						$htmlCollection .= self::openForm($vx);

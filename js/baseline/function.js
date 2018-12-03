@@ -86,3 +86,48 @@ function funcSubmitDelete(link) {
 	funcSendCommand(link, 14, params);
 }
 
+function funcUploadFile(link) {
+	var fileButton;
+	var fileSelect;
+	var tokenObject;
+	var secToken;
+	var formData;
+	var fileList;
+	var path;
+	var file;
+	var param;
+	var i;
+
+	// Get our necessary IDs.
+	fileSelect = document.getElementById('fileInput');
+	fileButton = document.getElementById('fileSubmit');
+	path = document.getElementById('hidden');
+	// Get the security token.
+	tokenObject = document.getElementById('token_data');
+	if (tokenObject != null) {
+		secToken = tokenObject.value;
+	} else {
+		secToken = '';
+	}
+
+	// Start processing the input.
+	formData = new FormData();
+	fileList = fileSelect.files;
+	if (fileList.length > 0) {
+		fileButton.defaultText = fileButton.innerHTML;
+		fileButton.innerHTML = 'Uploading...';
+		for (i = 0; i < fileList.length; i++) {
+			file = fileList[i];
+			formData.append('uploadFiles', file, file.name);
+		}
+		if (arguments.length > 1) {
+			param = '';
+			for (i = 1; i < arguments.length; i++) {
+				param += arguments[i];
+				if (i < (arguments.length - 1)) param += "&";
+			}
+		}
+		ajaxServerSend.filePut(functionList[link], path, formData, fileButton,
+			secToken, 30, param);
+	}
+}

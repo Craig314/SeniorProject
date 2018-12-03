@@ -379,7 +379,6 @@ class filesClass implements filesInterface
 		unset($cxa, $cxb);
 		$markerLenStart = strlen($markerStart);
 		$markerLenEnd = strlen($markerEnd);
-		var_dump($markerStart, $markerEnd);
 	
 		// Save file to temp file
 		$tempFile = tmpfile();
@@ -537,10 +536,7 @@ class filesClass implements filesInterface
 					$tfile = $this::generateTempFilename();
 					$fileCheck = file_exists($realPath . '/' . $tfile);
 				}
-				$tarray = array(
-					$filename => $tfile,
-				);
-				array_push($fileLinkArray, $tarray);
+				$fileLinkArray[$filename] = $tfile;
 				$filename = $tfile;
 			}
 	

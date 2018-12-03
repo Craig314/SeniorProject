@@ -100,6 +100,17 @@ function getPostValue(...$list)
 	return NULL;
 }
 
+// Returns the first argument match of a $_GET value.  If no
+// values are found, then returns null.
+function getGetValue(...$list)
+{
+	foreach($list as $param)
+	{
+		if (isset($_GET[$param])) return $_GET[$param];
+	}
+	return NULL;
+}
+
 // Converts a boolean value into Yes/No.
 function convBooleanValue($value)
 {

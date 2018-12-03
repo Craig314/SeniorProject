@@ -85,7 +85,7 @@ function commandProcessorPost($commandId)
 
 	switch ((int)$commandId)
 	{
-		case 25:
+		case 131:
 			performDataAction();
 			break;
 		default:
@@ -313,25 +313,23 @@ function formPage($mode, $rxa)
 			);
 			if ($vx['turninreq'] != 0)
 			{
-				// $ascomp = generateField(html::TYPE_CHECK, '', 'Completed', 1,
-				// 	$vx['complete'], 'Indicates if this step has been turned in.',
-				// 	$default, $disable);
 				$formcode = 'A' . $vx['assignment'] . 'S' . $vx['step'];
-				$asupload = array(
-					'type' => html::TYPE_FILE,
-					'bname' => 'fileSubmit_' . $formcode,
-					'fname' => 'fileInputForm_' . $formcode,
-					'name' => 'fileInput_' . $formcode,
-					'action' => 'fileUpload(' . $vx['assignment'] . ', ' . $vx['step'] . ')',
-					'fsize' => 8,
+				$tibutton = array(
+					'type' => html::TYPE_SBUTTON,
+					'width' => 4,
+					'offset' => 4,
+					'name' => 'turnin',
+					'dispname' => 'Submit Assignment Step',
+					'class' => html::BTNCLR_BLUE,
+					'action' => 'turninAssignment(' . $vx['assignment']
+						. ', ' . $vx['step'] . ')',
 				);
 			}
 			else
 			{
-				// $ascomp = NULL;
-				$asupload = NULL;
+				$tibutton = NULL;
 			}
-			array_push($data2, $fsetopen, $astep, $asdate, $asdesc, $asupload, $fsetclose);
+			array_push($data2, $fsetopen, $astep, $asdate, $asdesc, $tibutton, $fsetclose);
 		}
 	}
 

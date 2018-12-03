@@ -138,7 +138,6 @@ function selectItemRadio(name, item) {
 	}
 }
 
-
 // Button click handler for moving to the home directory.
 $('#directoryHome').on('click', function() {
 	ajaxServerCommand.sendCommand(20);
@@ -275,7 +274,8 @@ function fileUpload() {
 			file = fileList[i];
 			formData.append('uploadFiles', file, file.name);
 		}
-		ajaxServerSend.filePut(serverLinkObject, path, formData, fileButton, secToken, 30);
+		ajaxServerSend.filePut(serverLinkObject, path, formData, fileButton,
+			secToken, 30, null);
 	}
 }
 

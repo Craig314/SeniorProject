@@ -358,7 +358,7 @@ function loadAdditionalContent()
 			'message3' => 'Click to select course.',
 		),
 		array('type' => html::TYPE_TOPB1),
-		//array('type' => html::TYPE_WD75OPEN),
+		array('type' => html::TYPE_WD800PXOPEN),
 		array(
 			'type' => html::TYPE_FORMOPEN,
 			'name' => 'select_table',
@@ -370,7 +370,7 @@ function loadAdditionalContent()
 		//End of custom data
 
 		array('type' => html::TYPE_FORMCLOSE),
-		//array('type' => html::TYPE_WDCLOSE),
+		array('type' => html::TYPE_WDCLOSE),
 		array('type' => html::TYPE_BOTB1)
 	);
 

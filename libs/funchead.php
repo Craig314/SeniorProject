@@ -220,7 +220,6 @@ function redirectPortal()
 	global $herr;
 	global $ajax;
 
-	if ($_SESSION['portalType'] == 1)
 	switch ($_SESSION['portalType'])
 	{
 		case 0:

@@ -9,6 +9,7 @@ var eventCallback;
 // Set function access URLs.
 functionList[0].setUrlPath('/application/func.assignments.php');
 functionList[1].setUrlPath('/application/func.caljson.php');
+functionList[2].setUrlPath('/application/func.turnin.php');
 
 
 // Custom command handler.  Called from ajax.js:ajaxProcessData.parseCommand
@@ -52,7 +53,7 @@ function activateCalendar() {
 			listWeek: { buttonText: 'list week' }
 		},
 		eventClick: function(calEvent, jsEvent, view) {
-			funcSendCommand(0, 25, 'assignment=' + calEvent.assignment);
+			funcSendCommand(0, 131, 'assignment=' + calEvent.assignment);
 		},
 		events: function(start, end, timezone, callback) {
 			eventCallback = callback;
@@ -73,6 +74,13 @@ function objectJsonPost152(jsonObject) {
 // Loads assignment details from the server when the user
 // clicks on a calendar event.
 function loadAssignment(assignId) {
-	funcSendCommand(0, 25, 'assignment=' + assignId);
+	funcSendCommand(0, 131, 'assignment=' + assignId);
+}
+
+// Loads the assignment turnin page from the server so
+// that the user can upload the assignment to the server.
+function turninAssignment(assignId, assignStep) {
+	funcSendCommand(2, 132, 'assignment=' + assignId,
+		'assignstep=' + assignStep);
 }
 
