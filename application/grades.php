@@ -204,8 +204,9 @@ function loadAdditionalContent()
 	// Get data from database.
 
 	//$list = false;
-	$list = array(
+	/*$list = array(
 		'type' => html::TYPE_RADTABLE,
+		//'type' => html::TYPE_DATATAB,
 		'name' => 'select_item',
 		'clickset' => true,
 		'condense' => true,
@@ -221,16 +222,16 @@ function loadAdditionalContent()
 		'stage' => 1,
 		'stagelast' => 4,
 		'mode' => 2,
-	);
+	);*/
 
-	if($list['tdata'] == false) 
-	{
+	//if($list['tdata'] == false) 
+	//{
 		/*$list = array(
 			'type' => html::TYPE_BOTB1,
 			'data' => 'There are no ' . $moduleDisplayLower . '\'s in the database to query.',
 		);*/
 		showStage1();
-	}
+	//}
 }
 
 // Called when the initial command processor doesn't have the
@@ -328,12 +329,63 @@ function showStage1() {
 				handleError($herr->errorGetMessage());
 			else
 				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
-
 		}
+		$list = array(
+			'type' => html::TYPE_RADTABLE,
+			//'type' => html::TYPE_DATATAB,
+			'name' => 'select_item',
+			'clickset' => true,
+			'condense' => true,
+			'hover' => true,
+			'titles' => array(
+				'Course ID',
+				'Class',
+				'Section',
+				'Name',
+			),
+			'tdata' => array(),
+			'tooltip' => array(),
+			'stage' => 1,
+			'stagelast' => 3,
+			'mode' => 2,
+		);
+
+		foreach ($rxa as $kxa => $vxa)
+		{
+			$tdata = array(
+				$vxa['courseid'],
+				$vxa['courseid'],
+				$vxa['class'],
+				$vxa['section'],
+				$vxa['name'],
+			);
+			array_push($list['tdata'], $tdata);
+		}
+
+
 	}
 	//Check if instructor
 	else if ($dbapp->queryCourseInstructAll($_SESSION['userId']) == true)
 	{
+		$list = array(
+			'type' => html::TYPE_RADTABLE,
+			//'type' => html::TYPE_DATATAB,
+			'name' => 'select_item',
+			'clickset' => true,
+			'condense' => true,
+			'hover' => true,
+			'titles' => array(
+				'Class',
+				'Section',
+				'Name',
+			),
+			'tdata' => array(),
+			'tooltip' => array(),
+			'stage' => 1,
+			'stagelast' => 3,
+			'mode' => 2,
+		);
+
 		$rxa = $dbapp->queryCourseInstructAll($_SESSION['userId']);
 		if ($rxa == false)
 		{
@@ -346,7 +398,6 @@ function showStage1() {
 		{
 			$tdata = array(
 				$vxa['courseid'],
-				$vxa['courseid'],
 				$vxa['class'],
 				$vxa['section'],
 				$vxa['name'],
@@ -356,7 +407,34 @@ function showStage1() {
 	}
 	//Check if student
 	else if ($dbapp->queryStudentclassStudentAll($_SESSION['userId']) == true) {
+		$list = array(
+			'type' => html::TYPE_RADTABLE,
+			//'type' => html::TYPE_DATATAB,
+			'name' => 'select_item',
+			'clickset' => true,
+			'condense' => true,
+			'hover' => true,
+			'titles' => array(
+				'Course ID',
+			),
+			'tdata' => array(),
+			'tooltip' => array(),
+			'stage' => 1,
+			'stagelast' => 3,
+			'mode' => 2,
+		);
 		$rxa = $dbapp->queryCourseStudentAll($_SESSION['userId']);
+		foreach ($rxa as $kxa => $vxa)
+		{
+			$courseid = $vxa['courseid'];
+			$course_info = $dbapp->queryCourse($courseid);
+			$course_name = $course_info['name'];
+			$tdata = array(
+				$vxa['courseid'],
+				$course_name,
+			);
+			array_push($list['tdata'], $tdata);
+		}
 	}
 	//Else nothing to query
 	else {
@@ -383,7 +461,7 @@ function showStage1() {
 		// Enter custom data here.
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Your Courses'
+			'name' => 'Courses'
 		),
 		$list,
 
@@ -395,54 +473,125 @@ function showStage1() {
 	);
 
 	// Get panel content
-	//$navContent = $panels->getLinks();
-	//$statusContent = $panels->getStatus();
+	$navContent = $panels->getLinks();
+	$statusContent = $panels->getStatus();
 	$mainContent = html::pageAutoGenerate($data);
 	//$testContent = html::insertRadioButtons($data);
 
-	echo $mainContent;
+	//echo $mainContent;
+
+	// Queue content in ajax transmit buffer.
+	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
+	
+	//Don't need this if using loadQueueCommand
+	
+	//$ajax->writePanelsImmediate($navContent, $statusContent, $mainContent);
+	
+	// Render
+	$ajax->sendQueue();
+
+	// Render
+	//echo html::pageAutoGenerate($data);
+	//exit(0);
 }
 
 function showStage2()
 {
 	global $dbapp;
 	global $list;
+	global $admin;
+	global $vendor;
+	global $panels;
+	global $ajax;
+	global $herr;
+	global $moduleTitle;
+	global $moduleDisplayLower;
 
 	$key = getPostValue('select_item');
 	$_SESSION['courseid'] = $key;
 
-	$rxa = $dbapp->queryAssignmentCourseAll($key);
-
 	$list = array(
-		'type' => html::TYPE_RADTABLE,
-		'name' => 'select_item',
-		'clickset' => true,
-		'condense' => true,
-		'hover' => true,
-		'titles' => array(
-			'Assign ID',
-			'Name',
-			'Due Date',
-			'Max Points',
-		),
-		'tdata' => array(),
-		'tooltip' => array(),
-		'stage' => 2,
-		'stagelast' => 4,
-		'mode' => 2,
+			'type' => html::TYPE_RADTABLE,
+			//'type' => html::TYPE_DATATAB,
+			'name' => 'select_item',
+			'clickset' => true,
+			'condense' => true,
+			'hover' => true,
+			'titles' => array(
+				'Name',
+				'Due Date',
+				'Max Points',
+			),
+			'tdata' => array(),
+			'tooltip' => array(),
+			'stage' => 2,
+			'stagelast' => 3,
+			'mode' => 2,
 	);
 
-
-	foreach ($rxa as $kxa => $vxa)
+	
+	if ($vendor || $admin)
 	{
-		$tdata = array(
-			$vxa['assignment'],
-			$vxa['assignment'],
-			$vxa['name'],
-			timedate::unix2canonical($vxa['duedate']),
-			$vxa['points'],
-		);
-		array_push($list['tdata'], $tdata);
+		//$rxa = $dbapp->queryCourseAll();	//Querying the database
+		$rxa = $dbapp->queryCourseAll();
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+		}
+	}
+	//Check if instructor
+	else if ($dbapp->queryCourseInstructAll($_SESSION['userId']) == true)
+	{
+
+		$rxa = $dbapp->queryAssignmentCourseAll($key);
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+		}
+		else{
+
+			foreach ($rxa as $kxa => $vxa)
+			{
+				$tdata = array(
+					$vxa['assignment'],
+					$vxa['name'],
+					timedate::unix2canonical($vxa['duedate']),
+					$vxa['points'],
+				);
+				array_push($list['tdata'], $tdata);
+			}
+		}
+	}
+	//Check if student
+	else if ($dbapp->queryStudentclassStudentAll($_SESSION['userId']) == true) {
+		$rxa = $dbapp->queryAssignmentCourseAll($key);
+
+
+		foreach ($rxa as $kxa => $vxa)
+		{
+			$tdata = array(
+				$vxa['assignment'],
+				$vxa['name'],
+				timedate::unix2canonical($vxa['duedate']),
+				$vxa['points'],
+			);
+			array_push($list['tdata'], $tdata);
+		}
+	}
+	//Else nothing to query
+	else {
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
 	}
 
 
@@ -463,7 +612,7 @@ function showStage2()
 		// Enter custom data here.
 		array(
 			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Graded Assignments'
+			'name' => 'Assignments'
 		),
 		$list,
 
@@ -474,16 +623,16 @@ function showStage2()
 		array('type' => html::TYPE_BOTB1)
 	);
 	// Get panel content
-	//$navContent = $panels->getLinks();
-	//$statusContent = $panels->getStatus();
+	$navContent = $panels->getLinks();
+	$statusContent = $panels->getStatus();
 	$mainContent = html::pageAutoGenerate($data);
 	//$testContent = html::insertRadioButtons($data);
 
-	echo $mainContent;
+	//echo $mainContent;
 	//exit(0);
 	
 	// Queue content in ajax transmit buffer.
-	/*$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
 	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
 	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
 	
@@ -492,7 +641,7 @@ function showStage2()
 	//$ajax->writePanelsImmediate($navContent, $statusContent, $mainContent);
 	
 	// Render
-	$ajax->sendQueue();*/
+	$ajax->sendQueue();
 
 	// Render
 	//echo html::pageAutoGenerate($data);
@@ -514,12 +663,12 @@ function showStage3() {
 
 	$list = array(
 		'type' => html::TYPE_RADTABLE,
+		//'type' => html::TYPE_DATATAB,
 		'name' => 'select_item',
 		'clickset' => true,
 		'condense' => true,
 		'hover' => true,
 		'titles' => array(
-			'StudentID',
 			'Assignment',
 			'Comments',
 			'Grade',
@@ -527,20 +676,29 @@ function showStage3() {
 		'tdata' => array(),
 		'tooltip' => array(),
 		'stage' => 3,
-		'stagelast' => 4,
+		'stagelast' => 3,
 		'mode' => 0,
 	);
 
-	foreach ($rxa as $kxa => $vxa)
+	if ($rxa == false)
 	{
-		$tdata = array(
-			$vxa['studentid'],
-			$vxa['studentid'],
-			$vxa['assignment'],
-			$vxa['comment'],
-			$vxa['grade'],
-		);
-		array_push($list['tdata'], $tdata);
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+	}
+	else 
+	{
+		foreach ($rxa as $kxa => $vxa)
+		{
+			$tdata = array(
+				$vxa['studentid'],
+				$vxa['assignment'],
+				$vxa['comment'],
+				$vxa['grade'],
+			);
+			array_push($list['tdata'], $tdata);
+		}
 	}
 
 	$data = array(
