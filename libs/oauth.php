@@ -23,6 +23,8 @@ $oAuthInitiate = true;
 
 interface oauthInterface
 {
+	public function callback($oAuthData);
+	public function initiate($userid, $username = '', $password = '');
 }
 
 class oauthClass implements oauthInterface
@@ -222,10 +224,12 @@ class oauthClass implements oauthInterface
 		$rxu = $this->getUserData($userid);
 		$rxp = $this->getProviderData($userid);
 
+		// Load the configured module.
 		$module = '../authorize/oauth.' . $rxp['module'] . '.php';
 		if (!file_exist($module))
 			$this->handleError('OAuth module file not found.' .
 				'<br>Contact your administrator.');
+		// XXX Not sure if this will work.
 		require_once $module;
 
 		if ($rxp['usepkce'] != 0)
@@ -264,6 +268,7 @@ class oauthClass implements oauthInterface
 	// specific code is executed, this method is called.
 	public function callback($oAuthData)
 	{
+		// Perform authentication.
 		$userid = $_SESSION['userId'];
 		$rxu = $this->getUserData($userid);
 		if (strcmp($oAuthData['state'], $rxu['state']) != 0)
@@ -280,11 +285,9 @@ class oauthClass implements oauthInterface
 			handleError('Authentication Failue: ' . $errdesc . ' at ' . $erruri . '.');
 		}
 
-
-
-
+		// If we get to this point, then the authentication was successful.
+		// So, we log the user into the application.
 	}
-
 }
 
 $oauth = new oauthClass();
