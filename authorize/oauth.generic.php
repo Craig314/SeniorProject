@@ -60,6 +60,8 @@ if (!isset($oAuthInitiate))
 	}
 	else
 	{
+		// We will not recognize any other request methods.
+		html::sendCode(501);
 	}
 }
 

@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS `gradescale` (
   CONSTRAINT `FK1_gradescale_instructor_users_userid` FOREIGN KEY (`instructor`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='The instructor''s grade scale.';
 
--- Dumping data for table application.gradescale: ~1 rows (approximately)
+-- Dumping data for table application.gradescale: ~3 rows (approximately)
 /*!40000 ALTER TABLE `gradescale` DISABLE KEYS */;
 INSERT INTO `gradescale` (`scale`, `instructor`, `name`, `description`, `grade_ap`, `grade_a`, `grade_am`, `grade_bp`, `grade_b`, `grade_bm`, `grade_cp`, `grade_c`, `grade_cm`, `grade_dp`, `grade_d`, `grade_dm`) VALUES
 	(0, 0, 'Default Grade Scale', 'Default grade scale when there is no instructor assigned to a course.', 100, 92, 90, 87, 83, 80, 77, 73, 70, 67, 63, 60),
@@ -217,8 +217,6 @@ CREATE TABLE IF NOT EXISTS `turnin` (
 
 -- Dumping data for table application.turnin: ~0 rows (approximately)
 /*!40000 ALTER TABLE `turnin` DISABLE KEYS */;
-INSERT INTO `turnin` (`studentid`, `assignment`, `step`, `subcount`, `course`, `timedate`) VALUES
-	(2000, 5, 4, 1, 83746, 1541768157);
 /*!40000 ALTER TABLE `turnin` ENABLE KEYS */;
 
 -- Dumping structure for table application.weightgroup
@@ -300,7 +298,7 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`setting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains configuration information about the application.\r\nThe following numerical ranges are defined:\r\n0-9  Server\r\n10-19 HTML\r\n20-29 SSL\r\n30-49 Security\r\n50-59 Session\r\n60-69 Time/Timezone\r\n70-79 Account/Profile\r\n1000+ Application Specific';
 
--- Dumping data for table configuration.config: ~60 rows (approximately)
+-- Dumping data for table configuration.config: ~62 rows (approximately)
 /*!40000 ALTER TABLE `config` DISABLE KEYS */;
 INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `description`, `admin`) VALUES
 	(0, 0, 'server_document_root', 'Appliation Root Directory', '/Servers/webdocs', 'This sets the application root directory on the server.', 1),
@@ -406,7 +404,7 @@ CREATE TABLE IF NOT EXISTS `modaccess` (
   CONSTRAINT `FK_modaccess_profile` FOREIGN KEY (`profileid`) REFERENCES `profile` (`profileid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table determines which modules a particular user profile has access to.  If the tuple is present for the module ID and profile ID combination, then all users on that profile ID have access to that module.';
 
--- Dumping data for table configuration.modaccess: ~0 rows (approximately)
+-- Dumping data for table configuration.modaccess: ~1 rows (approximately)
 /*!40000 ALTER TABLE `modaccess` DISABLE KEYS */;
 INSERT INTO `modaccess` (`moduleid`, `profileid`) VALUES
 	(1501, 100);
@@ -426,7 +424,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~18 rows (approximately)
+-- Dumping data for table configuration.module: ~19 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
 	(1, 'Grid Portal', 'Views the available modules in grid format.', 'gridportal.php', 'icon_grid', 1, 1, 1, 0),
@@ -573,12 +571,12 @@ CREATE TABLE IF NOT EXISTS `login` (
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
 	(0, 0, 0, 0, 0, -1, 'SHA256', 100, '0000000000000000000000000000000000000000000000000000000000000000', '0000000000000000000000000000000000000000000000000000000000000000'),
-	(1, 0, 1541625858, 1543528433, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 0, 1541625858, 1543544044, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, 0, 0, 1536731231, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
 	(34, 0, 1541017469, 1537509577, 1, 2147483647, 'SHA256', 100, '62b1c831bcabd2235af77b7d607199cebbe13f2e2383d690c5eb6cb8e1f1a9da', '35ff44e1a99b3fa565a6b9c11624bff018437d465fe125c206b4a9fee6f44e1a'),
 	(1000, 0, 0, 1541017383, 0, 2147483647, 'SHA256', 100, '3d85c8641e61e8b8c5ddb6b2b52f717736415cad7ceae3486fa835d59b18a6f8', 'db8812f0f4d975c2ea9172ea0611169dc3ff27475b5057ca21762d16402c61bc'),
 	(1001, 0, 0, 0, 0, 2147483647, 'SHA256', 100, 'fae2455c525bf8364cda5a95bd38287461ee8ca3662ecfa1285bdb0141e73592', '15452a7755e9d68edff36d20d573b662ac2f8b037cb67629437a4f8cc4681a4c'),
-	(2000, 0, 1541183684, 1542287531, 0, 2147483647, 'SHA256', 100, '61942ac2e51e43516d325b4aa4cd33f9c3d829f666cbac140a200452df3f9373', '6ead0b2e7c114c0bdbcf55595cc7115af2a436669381fb51c77a2b4af12a37e1'),
+	(2000, 0, 1541183684, 1543800399, 0, 2147483647, 'SHA256', 100, '61942ac2e51e43516d325b4aa4cd33f9c3d829f666cbac140a200452df3f9373', '6ead0b2e7c114c0bdbcf55595cc7115af2a436669381fb51c77a2b4af12a37e1'),
 	(2001, 0, 0, 0, 0, 2147483647, 'SHA256', 100, '6f0724ece7ba6ac9296c1e32fc6e1054e45a493ff684a8cab049fc8e8b10d0ef', '5922976a8119338be7716654f7cb8726ff21d129cf853f8d9ef4d5143ada1f86'),
 	(2003, 0, 0, 0, 0, 2147483647, 'SHA256', 100, '9c2b3ddfc3d1e8caf1ca5797eda8eb27fb431f1b5031f1fa1918da972b181689', '956430a38a95241f3175eae6e3ff1e4f3c5080fb13935a7e0c48e50b43b72717');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;
@@ -611,10 +609,14 @@ CREATE TABLE IF NOT EXISTS `openid` (
   `userid` int(11) NOT NULL COMMENT 'Key Field: The user''s ID number.',
   `provider` int(11) NOT NULL COMMENT 'The OpenID provider identification key.',
   `ident` varchar(512) NOT NULL COMMENT 'The user''s OpenID ID.',
-  `issue` bigint(20) NOT NULL COMMENT 'Time/Date that the authentication was issued.',
-  `expire` bigint(20) NOT NULL COMMENT 'Time/Date that the authentication is to expire.',
+  `handle` varchar(256) DEFAULT NULL COMMENT 'Randomly generated transaction ID.',
+  `invalid` varchar(256) DEFAULT NULL COMMENT 'An invalidation handle.',
+  `nonce` varchar(250) DEFAULT NULL COMMENT 'OpenID response nonce.',
+  `issue` bigint(20) NOT NULL DEFAULT '0' COMMENT 'Time/Date that the authentication was issued.',
+  `expire` bigint(20) NOT NULL DEFAULT '0' COMMENT 'Time/Date that the authentication is to expire.',
   PRIMARY KEY (`userid`),
   KEY `FK_openid_provider_configuration.openid_provider` (`provider`),
+  KEY `handle` (`handle`),
   CONSTRAINT `FK_openid_provider_configuration.openid_provider` FOREIGN KEY (`provider`) REFERENCES `configuration`.`openid` (`provider`) ON UPDATE CASCADE,
   CONSTRAINT `FK_openid_userid_users_userid` FOREIGN KEY (`userid`) REFERENCES `users` (`userid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Holds OpenID information for the user.';

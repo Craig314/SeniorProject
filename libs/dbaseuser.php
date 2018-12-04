@@ -53,9 +53,11 @@ interface database_userdata_interface
 	public function queryOpenId($userid);
 	public function queryOpenIdState($state);
 	public function queryOpenIdProvAll($provider);
-	public function updateOpenId($userid, $provider, $ident, $issue, $expire);
-	public function updateOpenIdLogin($userid, $issue, $expire);
-	public function insertOpenId($userid, $provider, $ident, $issue, $expire);
+	public function updateOpenId($userid, $provider, $ident, $handle,
+		$invalid, $nonce, $issue, $expire);
+	public function updateOpenIdLogin($userid, $handle, $invalid, $nonce,
+		$issue, $expire);
+	public function insertOpenId($userid, $provider, $ident);
 	public function deleteOpenId($userid);
 
 	// Table: users
@@ -408,37 +410,51 @@ class database_user implements database_userdata_interface
 	}
 
 	// Updates a user's OpenID data.
-	public function updateOpenId($userid, $provider, $ident, $issue, $expire)
+	public function updateOpenId($userid, $provider, $ident, $handle,
+		$invalid, $nonce, $issue, $expire)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.openid';
 		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('ident', $ident, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('handle', $handle, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('invalid', $invalid, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid,
+			databaseCore::PTINT, $qxa));
 	}
 
 	// Updates just the user's OpenID login status.
-	public function updateOpenIdLogin($userid, $issue, $expire)
+	public function updateOpenIdLogin($userid, $handle, $invalid, $nonce,
+		$issue, $expire)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.openid';
-		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('handle', $handle, databaseCore::PTSTR);
+		$qxa = $dbcore->buildArray('invalid', $invalid, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('nonce', $nonce, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
-		return($dbcore->launchUpdateSingle($table, 'userid', $userid, databaseCore::PTINT, $qxa));
+		return($dbcore->launchUpdateSingle($table, 'userid', $userid,
+			databaseCore::PTINT, $qxa));
 	}
 
 	// Inserts the OpenID data for a user.
-	public function insertOpenId($userid, $provider, $ident, $issue, $expire)
+	public function insertOpenId($userid, $provider, $ident)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.openid';
 		$qxa = $dbcore->buildArray('userid', $userid, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('provider', $provider, databaseCore::PTINT, $qxa);
 		$qxa = $dbcore->buildArray('ident', $ident, databaseCore::PTSTR, $qxa);
-		$qxa = $dbcore->buildArray('issue', $issue, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('expire', $expire, databaseCore::PTINT, $qxa);
+		// The rest of this is default values as they are set when
+		// the user logs in via OpenID.
+		$qxa = $dbcore->buildArray('handle', '', databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('invalid', '', databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('nonce', '', databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('issue', 0, databaseCore::PTINT, $qxa);
+		$qxa = $dbcore->buildArray('expire', 0, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
