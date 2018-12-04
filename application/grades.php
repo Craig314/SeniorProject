@@ -573,17 +573,24 @@ function showStage2()
 	//Check if student
 	else if ($dbapp->queryStudentclassStudentAll($_SESSION['userId']) == true) {
 		$rxa = $dbapp->queryAssignmentCourseAll($key);
-
-
-		foreach ($rxa as $kxa => $vxa)
+		if ($rxa == false)
 		{
-			$tdata = array(
-				$vxa['assignment'],
-				$vxa['name'],
-				timedate::unix2canonical($vxa['duedate']),
-				$vxa['points'],
-			);
-			array_push($list['tdata'], $tdata);
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+		}
+		else {
+			foreach ($rxa as $kxa => $vxa)
+			{
+				$tdata = array(
+					$vxa['assignment'],
+					$vxa['name'],
+					timedate::unix2canonical($vxa['duedate']),
+					$vxa['points'],
+				);
+				array_push($list['tdata'], $tdata);
+			}
 		}
 	}
 	//Else nothing to query
@@ -652,6 +659,13 @@ function showStage2()
 function showStage3() {
 	global $dbapp;
 	global $list;
+	global $admin;
+	global $vendor;
+	global $panels;
+	global $ajax;
+	global $herr;
+	global $moduleTitle;
+	global $moduleDisplayLower;
 
 	$assignment = getPostValue('select_item');
 	$course = $_SESSION['courseid'];
@@ -730,12 +744,29 @@ function showStage3() {
 	);
 
 	// Get panel content
-	//$navContent = $panels->getLinks();
-	//$statusContent = $panels->getStatus();
+	$navContent = $panels->getLinks();
+	$statusContent = $panels->getStatus();
 	$mainContent = html::pageAutoGenerate($data);
 	//$testContent = html::insertRadioButtons($data);
 
-	echo $mainContent;
+	//echo $mainContent;
+	//exit(0);
+	
+	// Queue content in ajax transmit buffer.
+	$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $mainContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WNAVPANEL, $navContent);
+	$ajax->loadQueueCommand(ajaxClass::CMD_WSTATPANEL, $statusContent);
+	
+	//Don't need this if using loadQueueCommand
+	
+	//$ajax->writePanelsImmediate($navContent, $statusContent, $mainContent);
+	
+	// Render
+	$ajax->sendQueue();
+
+	// Render
+	//echo html::pageAutoGenerate($data);
+	//exit(0);
 }
 
 function showStage4() {
