@@ -566,7 +566,7 @@ class database_application implements database_application_interface
 		$column = '*';
 		$qxa = $dbcore->buildArray('studentid', $student, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('course', $course, databaseCore::PTINT, $qxa);
-		return($dbcore->launchQuerySingle($table, $column, $qxa));
+		return($dbcore->launchQueryMultiple($table, $column, $qxa));
 	}
 
 	public function queryGradesInstructAssign($course, $assign)

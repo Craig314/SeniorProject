@@ -449,7 +449,7 @@ function showStage1() {
 			'type' => html::TYPE_HEADING,
 			'message1' => 'Grades',
 			'message2' => 'Test',	// Delete if not needed.
-			'warning' => 'Still in development',
+			//'warning' => 'Still in development',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
@@ -512,7 +512,10 @@ function showStage2()
 	$key = getPostValue('select_item');
 	$_SESSION['courseid'] = $key;
 
-	$list = array(
+	
+	if ($vendor || $admin)
+	{
+		$list = array(
 			'type' => html::TYPE_RADTABLE,
 			//'type' => html::TYPE_DATATAB,
 			'name' => 'select_item',
@@ -520,6 +523,7 @@ function showStage2()
 			'condense' => true,
 			'hover' => true,
 			'titles' => array(
+				'AssignmentId',
 				'Name',
 				'Due Date',
 				'Max Points',
@@ -529,13 +533,9 @@ function showStage2()
 			'stage' => 2,
 			'stagelast' => 3,
 			'mode' => 2,
-	);
-
-	
-	if ($vendor || $admin)
-	{
-		//$rxa = $dbapp->queryCourseAll();	//Querying the database
-		$rxa = $dbapp->queryCourseAll();
+		);
+		//Querying the database
+		$rxa = $dbapp->queryAssignmentCourseAll($key);
 		if ($rxa == false)
 		{
 			if ($herr->checkState())
@@ -543,10 +543,43 @@ function showStage2()
 			else
 				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
 		}
+		else{
+
+			foreach ($rxa as $kxa => $vxa)
+			{
+				$tdata = array(
+					$vxa['assignment'],
+					$vxa['assignment'],
+					$vxa['name'],
+					timedate::unix2canonical($vxa['duedate']),
+					$vxa['points'],
+				);
+				array_push($list['tdata'], $tdata);
+			}
+		}
 	}
 	//Check if instructor
 	else if ($dbapp->queryCourseInstructAll($_SESSION['userId']) == true)
 	{
+		$list = array(
+			'type' => html::TYPE_RADTABLE,
+			//'type' => html::TYPE_DATATAB,
+			'name' => 'select_item',
+			'clickset' => true,
+			'condense' => true,
+			'hover' => true,
+			'titles' => array(
+				'AssignmentId',
+				'Name',
+				'Due Date',
+				'Max Points',
+			),
+			'tdata' => array(),
+			'tooltip' => array(),
+			'stage' => 2,
+			'stagelast' => 3,
+			'mode' => 2,
+		);
 
 		$rxa = $dbapp->queryAssignmentCourseAll($key);
 		if ($rxa == false)
@@ -562,6 +595,7 @@ function showStage2()
 			{
 				$tdata = array(
 					$vxa['assignment'],
+					$vxa['assignment'],
 					$vxa['name'],
 					timedate::unix2canonical($vxa['duedate']),
 					$vxa['points'],
@@ -572,7 +606,7 @@ function showStage2()
 	}
 	//Check if student
 	else if ($dbapp->queryStudentclassStudentAll($_SESSION['userId']) == true) {
-		$rxa = $dbapp->queryAssignmentCourseAll($key);
+		/*$rxa = $dbapp->queryAssignmentCourseAll($key);
 		if ($rxa == false)
 		{
 			if ($herr->checkState())
@@ -588,6 +622,58 @@ function showStage2()
 					$vxa['name'],
 					timedate::unix2canonical($vxa['duedate']),
 					$vxa['points'],
+				);
+				array_push($list['tdata'], $tdata);
+			}
+		}*/
+
+		$list = array(
+			'type' => html::TYPE_RADTABLE,
+			//'type' => html::TYPE_DATATAB,
+			'name' => 'select_item',
+			'clickset' => true,
+			'condense' => true,
+			'hover' => true,
+			'titles' => array(
+				'Name',
+				'Comments',
+				'Grade',
+			),
+			'tdata' => array(),
+			'tooltip' => array(),
+			'stage' => 2,
+			'stagelast' => 2,
+			'mode' => 0,
+		);
+		$studentid = $_SESSION['userId'];
+		$rxa = $dbapp->queryGradesStudent($studentid, $key);
+		$rxb = $dbapp->queryAssignmentCourseAll($key);
+
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+		}
+		else 
+		{
+			foreach ($rxa as $kxa => $vxa)
+			{
+				$assignment_name = "";
+				//var_dump($vxa);
+				foreach($rxb as $kvb => $vxb) {
+					if($vxa['assignment'] == $vxb['assignment'])
+					{
+						$assignment_name = $vxb['name'];
+					}
+				}
+				$tdata = array(
+					$vxa['assignment'],
+					//$vxa['assignment'],
+					$assignment_name,
+					$vxa['comment'],
+					$vxa['grade'],
 				);
 				array_push($list['tdata'], $tdata);
 			}
@@ -607,7 +693,7 @@ function showStage2()
 			'type' => html::TYPE_HEADING,
 			'message1' => 'Grades',
 			'message2' => 'Test',	// Delete if not needed.
-			'warning' => 'Still in development',
+			//'warning' => 'Still in development',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
@@ -672,7 +758,6 @@ function showStage3() {
 
 	//var_dump($course);
 	#$rxa = $dbapp->queryGradesAssign($key);
-	$rxa = $dbapp->queryGradesInstructAssign($course, $assignment);
 	//var_dump($rxa);
 
 	$list = array(
@@ -694,25 +779,88 @@ function showStage3() {
 		'mode' => 0,
 	);
 
-	if ($rxa == false)
+	if ($vendor || $admin)
 	{
+		$rxa = $dbapp->queryGradesInstructAssign($course, $assignment);
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+		}
+		else 
+		{
+			foreach ($rxa as $kxa => $vxa)
+			{
+				$tdata = array(
+					$vxa['studentid'],
+					$vxa['assignment'],
+					$vxa['comment'],
+					$vxa['grade'],
+				);
+				array_push($list['tdata'], $tdata);
+			}
+		}
+	}
+	//Check if instructor
+	else if ($dbapp->queryCourseInstructAll($_SESSION['userId']) == true)
+	{
+		$rxa = $dbapp->queryGradesInstructAssign($course, $assignment);
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+		}
+		else 
+		{
+			foreach ($rxa as $kxa => $vxa)
+			{
+				$tdata = array(
+					$vxa['studentid'],
+					$vxa['assignment'],
+					$vxa['comment'],
+					$vxa['grade'],
+				);
+				array_push($list['tdata'], $tdata);
+			}
+		}
+	}
+	//Check if student
+	else if ($dbapp->queryStudentclassStudentAll($_SESSION['userId']) == true) {
+
+		$studentid = $_SESSION['userId'];
+		$rxa = $dbapp->queryGradesStudent($studentid, $course);
+
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
+		}
+		else 
+		{
+			foreach ($rxa as $kxa => $vxa)
+			{
+				$tdata = array(
+					$vxa['studentid'],
+					$vxa['assignment'],
+					$vxa['comment'],
+					$vxa['grade'],
+				);
+				array_push($list['tdata'], $tdata);
+			}
+		}
+	}
+	//Else nothing to query
+	else {
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
 		else
 			handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
-	}
-	else 
-	{
-		foreach ($rxa as $kxa => $vxa)
-		{
-			$tdata = array(
-				$vxa['studentid'],
-				$vxa['assignment'],
-				$vxa['comment'],
-				$vxa['grade'],
-			);
-			array_push($list['tdata'], $tdata);
-		}
 	}
 
 	$data = array(
@@ -720,7 +868,7 @@ function showStage3() {
 			'type' => html::TYPE_HEADING,
 			'message1' => 'Grades',
 			'message2' => 'Test',	// Delete if not needed.
-			'warning' => 'Still in development',
+			//'warning' => 'Still in development',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
