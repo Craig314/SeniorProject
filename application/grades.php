@@ -512,7 +512,10 @@ function showStage2()
 	$key = getPostValue('select_item');
 	$_SESSION['courseid'] = $key;
 
-	$list = array(
+	
+	if ($vendor || $admin)
+	{
+		$list = array(
 			'type' => html::TYPE_RADTABLE,
 			//'type' => html::TYPE_DATATAB,
 			'name' => 'select_item',
@@ -520,6 +523,7 @@ function showStage2()
 			'condense' => true,
 			'hover' => true,
 			'titles' => array(
+				'AssignmentId',
 				'Name',
 				'Due Date',
 				'Max Points',
@@ -529,13 +533,9 @@ function showStage2()
 			'stage' => 2,
 			'stagelast' => 3,
 			'mode' => 2,
-	);
-
-	
-	if ($vendor || $admin)
-	{
-		//$rxa = $dbapp->queryCourseAll();	//Querying the database
-		$rxa = $dbapp->queryCourseAll();
+		);
+		//Querying the database
+		$rxa = $dbapp->queryAssignmentCourseAll($key);
 		if ($rxa == false)
 		{
 			if ($herr->checkState())
@@ -543,10 +543,43 @@ function showStage2()
 			else
 				handleError('There are no ' . $moduleDisplayLower . '\'s in the database to query.');
 		}
+		else{
+
+			foreach ($rxa as $kxa => $vxa)
+			{
+				$tdata = array(
+					$vxa['assignment'],
+					$vxa['assignment'],
+					$vxa['name'],
+					timedate::unix2canonical($vxa['duedate']),
+					$vxa['points'],
+				);
+				array_push($list['tdata'], $tdata);
+			}
+		}
 	}
 	//Check if instructor
 	else if ($dbapp->queryCourseInstructAll($_SESSION['userId']) == true)
 	{
+		$list = array(
+			'type' => html::TYPE_RADTABLE,
+			//'type' => html::TYPE_DATATAB,
+			'name' => 'select_item',
+			'clickset' => true,
+			'condense' => true,
+			'hover' => true,
+			'titles' => array(
+				'AssignmentId',
+				'Name',
+				'Due Date',
+				'Max Points',
+			),
+			'tdata' => array(),
+			'tooltip' => array(),
+			'stage' => 2,
+			'stagelast' => 3,
+			'mode' => 2,
+		);
 
 		$rxa = $dbapp->queryAssignmentCourseAll($key);
 		if ($rxa == false)
@@ -561,6 +594,7 @@ function showStage2()
 			foreach ($rxa as $kxa => $vxa)
 			{
 				$tdata = array(
+					$vxa['assignment'],
 					$vxa['assignment'],
 					$vxa['name'],
 					timedate::unix2canonical($vxa['duedate']),
@@ -747,6 +781,7 @@ function showStage3() {
 
 	if ($vendor || $admin)
 	{
+		$rxa = $dbapp->queryGradesInstructAssign($course, $assignment);
 		if ($rxa == false)
 		{
 			if ($herr->checkState())
