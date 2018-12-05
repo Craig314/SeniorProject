@@ -152,7 +152,11 @@ class linkPanel implements linkPanelInterface
 		global $CONFIGVAR;
 		global $dbapp;
 		global $herr;
+		global $vendor;
+		global $admin;
 
+		// Bail if the user is either the vendor or an admin.
+		if ($vendor || $admin) return ' ';
 
 		// Courses
 		$rxa = $dbapp->queryStudentclassStudentAll($_SESSION['userId']);

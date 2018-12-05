@@ -80,6 +80,7 @@ const BASEAPP = '../applibs/';
 require_once BASEAPP . 'panels.php';
 require_once BASEAPP . 'loadmodule.php';
 require_once BASEAPP . 'dbaseapp.php';
+require_once BASEAPP . 'dbutils.php';
 require_once BASEDIR . 'modhead.php';
 
 // Called when the client sends a GET request to the server.
@@ -200,7 +201,7 @@ function loadAdditionalContent()
 	$list = array(
 		'type' => html::TYPE_RADTABLE,
 		'name' => 'select_item',
-		'clickset' => true,
+		'mode' => 2,
 		'condense' => true,
 		'hover' => true,
 		'titles' => array(
@@ -269,8 +270,7 @@ function loadAdditionalContent()
 	// Render
 	$ajax->sendQueue();
 
-	exit(0);
-}
+	exit(0);}
 
 // Called when the initial command processor doesn't have the
 // command number. This call comes from modhead.php.
@@ -281,29 +281,14 @@ function commandProcessor($commandId)
 
 	switch ((int)$commandId)
 	{
-		case 1:		// View
-			viewRecordView();
-			break;
-		case 2:		// Update
-			updateRecordView();
-			break;
-		case 3:		// Insert
-			insertRecordView();
-			break;
-		case 4:		// Delete
-			deleteRecordView();
-			break;
-		case 5:	// Submit Update
+		case 5:		// Submit Update
 			updateRecordAction();
 			break;
-		case 6:	// Submit Insert
-			insertRecordAction();
-			break;
-		case 7:	// Submit Delete
-			deleteRecordAction();
-			break;
-		case 90:		// Load Module
+		case 90:	// Load Module
 			$moduleLoad->loadModule();
+			break;
+		case 91:	// Next Stage
+			listStudents();
 			break;
 		default:
 			// If we get here, then the command is undefined.
@@ -315,54 +300,129 @@ function commandProcessor($commandId)
 	}
 }
 
-// Helper function for the view functions below that loads information
-// from the database and check for errors.
-// XXX: Requires customization.
-function databaseLoad()
+// Lists all students and lists the ones that are enrolled in the course.
+function listStudents($key = NULL)
 {
+	global $CONFIGVAR;
+	global $dbapp;
 	global $herr;
-	global $moduleDisplayLower;
+	global $ajax;
 
-	$key = getPostValue('select_item', 'hidden');
+	// Gather data
 	if ($key == NULL)
-		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
-	// The below line requires customization for database loading.	
-	$rxa = $dbapp->queryCourse($key);
+	{
+		$course = getPostValue('select_item');
+		if ($course == NULL)
+			handleError('Missing ' . $moduleDisplayLower . ' selection data.');
+		if (!is_numeric($course))
+			handleError('Malformed key sequence.');
+	}
+	else $course = $key;
+	
+	// Query course information to make sure it's still there.
+	$rxa = $dbapp->queryCourse($course);
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
-			handleError($herr->errorGetMessage());
+			handleError($herr->errorGetMessage);
 		else
-			handleError('Database Error: Unable to retrieve required ' . $moduleDisplayLower . ' data.');
+			handleError('Database Error: Failed to retrieve course information');
 	}
-	return $rxa;
-}
 
-// The View Record view.
-function viewRecordView()
-{
-	$rxa = databaseLoad();
-	formPage(MODE_VIEW, $rxa);
-}
+	// Gather student information.
+	$rxu = getUsersByProfile($CONFIGVAR['app_profile_student']['value']);
+	$rxe = $dbapp->queryStudentclassCourseAll($course);
+	if ($rxe == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage);
+	}
 
-// The Edit Record view.
-function updateRecordView()
-{
-	$rxa = databaseLoad();
-	formPage(MODE_UPDATE, $rxa);
-}
+	// Process student enrollments
+	$enrolled = array();
+	if (is_array($rxe))
+	{
+		foreach ($rxe as $kx => $vx)
+		{
+			$enrolled[$vx['studentid']] = 1;
+		}
+	}
 
-// The Add Record view.
-function insertRecordView()
-{
-	formPage(MODE_INSERT, NULL);
-}
+	// Generate Selection Table.
+	$list = array(
+		'type' => html::TYPE_RADTABLE,
+		'name' => 'select_item',
+		'mode' => 1,
+		'clickset' => true,
+		'condense' => true,
+		'hover' => true,
+		'titles' => array(
+			// Add column titles here
+			'Student ID',
+			'Name',
+		),
+		'tdata' => array(),
+		'tooltip' => array(),
+		'default' => $enrolled,
+	);
+	foreach ($rxu as $kx => $vx)
+	{
+		$tdata = array(
+			// These are the values that show up under the columns above.
+			// The *FIRST* value is the value that is sent when a row
+			// is selected.  AKA Key Field.
+			$vx,
+			$vx,
+			$kx,
+		);
+		array_push($list['tdata'], $tdata);
+	}
 
-// The Delete Record view.
-function deleteRecordView()
-{
-	$rxa = databaseLoad();
-	formPage(MODE_DELETE, $rxa);
+	// Generate rest of page.
+	$msg2 = $rxa['courseid'] . ' ' . $rxa['class'] . '-' . $rxa['section']
+		. ': ' . $rxa['name'];
+	$data = array(
+		array(
+			'type' => html::TYPE_HIDE,
+			'fname'=> 'hiddenForm',
+			'name' => 'hidden',
+			'data' => $course,
+		),
+		array(
+			'type' => html::TYPE_HEADING,
+			'message1' => 'Class Enrollment Student Selection<br>',
+			'message2' => $msg2,
+			'warning' => 'Under Development',
+		),
+		array('type' => html::TYPE_TOPB1),
+		array('type' => html::TYPE_WD75OPEN),
+		array(
+			'type' => html::TYPE_FORMOPEN,
+			'name' => 'select_table',
+		),
+
+		// Enter custom data here.
+		$list,
+
+		array(
+			'type' => html::TYPE_ACTBTN,
+			'dispname' => 'Submit Enrollment Data',
+			'btnset' => html::BTNTYP_UPDATE,
+			'action' => 'submitUpdate()',
+		),
+		array('type' => html::TYPE_FORMCLOSE),
+		array('type' => html::TYPE_WDCLOSE),
+		array('type' => html::TYPE_BOTB1)
+	);
+
+	// Get panel content
+	$mainContent = html::pageAutoGenerate($data);
+
+	// Render
+	$ajax->writeMainPanelImmediate($mainContent, NULL);
+
+	exit(0);
+
 }
 
 // Updates the record in the database.
@@ -375,328 +435,112 @@ function updateRecordAction()
 	global $CONFIGVAR;
 	global $moduleDisplayUpper;
 	global $moduleDisplayLower;
+	global $dbapp;
 
-	// Get field data.
-	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
-
-	// Get data
+	// Get and check key value (course id).
 	$key = getPostValue('hidden');
-	$id = getPostValue('');
-
-	// Check key data.
 	if ($key == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
-	if ($id == NULL)
 		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
 	if (!is_numeric($key))
 		handleError('Malformed key sequence.');
-	if (!is_numeric($id))
-		handleError('Malformed key sequence.');
-	if ($key != $id)
-		handleError('Database key mismatch.');
 
-	// Check field data.
-	$vfystr->fieldchk($fieldData, $index, $postData);
-
-	// Handle any errors from above.
-	if ($vfystr->errstat() == true)
+	// Query course information to make sure it's still there.
+	$rxa = $dbapp->queryCourse($key);
+	if ($rxa == false)
 	{
-		if ($herr->checkState() == true)
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage);
+		else
+			handleError('Database Error: Failed to retrieve course information');
+	}
+
+	// Query all students in the course
+	$rxb = $dbapp->queryStudentclassCourseAll($key);
+	if ($rxb == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage);
+	}
+
+	// Process student enrollments
+	$dbenrolled = array();
+	if (is_array($rxb))
+	{
+		foreach ($rxb as $kx => $vx)
 		{
-			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe);
-			exit(1);
+			$dbenrolled[$vx['studentid']] = 1;
 		}
 	}
 
-	// Safely encode all strings to prevent XSS attacks.
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	
-	// We are good, update the record
-	$result = $DATABASE_UPDATE_OPERATION($key);		// XXX Set This
-	if ($result == false)
+	// Process post information
+	$str = 'select_item';
+	$delim = '_';
+	$length = strlen($str);
+	$postenrolled = array();
+	foreach ($_POST as $kx => $vx)
 	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessage());
-		else
-			handleError('Database: Record update failed. Key = ' . $key);
-	}
-	sendResponse($moduleDisplayUpper . ' update completed: key = ' . $key);
-	exit(0);
-}
-
-// Inserts the record into the database.
-// XXX: Requires customization.
-function insertRecordAction()
-{
-	global $ajax;
-	global $herr;
-	global $vfystr;
-	global $CONFIGVAR;
-	global $moduleDisplayUpper;
-	global $moduleDisplayLower;
-
-	// Get field data.
-	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
-
-	// Get data
-	$id = getPostValue('');
-
-	// Check field data.
-	$vfystr->fieldchk($fieldData, $index, $postData);
-
-	// Handle any errors from above.
-	if ($vfystr->errstat() == true)
-	{
-		if ($herr->checkState() == true)
+		if (substr_compare($kx, $str, 0, $length, true) == 0)
 		{
-			$rxe = $herr->errorGetData();
-			$ajax->sendStatus($rxe);
-			exit(1);
+			$stx = explode($delim, $kx);
+			$pos = count($stx) - 1;
+			$student = $stx[$pos];
+			if (!is_numeric($student)) continue;
+			$postenrolled[$student] = 1;
 		}
 	}
 
-	// Safely encode all strings to prevent XSS attacks.
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	// $ = safeEncodeString($);
-	
-	// We are good, insert the record
-	$result = $DATABASE_INSERT_OPERATION($id);		// XXX Set This
-	if ($result == false)
+	// There are two conditions that we have to consider.
+	// 1. The student is to be added to a class.
+	// 2. The student is to be removed from a class.
+	// The other two don't matter because they don't change
+	// the database.
+	$insert = array_diff_key($postenrolled, $dbenrolled);
+	$delete = array_diff_key($dbenrolled, $postenrolled);
+
+	// We have everything that we need, so update the database.
+	// First we insert new students.
+	if (is_array($insert))
 	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessage());
-		else
-			handleError('Database: Record insert failed. Key = ' . $id);
+		if (count($insert) > 0)
+		{
+			foreach ($insert as $kx => $vx)
+			{
+				$result = $dbapp->insertStudentclass($kx, $key);
+				if ($result == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+					else
+						handleError('Database: Record insert failed. Key = ' . $kx);
+				}
+			}
+		}
 	}
-	sendResponseClear($moduleDisplayUpper . ' insert completed: key = '
-		. $id);
+
+	// Then we remove students from the course.
+	if (is_array($delete))
+	{
+		if (count($delete) > 0)
+		{
+			foreach ($delete as $kx => $vx)
+			{
+				var_dump($kx);
+				$result = $dbapp->metaDeleteStudentCourse($kx, $key);
+				if ($result == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+					else
+						handleError('Database: Record delete failed. Key = ' . $kx);
+				}
+			}
+		}
+	}
+
+	sendResponse('Student enrollment processing completed.');
 	exit(0);
 }
 
-// Deletes the record from the database.
-// XXX: Requires customization.
-function deleteRecordAction()
-{
-	global $ajax;
-	global $herr;
-	global $vfystr;
-	global $CONFIGVAR;
-	global $moduleDisplayUpper;
-	global $moduleDisplayLower;
-
-	// Gather data...
-	$key = getPostValue('hidden');
-	$id = getPostValue('');		// XXX Set This
-
-	// ...and check it.
-	if ($key == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' module selection data.');
-	if ($id == NULL)
-		handleError('Missing ' . $moduleDisplayLower . ' selection data.');
-	if (!is_numeric($key))
-		handleError('Malformed key sequence.');
-	if (!is_numeric($id))
-		handleError('Malformed key sequence.');
-	if ($key != $id)
-		handleError('Database key mismatch.');
-	
-	// Now remove the record from the database.
-	$result = $DATABASE_DELETE_OPERATION($key);		// XXX Set This
-	if ($result == false)
-	{
-		if ($herr->checkState())
-			handleError($herr->errorGetMessage());
-		else
-			handleError('Database Error: Unable to delete ' . $moduleDisplayLower .
-				' data. Key = ' . $key);
-	}
-	sendResponse($moduleDisplayUpper . ' delete completed: key = ' . $key);
-	exit(0);
-}
-
-// Generate generic form page.
-// XXX Requires customization
-function formPage($mode, $rxa)
-{
-	global $CONFIGVAR;
-	global $moduleDisplayUpper;
-	global $moduleDisplayLower;
-	global $ajax;
-
-	// Determine the editing mode.
-	switch($mode)
-	{
-		case MODE_VIEW:			// View
-			$msg1 = 'Viewing ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['class'] . '-' . $rxa['section'];
-			$btnset = html::BTNTYP_VIEW;
-			$action = '';
-			$hideValue = $rxa['courseid'];
-			$disable = true;
-			$default = true;
-			$key = true;
-			break;
-		case MODE_UPDATE:		// Update
-			$msg1 = 'Updating ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['class'] . '-' . $rxa['section'];
-			$warn = '';
-			$btnset = html::BTNTYP_UPDATE;
-			$action = 'submitUpdate()';
-			$hideValue = $rxa['courseid'];
-			$disable = false;
-			$default = true;
-			$key = true;
-			break;
-		case MODE_INSERT:		// Insert
-			$msg1 = 'Inserting ' . $moduleDisplayUpper . ' Data';
-			$msg2 = $rxa['class'] . '-' . $rxa['section'];
-			$warn = '';
-			$btnset = html::BTNTYP_INSERT;
-			$action = 'submitInsert()';
-			$disable = false;
-			$default = false;
-			$key = false;
-			break;
-		case MODE_DELETE:		// Delete
-			$msg1 = 'Deleting ' . $moduleDisplayUpper . ' Data For';
-			$msg2 = $rxa['class'] . '-' . $rxa['section'];
-			$warn = '';
-			$btnset = html::BTNTYP_DELETE;
-			$action = 'submitDelete()';
-			$hideValue = $rxa['courseid'];
-			$disable = true;
-			$default = true;
-			$key = true;
-			break;
-		default:
-			handleError('Internal Error: Contact your administrator.  XX82747');
-			break;
-	}
-
-	// Hidden field to pass key data
-	if (isset($hideValue))
-	{
-		$hidden = array(
-			'type' => html::TYPE_HIDE,
-			'fname'=> 'hiddenForm',
-			'name' => 'hidden',
-			'data' => $hideValue,
-		);
-	}
-	else $hidden = array();
-
-	// Load $rxa with dummy values for insert mode.
-	if ($mode == MODE_INSERT)
-	{
-		// Variable $rxa is null when the exit mode is insert.
-		// Datafill this array with dummy values to prevent PHP
-		// from issuing errors.
-		$rxa = array(
-			'' => '',
-		);
-	}
-
-	// XXX Custom field rendering code
-	$rxb = 
-
-	// Build out the form array.
-	$data = array(
-		$hidden,
-		array(
-			'type' => html::TYPE_HEADING,
-			'message1' => $msg1,
-			'message2' => $msg2,
-			'warning' => $warn,
-		),
-		array('type' => html::TYPE_TOPB2),
-		array('type' => html::TYPE_WD75OPEN),
-		array(
-			'type' => html::TYPE_FORMOPEN,
-			'name' => 'dataForm',
-		),
-
-		// XXX Enter custom field data here.
-
-
-		array(
-			'type' => html::TYPE_ACTBTN,
-			'dispname' => $moduleDisplayUpper,
-			'btnset' => $btnset,
-			'action' => $action,
-		),
-		array('type' => html::TYPE_FORMCLOSE),
-		array('type' => html::TYPE_WDCLOSE),
-		array('type' => html::TYPE_BOTB2),
-		array('type' => html::TYPE_VTAB10),
-	);
-
-	// Render
-	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
-		generateFieldCheck());
-}
-
-// Generate the field definitions for client side error checking.
-function generateFieldCheck($returnType = 0)
-{
-	global $CONFIGVAR;
-	global $vfystr;
-
-	$data = array(
-		0 => array(
-			// This is the display name of the field.
-			'dispname' => '',
-			// The internal name of the field.
-			'name' => '',
-			// The type of the field.
-			'type' => $vfystr::STR_,
-			// If special handling of this field is required, then set type
-			// to $vfystr::STR_CUSTOM and this field to the actual datatype.
-			// Remove if this field is not needed.
-			'ctype' => $vfystr::STR_,
-			// True if this field cannot be blank.  False otherwise.
-			'noblank' => true,
-			// Same as noblank above, except this is only for insert mode.
-			// Use only if different from noblank.
-			// Remove if this field is not needed.
-			'noblankins' => true,
-			// Maximum allowable field length (or numeric value).
-			'max' => 0,
-			// Minimum allowable field length (or numeric value).
-			// In all cases, if min > max, then no checking is done.
-			'min' => 0,
-		),
-		0 => array(
-			'dispname' => '',
-			'name' => '',
-			'type' => $vfystr::STR_,
-			'ctype' => $vfystr::STR_,
-			'noblank' => true,
-			'noblankins' => true,
-			'max' => 0,
-			'min' => 0,
-		),
-	);
-	switch ($returnType)
-	{
-		case FIELDCHK_JSON:
-			$fieldcheck = json_encode($data);
-			break;
-		case FIELDCHK_ARRAY:
-			$fieldcheck = $data;
-			break;
-		default:
-			handleError('Internal Programming Error: CODE XY039223<br>' .
-				'Contact your administrator.');
-			break;
-	}
-	return $fieldcheck;
-}
 
 
 ?>

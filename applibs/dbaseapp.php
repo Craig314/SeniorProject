@@ -117,6 +117,7 @@ interface database_application_interface
 	// Meta Functions
 	public function metaDeleteUser($userid);
 	public function metaDeleteCourse($course);
+	public function metaDeleteStudentCourse($student, $course);
 	
 }
 
@@ -1158,6 +1159,67 @@ class database_application implements database_application_interface
 					handleError('Database Error: Delete course rollback failed.');
 			}
 			return false;
+		}
+	}
+
+	// Meta method to delete a student from a course.
+	public function metaDeleteStudentCourse($student, $course)
+	{
+		global $dbcore;
+		global $herr;
+
+		$rxa = $this->queryAssignmentCourseAll($course);
+		if ($rxa == false)
+		{
+			if ($herr->checkState())
+				handleError($herr->errorGetMessage());
+			else
+				handleError('Database Error: Query assignments failed ' .
+					'for student removal from course. KEY=' . $student .
+					', ' . $course);
+		}
+
+		foreach ($rxa as $kx => $vx)
+		{
+			// Open the transaction.
+			$result = $dbcore->transOpen();
+			if ($result == false) return false;
+			$result = true;
+
+			$result = ($this->deleteFilenameAssign($student, $vx['assignment'])) ? $result : false;
+			$result = ($this->deleteGrades($student, $vx['assignment'], $course)) ? $result : false;
+			$result = ($this->deleteTurninStudentAssign($student, $vx['assignment'], $course)) ? $result : false;;
+			$result = ($this->deleteStudentclass($student, $course)) ? $result : false;
+
+			// Either commit or rollback the changes.
+			if ($result == true)
+			{
+				$result = $dbcore->transCommit();
+				if ($result == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+					else
+						handleError('Database Error: Remove student from ' .
+							'course commit failed. KEY=' . $student . ', ' .
+							$course);
+				}
+				return true;
+			}
+			else
+			{
+				$result = $dbcore->transRollback();
+				if ($result == false)
+				{
+					if ($herr->checkState())
+						handleError($herr->errorGetMessage());
+					else
+						handleError('Database Error: Remove student from ' .
+							'course commit failed. KEY=' . $student . ', ' .
+							$course);
+				}
+				return false;
+			}
 		}
 	}
 }

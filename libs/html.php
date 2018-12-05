@@ -1544,6 +1544,9 @@ class html implements html_interface
 			else $stageLast = 0;
 		if (isset($data['clickset'])) $clickset = true;
 			else $clickset = false;
+		if (isset($data['prefix'])) $prefix = $data['prefix'];
+			else $prefix = $tableName;
+		if (isset($data['default'])) $default = $data['default'];
 		if (isset($data['stripe'])) $bsFeatures .= ' table-striped';
 		if (isset($data['condense'])) $bsFeatures .= ' table-condensed';
 		if (isset($data['hover'])) $bsFeatures .= ' table-hover';
@@ -1632,8 +1635,13 @@ class html implements html_interface
 						$name = 'id="' . $data['name'] . '_' . $keydata . '"';
 						if ($clickset)
 						{
-							$checkKey = $tableName . '_' . $keydata;
-							$checkBox = "onclick=\"selectItemCheck('$checkKey');\"";
+							$checkKey = $prefix . '_' . $keydata;
+							if (isset($default))
+							{
+								if (isset($default[$keydata])) $checked = ' checked="true"';
+									else $checked = '';
+							}
+							$checkBox = "onclick=\"selectItemCheck('$checkKey');\"$checked";
 							$html .= "
 				<tr $tooltip onclick=\"selectItemCheck('$checkKey');\">";
 						}
