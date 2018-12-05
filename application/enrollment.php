@@ -158,7 +158,7 @@ function loadInitialContent()
 		//  $left, $right, $funcBar, $jsFiles, $cssFiles, $htmlFlags,
 		//	$funcbar2, $funcbar3);
 		html::loadTemplatePage($moduleTitle, $baseUrl, $moduleFilename,
-			$left, '', $funcBar, $jsFiles, '', $htmlFlags);
+			$left, '', $funcBar, $jsFiles, $cssFiles, $htmlFlags);
 	}
 	else
 	{
