@@ -959,10 +959,10 @@ class database_application implements database_application_interface
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.weightgroup';
-		$qxa = $dbcore->buildArray('weight', $weight, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT);
-		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('weight', $weight, databaseCore::PTINT, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'group', $group,
 			databaseCore::PTINT, $qxa));
 	}
@@ -973,9 +973,9 @@ class database_application implements database_application_interface
 		global $dbcore;
 		$table = $this->tablebase . '.weightgroup';
 		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT);
-		$qxa = $dbcore->buildArray('weight', $weight, databaseCore::PTINT, $qxa);
-		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
+		$qxa = $dbcore->buildArray('weight', $weight, databaseCore::PTINT, $qxa);
 		return($dbcore->launchInsert($table, $qxa));
 	}
 
