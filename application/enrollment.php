@@ -119,12 +119,6 @@ function loadInitialContent()
 		// use nested associtive arrays to group buttons together.
 		// $funcBar = array();
 		$funcBar = array(
-			array(
-				'Insert' => 'insertDataItem',
-				'Update' => 'updateDataItem',
-				'Delete' => 'deleteDataItem',
-			),
-			'View' => 'viewDataItem',
 			'List' => 'listDataItems',
 		);
 
