@@ -256,7 +256,7 @@ function loadAdditionalUser()
 	{
 		$rxc = array($rxa);
 	}
-	$rxb = $dbapp->queryGradeWeightgroupInstructAll($_SESSION['userId']);
+	$rxb = $dbapp->queryWeightgroupInstructAll($_SESSION['userId']);
 	if ($rxb == false)
 	{
 		if ($herr->checkState())

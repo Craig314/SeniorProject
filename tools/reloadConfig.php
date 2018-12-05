@@ -26,7 +26,6 @@ echo "Configuration reload utility.\n\n";
 echo "Reloading Configuration...\n";
 processSharedMemoryReload();
 echo "Done.\n";
-var_dump($CONFIGVAR);
 exit(0);
 
 
