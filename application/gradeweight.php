@@ -620,8 +620,7 @@ function insertRecordAction()
 		else
 			handleError('Database: Record insert failed. Key = ' . $id);
 	}
-	sendResponseClear($moduleDisplayUpper . ' insert completed: key = '
-		. $id);
+	sendResponseClear($moduleDisplayUpper . ' insert completed');
 	exit(0);
 }
 
@@ -893,7 +892,7 @@ function formPage($mode, $rxa)
 		$rxa['description'], 'The description of this grade weight group.',
 		$default, $disable);
 	$desc['rows'] = 6;
-	$name = generateField(html::TYPE_TEXT, 'weight', 'Group Weight', 2,
+	$weight = generateField(html::TYPE_TEXT, 'weight', 'Group Weight', 2,
 		$rxa['weight'], 'The name of this grade weight group.',
 		$default, $disable);
 
