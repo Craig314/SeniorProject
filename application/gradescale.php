@@ -46,7 +46,7 @@ $moduleDisplayUpper = 'Grading Scale';		// XXX Set This
 
 // The lowercase short display name of the module.  This shows up in
 // various messages.
-$moduleDisplayLower = 'gradeing scale';		// XXX Set This
+$moduleDisplayLower = 'grading scale';		// XXX Set This
 
 // Set to true if this is a system module.
 $moduleSystem = false;

@@ -239,7 +239,6 @@ function loadAdditionalContent()
 		array(
 			'type' => html::TYPE_HEADING,
 			'message1' => 'Class Enrollment',
-			'warning' => 'Under Development',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
@@ -392,7 +391,8 @@ function listStudents($key = NULL)
 			'type' => html::TYPE_HEADING,
 			'message1' => 'Class Enrollment Student Selection<br>',
 			'message2' => $msg2,
-			'warning' => 'Under Development',
+			'warning' => 'Removing a student from a course will also remove<br>' .
+				'all of their submitted work in that class.',
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
