@@ -762,7 +762,7 @@ function deleteRecordAction()
 	{
 		if ($admin)
 		{
-			if ($key == $CONFIGVAR['gradescale_mode']['value'])
+			if ($key == $CONFIGVAR['default_gradescale']['value'])
 			{
 				handleError('Security Violation: You are not allowed to delete the ' .
 					'default grade scale.<br>Permission Denied.');
@@ -772,7 +772,7 @@ function deleteRecordAction()
 	else
 	{
 		// All other users.
-		if ($key == $CONFIGVAR['gradescale_mode']['value'])
+		if ($key == $CONFIGVAR['default_gradescale']['value'])
 		{
 			handleError('Security Violation: You are not allowed to delete the ' .
 				'default grade scale.<br>Permission Denied.');

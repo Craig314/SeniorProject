@@ -4,7 +4,7 @@
 SEA-CORE International Ltd.
 SEA-CORE Development Group
 
-PHP Web Application Module Grading Scale.
+PHP Web Application Module Grade Weight Group Editor
 
 The css filename must match the module name, so if the module filename is
 abc123.php, then the associated stylesheet must be named abc123.css.  The
@@ -202,7 +202,8 @@ function loadAdditionalContent()
 	$data = array(
 		array(
 			'type' => html::TYPE_HEADING,
-			'message1' => 'Grading Scale Editor',
+			'message1' => 'Grade Weight Group Editor',
+
 		),
 		array('type' => html::TYPE_TOPB1),
 		array('type' => html::TYPE_WD75OPEN),
@@ -243,19 +244,19 @@ function loadAdditionalUser()
 	global $CONFIGVAR;
 
 	// Get data from database.
-	$rxa = $dbapp->queryGradescale($CONFIGVAR['default_gradescale']['value']);
+	$rxa = $dbapp->queryWeightgroup($CONFIGVAR['default_weightgroup']['value']);
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
 		else
-			handleError('Database Error: Default grading scale missing.');
+			handleError('Database Error: Default grade weight group missing.');
 	}
 	else
 	{
 		$rxc = array($rxa);
 	}
-	$rxb = $dbapp->queryGradeScaleInstructAll($_SESSION['userId']);
+	$rxb = $dbapp->queryGradeWeightgroupInstructAll($_SESSION['userId']);
 	if ($rxb == false)
 	{
 		if ($herr->checkState())
@@ -275,7 +276,7 @@ function loadAdditionalUser()
 		'hover' => true,
 		'titles' => array(
 			// Add column titles here
-			'Grade Scale Name',
+			'Group Name',
 		),
 		'tdata' => array(),
 		'tooltip' => array(),
@@ -286,7 +287,7 @@ function loadAdditionalUser()
 			// These are the values that show up under the columns above.
 			// The *FIRST* value is the value that is sent when a row
 			// is selected.  AKA Key Field.
-			$vx['scale'],
+			$vx['group'],
 			$vx['name'],
 		);
 		array_push($list['tdata'], $tdata);
@@ -306,13 +307,13 @@ function loadAdditionalAdmin()
 	global $CONFIGVAR;
 
 	// Get data from database.
-	$rxa = $dbapp->queryGradescaleAll();
+	$rxa = $dbapp->queryWeightgroupAll();
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
 		else
-			handleError('Database Error: Default grading scale missing.');
+			handleError('Database Error: Default grade weight group missing.');
 	}
 
 	// Generate Selection Table.
@@ -346,8 +347,8 @@ function loadAdditionalAdmin()
 			// These are the values that show up under the columns above.
 			// The *FIRST* value is the value that is sent when a row
 			// is selected.  AKA Key Field.
-			$vx['scale'],
-			$vx['scale'],
+			$vx['group'],
+			$vx['group'],
 			$rxb['name'],
 			$vx['name'],
 		);
@@ -416,7 +417,7 @@ function databaseLoad()
 	if ($key == NULL)
 		handleError('You must select a ' . $moduleDisplayLower . ' from the list view.');
 	// The below line requires customization for database loading.	
-	$rxa = $dbapp->queryGradescale($key);		// XXX Set This
+	$rxa = $dbapp->queryWeightgroup($key);		// XXX Set This
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
@@ -489,38 +490,13 @@ function updateRecordAction()
 	if ($vendor || $admin)
 	{
 		$inst = getPostValue('instructor');
-		$vfystr->fieldchk($fieldData, 14, $inst);
+		$vfystr->fieldchk($fieldData, 3, $inst);
 	}
 
 	// Check field data.
 	$vfystr->fieldchk($fieldData, 0, $name);
 	$vfystr->fieldchk($fieldData, 1, $desc);
-	switch($CONFIGVAR['gradescale_mode']['value'])
-	{
-		case 0:
-			$vfystr->fieldchk($fieldData, 2, $gap);
-			$vfystr->fieldchk($fieldData, 3, $ga);
-			$vfystr->fieldchk($fieldData, 4, $gam);
-			$vfystr->fieldchk($fieldData, 5, $gbp);
-			$vfystr->fieldchk($fieldData, 6, $gb);
-			$vfystr->fieldchk($fieldData, 7, $gbm);
-			$vfystr->fieldchk($fieldData, 8, $gcp);
-			$vfystr->fieldchk($fieldData, 9, $gc);
-			$vfystr->fieldchk($fieldData, 10, $gcm);
-			$vfystr->fieldchk($fieldData, 11, $gdp);
-			$vfystr->fieldchk($fieldData, 12, $gd);
-			$vfystr->fieldchk($fieldData, 13, $gdm);
-			break;
-		case 1:
-			$vfystr->fieldchk($fieldData, 3, $ga);
-			$vfystr->fieldchk($fieldData, 6, $gb);
-			$vfystr->fieldchk($fieldData, 9, $gc);
-			$vfystr->fieldchk($fieldData, 12, $gd);
-			break;
-		default:
-			handleError('Database Error: Invalid grade scale mode.<br>' .
-				'Contact your administrator.');
-	}
+	$vfystr->fieldchk($fieldData, 2, $weight);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -538,13 +514,13 @@ function updateRecordAction()
 	$desc = safeEncodeString($desc);
 	
 	// We are good, update the record
-	$rxa = $dbapp->queryGradescale($key);
+	$rxa = $dbapp->queryWeightgroup($key);
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
 		else
-			handleError('Database Error: Missing grade scale record.');
+			handleError('Database Error: Missing weight group record.');
 	}
 
 	// Security Checks
@@ -568,6 +544,7 @@ function updateRecordAction()
 	{
 		$inst = $rxa['instructor'];
 	}
+	$result = $dbapp->updateWeightgroup($key, $inst, $weight, $desc, $name);
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -598,27 +575,16 @@ function insertRecordAction()
 
 	// Get data
 	$id = 0;	// Field is auto-increment so we set to 0 for insert.
-	$name = getPostValue('gname');
-	$desc = getPostValue('gdesc');
-	$gap = getPostValue('grade_ap');
-	$ga =  getPostValue('grade_a');
-	$gam = getPostValue('grade_am');
-	$gbp = getPostValue('grade_bp');
-	$gb =  getPostValue('grade_b');
-	$gbm = getPostValue('grade_bm');
-	$gcp = getPostValue('grade_cp');
-	$gc =  getPostValue('grade_c');
-	$gcm = getPostValue('grade_cm');
-	$gdp = getPostValue('grade_dp');
-	$gd =  getPostValue('grade_d');
-	$gdm = getPostValue('grade_dm');
+	$name = getPostValue('wname');
+	$desc = getPostValue('wdesc');
+	$weight = getPostValue('weight');
 
-	// Special: The vendor or an admin can insert a grade scale
+	// Special: The vendor or an admin can insert a weight group
 	// on behalf of an instructor.
 	if ($vendor || $admin)
 	{
 		$inst = getPostValue('instructor');
-		$vfystr->fieldchk($fieldData, 14, $inst);
+		$vfystr->fieldchk($fieldData, 3, $inst);
 	}
 	else
 	{
@@ -628,32 +594,7 @@ function insertRecordAction()
 	// Check field data.
 	$vfystr->fieldchk($fieldData, 0, $name);
 	$vfystr->fieldchk($fieldData, 1, $desc);
-	switch($CONFIGVAR['gradescale_mode']['value'])
-	{
-		case 0:
-			$vfystr->fieldchk($fieldData, 2, $gap);
-			$vfystr->fieldchk($fieldData, 3, $ga);
-			$vfystr->fieldchk($fieldData, 4, $gam);
-			$vfystr->fieldchk($fieldData, 5, $gbp);
-			$vfystr->fieldchk($fieldData, 6, $gb);
-			$vfystr->fieldchk($fieldData, 7, $gbm);
-			$vfystr->fieldchk($fieldData, 8, $gcp);
-			$vfystr->fieldchk($fieldData, 9, $gc);
-			$vfystr->fieldchk($fieldData, 10, $gcm);
-			$vfystr->fieldchk($fieldData, 11, $gdp);
-			$vfystr->fieldchk($fieldData, 12, $gd);
-			$vfystr->fieldchk($fieldData, 13, $gdm);
-			break;
-		case 1:
-			$vfystr->fieldchk($fieldData, 3, $ga);
-			$vfystr->fieldchk($fieldData, 6, $gb);
-			$vfystr->fieldchk($fieldData, 9, $gc);
-			$vfystr->fieldchk($fieldData, 12, $gd);
-			break;
-		default:
-			handleError('Database Error: Invalid grade scale mode.<br>' .
-				'Contact your administrator.');
-	}
+	$vfystr->fieldchk($fieldData, 2, $weight);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -671,20 +612,7 @@ function insertRecordAction()
 	$desc = safeEncodeString($desc);
 	
 	// We are good, insert the record
-	switch($CONFIGVAR['gradescale_mode']['value'])
-	{
-		case 0:
-			$result = $dbapp->insertGradescale($id, $inst, $name, $desc,
-				$gap, $ga, $gam, $gbp, $gb, $gbm, $gcp, $gc, $gcm, $gdp, $gd, $gdm);
-			break;
-		case 1:
-			$result = $dbapp->insertGradescale($id, $inst, $name, $desc,
-				0, $ga, 0, 0, $gb, 0, 0, $gc, 0, 0, $gd, 0);
-			break;
-		default:
-			$result = false;
-			break;
-	}
+	$result = $dbapp->insertWeightgroup($inst, $weight, $desc, $name);
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -721,13 +649,13 @@ function deleteRecordAction()
 		handleError('Malformed key sequence.');
 	
 	// Now remove the record from the database.
-	$rxa = $dbapp->queryGradescale($key);
+	$rxa = $dbapp->queryWeightgroup($key);
 	if ($rxa == false)
 	{
 		if ($herr->checkState())
 			handleError($herr->errorGetMessage());
 		else
-			handleError('Database Error: Missing grade scale record.');
+			handleError('Database Error: Missing weight group record.');
 	}
 
 	// Security Checks
@@ -740,27 +668,27 @@ function deleteRecordAction()
 			if ($key == $CONFIGVAR['default_weightgroup']['value'])
 			{
 				handleError('Security Violation: You are not allowed to delete the ' .
-					'default grade scale.<br>Permission Denied.');
+					'default weight group.<br>Permission Denied.');
 			}
 		}
 	}
 	else
 	{
 		// All other users.
-		if ($key == $CONFIGVAR['gradescale_mode']['value'])
+		if ($key == $CONFIGVAR['default_weightgroup']['value'])
 		{
 			handleError('Security Violation: You are not allowed to delete the ' .
-				'default grade scale.<br>Permission Denied.');
+				'default weight group.<br>Permission Denied.');
 		}
 		if ($_SESSION['userId'] != $rxa['instructor'])
 		{
-			handleError('Security Violation: You do not own the grade scale that' .
+			handleError('Security Violation: You do not own the weight group that' .
 				'<br>you are attempting to delete.<br>Permission Denied.');
 		}
 	}
 	$inst = $rxa['instructor'];
 
-	$result = $dbapp->deleteGradescale($key, $inst);
+	$result = $dbapp->deleteWeightgroup($key, $inst);
 	if ($result == false)
 	{
 		if ($herr->checkState())
@@ -915,7 +843,7 @@ function formPage($mode, $rxa)
 		// Datafill this array with dummy values to prevent PHP
 		// from issuing errors.
 		$rxa = array(
-			'scale' => 'Automatic Assignment',
+			'group' => 'Automatic Assignment',
 			'instructor' => ($vendor || $admin) ? '' : $_SESSION['userId'],
 			'name' => '',
 			'description' => '',
@@ -927,7 +855,7 @@ function formPage($mode, $rxa)
 	if ($vendor || $admin)
 	{
 		$group = generateField(html::TYPE_TEXT, 'group', 'Group ID', 4,
-			$rxa['scale'], 'The internal grade weight group identification number.',
+			$rxa['group'], 'The internal grade weight group identification number.',
 			$default, true);
 		if ($mode == MODE_INSERT || $mode == MODE_UPDATE)
 		{
@@ -958,75 +886,16 @@ function formPage($mode, $rxa)
 	}
 
 	// XXX Custom field rendering code
-	$name = generateField(html::TYPE_TEXT, 'gname', 'Scale Name', 4,
-		$rxa['name'], 'The name of this grading scale.',
+	$name = generateField(html::TYPE_TEXT, 'wname', 'Group Name', 4,
+		$rxa['name'], 'The name of this grade weight group.',
 		$default, $disable);
-	$desc = generateField(html::TYPE_AREA, 'gdesc', 'Description', 6,
-		$rxa['description'], 'The description of this grading scale.',
+	$desc = generateField(html::TYPE_AREA, 'wdesc', 'Description', 6,
+		$rxa['description'], 'The description of this grade weight group.',
 		$default, $disable);
 	$desc['rows'] = 6;
-
-	// Common grade fields.
-	$gA = generateField(html::TYPE_TEXT, 'grade_a', 'Grade A Value', 2,
-		$rxa['grade_a'], 'Anything equal to or above this value will be given an A grade.',
+	$name = generateField(html::TYPE_TEXT, 'weight', 'Group Weight', 2,
+		$rxa['weight'], 'The name of this grade weight group.',
 		$default, $disable);
-	$gB = generateField(html::TYPE_TEXT, 'grade_b', 'Grade B Value', 2,
-		$rxa['grade_b'], 'Anything equal to or above this value will be given an B grade.',
-		$default, $disable);
-	$gC = generateField(html::TYPE_TEXT, 'grade_c', 'Grade C Value', 2,
-		$rxa['grade_c'], 'Anything equal to or above this value will be given an C grade.',
-		$default, $disable);
-	switch($CONFIGVAR['gradescale_mode']['value'])
-	{
-		case 0:
-			$gAP = generateField(html::TYPE_TEXT, 'grade_ap', 'Grade A+ Value', 2,
-				$rxa['grade_ap'], 'Anything equal to or above this value will be given ' .
-				'an A+ grade. Set to 0 to disable.',
-				$default, $disable);
-			$gAM = generateField(html::TYPE_TEXT, 'grade_am', 'Grade A- Value', 2,
-				$rxa['grade_am'], 'Anything equal to or above this value will be given an A grade.',
-				$default, $disable);
-			$gBP = generateField(html::TYPE_TEXT, 'grade_bp', 'Grade B+ Value', 2,
-				$rxa['grade_bp'], 'Anything equal to or above this value will be given an B+ grade.',
-				$default, $disable);
-			$gBM = generateField(html::TYPE_TEXT, 'grade_bm', 'Grade B- Value', 2,
-				$rxa['grade_bm'], 'Anything equal to or above this value will be given an B- grade.',
-				$default, $disable);
-			$gCP = generateField(html::TYPE_TEXT, 'grade_cp', 'Grade C+ Value', 2,
-				$rxa['grade_cp'], 'Anything equal to or above this value will be given an C+ grade.',
-				$default, $disable);
-			$gCM = generateField(html::TYPE_TEXT, 'grade_cm', 'Grade C-  Value', 2,
-				$rxa['grade_cm'], 'Anything equal to or above this value will be given an C- grade.',
-				$default, $disable);
-			$gDP = generateField(html::TYPE_TEXT, 'grade_dp', 'Grade D+ Value', 2,
-				$rxa['grade_dp'], 'Anything equal to or above this value will be given an D+ grade.',
-				$default, $disable);
-			$gD = generateField(html::TYPE_TEXT, 'grade_d', 'Grade D Value', 2,
-				$rxa['grade_d'], 'Anything equal to or above this value will be given an D grade.',
-				$default, $disable);
-			$gDM = generateField(html::TYPE_TEXT, 'grade_dm', 'Grade D- Value', 2,
-				$rxa['grade_dm'], 'Anything below this value will be given an F grade.' .
-				' But anything equal to or above this value will be given a D- grade.',
-				$default, $disable);
-			break;
-		case 1:
-			$gAP = '';
-			$gAM = '';
-			$gBP = '';
-			$gBM = '';
-			$gCP = '';
-			$gCM = '';
-			$gDP = '';
-			$gDM = '';
-			$gD = generateField(html::TYPE_TEXT, 'grade_d', 'Grade D Value', 2,
-				$rxa['grade_d'], 'Anything below this value will be given an F grade.' .
-				' But anything equal to or above this value will be given a D grade.',
-				$default, $disable);
-			break;
-		default:
-			// Shouldn't get here...
-			break;
-	}
 
 
 	// Build out the form array.
@@ -1046,35 +915,11 @@ function formPage($mode, $rxa)
 		),
 
 		// XXX Enter custom field data here.
-		// Information section
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Grade Scale Information',
-		),
-		$scale,
+		$group,
 		$instruct,
 		$name,
 		$desc,
-		array('type' => html::TYPE_FSETCLOSE),
-
-		// Threshold value section
-		array(
-			'type' => html::TYPE_FSETOPEN,
-			'name' => 'Grade Value Thresholds',
-		),
-		$gAP,
-		$gA,
-		$gAM,
-		$gBP,
-		$gB,
-		$gBM,
-		$gCP,
-		$gC,
-		$gCM,
-		$gDP,
-		$gD,
-		$gDM,
-		array('type' => html::TYPE_FSETCLOSE),
+		$weight,
 
 		array(
 			'type' => html::TYPE_ACTBTN,
@@ -1118,7 +963,7 @@ function generateFieldCheck($returnType = 0)
 		),
 		2 => array(
 			'dispname' => 'Weight Value',
-			'name' => 'grade_ap',
+			'name' => 'weight',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
 			'max' => 100,

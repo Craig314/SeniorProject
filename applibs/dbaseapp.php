@@ -108,9 +108,11 @@ interface database_application_interface
 	public function deleteTurninCourseAll($course);
 
 	// Weight-Group Table
-	public function queryWeightgroup($group, $instruct);
+	public function queryWeightgroup($group);
+	public function queryWeightgroupAll();
+	public function queryWeightgroupInstruct($group, $instruct);
 	public function queryWeightgroupInstructAll($instruct);
-	public function updateWeightGroup($group, $weight, $desc, $name);
+	public function updateWeightGroup($group, $instruct, $weight, $desc, $name);
 	public function insertWeightgroup($instruct, $weight, $desc, $name);
 	public function deleteWeightgroup($group, $instruct);
 
@@ -913,7 +915,26 @@ class database_application implements database_application_interface
 	   collectively a percentage of the total grade. */
 
 	// Queries a weightgroup.
-	public function queryWeightgroup($group, $instruct)
+	public function queryWeightgroup($group)
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.weightgroup';
+		$column = '*';
+		$qxa = $dbcore->buildArray('group', $group, databaseCore::PTINT);
+		return($dbcore->launchQuerySingle($table, $column, $qxa));
+	}
+
+	// Queries all entries in the weightgroup table.
+	public function queryWeightgroupAll()
+	{
+		global $dbcore;
+		$table = $this->tablebase . '.weightgroup';
+		$column = '*';
+		return($dbcore->launchQueryDumpTable($table, $column));
+	}
+
+	// Queries a particular weightgroup that an instructor owns.
+	public function queryWeightgroupInstruct($group, $instruct)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.weightgroup';
@@ -934,11 +955,12 @@ class database_application implements database_application_interface
 	}
 
 	// Updates a weightgroup.
-	public function updateWeightGroup($group, $weight, $desc, $name)
+	public function updateWeightGroup($group, $instruct, $weight, $desc, $name)
 	{
 		global $dbcore;
 		$table = $this->tablebase . '.weightgroup';
 		$qxa = $dbcore->buildArray('weight', $weight, databaseCore::PTINT);
+		$qxa = $dbcore->buildArray('instructor', $instruct, databaseCore::PTINT);
 		$qxa = $dbcore->buildArray('description', $desc, databaseCore::PTSTR, $qxa);
 		$qxa = $dbcore->buildArray('name', $name, databaseCore::PTSTR, $qxa);
 		return($dbcore->launchUpdateSingle($table, 'group', $group,
