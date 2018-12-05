@@ -245,7 +245,7 @@ function change_password()
 	$_SESSION['passChange'] = false;
 
 	// Advance the page.
-	$ajax->sendResponseClear('Your password has been changed.');
+	sendResponseClear('Your password has been changed.');
 
 	exit(0);
 }
