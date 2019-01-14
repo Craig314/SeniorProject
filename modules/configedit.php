@@ -53,24 +53,6 @@ $moduleSystem = true;
 // has in this module.  Currently not implemented.
 $modulePermissions = array();
 
-
-
-// These are the data editing modes.
-const MODE_VIEW		= 0;
-const MODE_UPDATE	= 1;
-const MODE_INSERT	= 2;
-const MODE_DELETE	= 3;
-
-// These are the configuration data types in the database.
-const DBTYPE_STRING		= 0;
-const DBTYPE_INTEGER	= 1;
-const DBTYPE_BOOLEAN	= 2;
-const DBTYPE_LONGSTR	= 3;
-const DBTYPE_TIMEDISP	= 10;
-
-// Other misculanious constants.
-const DBSTR_LENGTH		= 20;
-
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
@@ -78,8 +60,7 @@ $htmlInjectFile = false;
 
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
-const BASEDIR = '../libs/';
-require_once BASEDIR . 'modhead.php';
+require_once '../libs/includes.php';
 
 // Called when the client sends a GET request to the server.
 // This call comes from modhead.php.
@@ -348,7 +329,10 @@ function updateRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
-// Get data
+	// Get field data.
+	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
+
+	// Get data
 	$key = getPostValue('hidden');
 	$id = getPostValue('setting');
 
@@ -370,11 +354,11 @@ function updateRecordAction()
 	{
 		case DBTYPE_STRING:
 			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_ASCII, true, 512, 1);
+			$vfystr->fieldchk($fieldData, 8, $value);
 			break;
 		case DBTYPE_INTEGER:
 			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_INTEGER, true);
+			$vfystr->fieldchk($fieldData, 8, $value);
 			break;
 		case DBTYPE_BOOLEAN:
 			$value = getPostValue('datavalue2');
@@ -382,11 +366,11 @@ function updateRecordAction()
 			break;
 		case DBTYPE_LONGSTR:
 			$value = getPostValue('datavalue1');
-			$vfystr->strchk($value, 'Value', 'datavalue1', verifyString::STR_ASCII, true, 512, 1);
+			$vfystr->fieldchk($fieldData, 6, $value);
 			break;
 		case DBTYPE_TIMEDISP:
 			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_TIMEDISP, true, 6, 5);
+			$vfystr->fieldchk($fieldData, 8, $value);
 			break;
 		default:
 			handleError('Invalid datatype detected.');
@@ -400,12 +384,9 @@ function updateRecordAction()
 	$accadmin = getPostValue('accadmin');
 
 	// Check the other values.
-	$vfystr->strchk($intname, 'Internal Name', 'intname',
-		verifyString::STR_ALPHASPEC, true, 32, 1);
-	$vfystr->strchk($dispname, 'Display Name', 'dispname',
-		verifyString::STR_ALPHANUM, true, 64, 1);
-	$vfystr->strchk($description, 'Description', 'description',
-		verifyString::STR_ASCII, true, 256, 1);
+	$vfystr->fieldchk($fieldData, 2, $intname);
+	$vfystr->fieldchk($fieldData, 3, $dispname);
+	$vfystr->fieldchk($fieldData, 4, $description);
 	if (!empty($accadmin)) $accadmin = 1; else $accadmin = 0;
 
 	// Handle any errors from above.
@@ -448,6 +429,9 @@ function insertRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
+	// Get field data.
+	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
+
 	// Get data
 	$id = getPostValue('setting');
 	$vfystr->strchk($id, 'Setting Number', 'setting', verifyString::STR_INTEGER, true);
@@ -458,11 +442,11 @@ function insertRecordAction()
 	{
 		case DBTYPE_STRING:
 			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_ASCII, true, 512, 1);
+			$vfystr->fieldchk($fieldData, 8, $value);
 			break;
 		case DBTYPE_INTEGER:
 			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_INTEGER, true, 0, 1);
+			$vfystr->fieldchk($fieldData, 8, $value);
 			break;
 		case DBTYPE_BOOLEAN:
 			$value = getPostValue('datavalue2');
@@ -470,11 +454,11 @@ function insertRecordAction()
 			break;
 		case DBTYPE_LONGSTR:
 			$value = getPostValue('datavalue1');
-			$vfystr->strchk($value, 'Value', 'datavalue1', verifyString::STR_ASCII, true, 512, 1);
+			$vfystr->fieldchk($fieldData, 6, $value);
 			break;
 		case DBTYPE_TIMEDISP:
 			$value = getPostValue('datavalue3');
-			$vfystr->strchk($value, 'Value', 'datavalue3', verifyString::STR_TIMEDISP, true, 6, 5);
+			$vfystr->fieldchk($fieldData, 8, $value);
 			break;
 		default:
 			handleError('Invalid datatype detected.');
@@ -488,12 +472,9 @@ function insertRecordAction()
 	$accadmin = getPostValue('accadmin');
 
 	// Check the other values.
-	$vfystr->strchk($intname, 'Internal Name', 'intname',
-		verifyString::STR_ALPHASPEC, true, 32, 1);
-	$vfystr->strchk($dispname, 'Display Name', 'dispname',
-		verifyString::STR_ALPHANUM, true, 64, 1);
-	$vfystr->strchk($description, 'Description', 'description',
-		verifyString::STR_ASCII, true, 256, 1);
+	$vfystr->fieldchk($fieldData, 2, $intname);
+	$vfystr->fieldchk($fieldData, 3, $dispname);
+	$vfystr->fieldchk($fieldData, 4, $description);
 	if (!empty($accadmin)) $accadmin = 1; else $accadmin = 0;
 
 	// Handle any errors from above.
@@ -818,55 +799,8 @@ function formPage($mode, $rxa)
 		generateFieldCheck());
 }
 
-// Converts type numbers into names.
-function convertType($type)
-{
-	switch ($type)
-	{
-		case DBTYPE_STRING:
-			return 'String';
-			break;
-		case DBTYPE_INTEGER:
-			return 'Integer';
-			break;
-		case DBTYPE_BOOLEAN:
-			return 'Boolean';
-			break;
-		case DBTYPE_LONGSTR:
-			return 'Long String';
-			break;
-		case DBTYPE_TIMEDISP:
-			return 'Time Displacement';
-			break;
-		default:
-			return 'Unknown';
-			break;
-	}
-}
-
-// Converts long string values to shorter strings for display.
-function convertLongString($type, $value)
-{
-	if ($type == DBTYPE_LONGSTR)
-	{
-		$len = strlen($value);
-		$data = '';
-		if ($len > DBSTR_LENGTH)
-		{
-			for ($i = 0; $i < DBSTR_LENGTH; $i++)
-			{
-				$data .= $value[$i];
-			}
-			$data .= '...';
-		}
-		else $data = $value;
-		return $data;
-	}
-	return $value;
-}
-
 // Generate the field definitions for client side error checking.
-function generateFieldCheck()
+function fcData()
 {
 	global $CONFIGVAR;
 	global $vfystr;
@@ -874,6 +808,7 @@ function generateFieldCheck()
 	$data = array(
 		0 => array(
 			'name' => 'setting',
+			'dispname' => 'Setting Number',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
 			'max' => 0,
@@ -881,6 +816,7 @@ function generateFieldCheck()
 		),
 		1 => array(
 			'name' => 'datatype',
+			'dispname' => 'Data Type',
 			'type' => $vfystr::STR_INTEGER,
 			'noblank' => true,
 			'max' => 25,
@@ -888,6 +824,7 @@ function generateFieldCheck()
 		),
 		2 => array(
 			'name' => 'intname',
+			'dispname' => 'Internal Name',
 			'type' => $vfystr::STR_ALPHASPEC,
 			'noblank' => true,
 			'max' => 32,
@@ -895,6 +832,7 @@ function generateFieldCheck()
 		),
 		3 => array(
 			'name' => 'dispname',
+			'dispname' => 'Display Name',
 			'type' => $vfystr::STR_ALPHANUM,
 			'noblank' => true,
 			'max' => 64,
@@ -902,6 +840,7 @@ function generateFieldCheck()
 		),
 		4 => array(
 			'name' => 'description',
+			'dispname' => 'Description',
 			'type' => $vfystr::STR_ASCII,
 			'noblank' => true,
 			'max' => 256,
@@ -909,6 +848,7 @@ function generateFieldCheck()
 		),
 		5 => array(
 			'name' => 'accadmin',
+			'dispname' => 'Admin Access',
 			'type' => $vfystr::STR_NONE,
 			'noblank' => false,
 			'max' => 0,
@@ -916,6 +856,7 @@ function generateFieldCheck()
 		),
 		6 => array(
 			'name' => 'datavalue1',
+			'dispname' => 'Value',
 			'type' => $vfystr::STR_CUSTOM,
 			'ctype' => $vfystr::STR_NONE,
 			'noblank' => false,
@@ -924,6 +865,7 @@ function generateFieldCheck()
 		),
 		7 => array(
 			'name' => 'datavalue2',
+			'dispname' => 'Value',
 			'type' => $vfystr::STR_NONE,
 			'noblank' => false,
 			'max' => 0,
@@ -931,6 +873,7 @@ function generateFieldCheck()
 		),
 		8 => array(
 			'name' => 'datavalue3',
+			'dispname' => 'Value',
 			'type' => $vfystr::STR_CUSTOM,
 			'ctype' => $vfystr::STR_NONE,
 			'noblank' => false,
@@ -938,8 +881,7 @@ function generateFieldCheck()
 			'min' => 1,
 		),
 	);
-	$fieldcheck = json_encode($data);
-	return $fieldcheck;
+	return $data;
 }
 
 ?>

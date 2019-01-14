@@ -75,14 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET')
 	// Called on a GET operation.
 	if ($CONFIGVAR['session_use_tokens']['value'] != 0) $token = $_SESSION['token'];
 		else $token = false;
-	bannerShowHeader($bannerTitle, $bannerSubtitle, $bannerMessage, $token);
-	if ($_SESSION['passChange'] == true)
-	{
-		bannerShowPassword(false);
-		bannerShowContinue(true);
-	}
-	else bannerShowContinue(false);
-	bannerShowFooter();
+	
+	echo htmlTemplate($bannerTitle, $bannerSubtitle, $bannerMessage, $token);
 	exit(0);
 }
 else if ($_SERVER['REQUEST_METHOD'] == 'POST')
@@ -100,36 +94,23 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 			printErrorImmediate('Security Error: Invalid Access Token.');
 	}
 
+	// Process the command.
 	if (isset($_POST['COMMAND']))
 	{
 		$command_id = (int)$_POST['COMMAND'];
 		switch($command_id)
 		{
+			case -1:
+				loadAdditionalContent();
+				break;
 			case 1:
-				change_password();
+				changePassword();
 				break;
 			case 2:
-				if ($_SESSION['passChange'] == true)
-					error_exit('Cannot Continue: Your password must be changed.');
-				$_SESSION['banner'] = true;
-				switch((int)$_SESSION['portalType'])
-				{
-					case 0:
-						$ajax->redirect('/modules' . '/' . $CONFIGVAR['html_gridportal_page']['value']);
-						break;
-					case 1:
-						$ajax->redirect('/modules' . '/' . $CONFIGVAR['html_linkportal_page']['value']);
-						break;
-					case 2:
-						$ajax->redirect('/application' . '/' . $CONFIGVAR['html_appportal_page']['value']);
-						break;
-					default:
-						error_exit('Invalid redirect.  Contact your administrator.');
-						break;
-				}
+				redirectPortal();
 				break;
 			default:
-				error_exit('Invalid Command');
+				handleError('Invalid Command');
 				break;
 		}
 		exit(0);
@@ -148,8 +129,75 @@ else
 	exit(1);
 }
 
+// Displays either the continue button or forces the user to change
+// their password.
+function loadAdditionalContent()
+{
+	global $ajax;
+
+	if (isset($_SESSION['passChange']))
+	{
+		if ($_SESSION['passChange'] == true)	
+		{
+			$html = htmlChangePassword();
+		}
+		else
+		{
+			$html = htmlContinue();
+		}
+	}
+	else
+	{
+		if ($_SESSION['method'] != 0)
+		{
+			$html = htmlContinue();
+		}
+		else
+		{
+			handleError("Internal Error: Password change flag missing.");
+		}
+	}
+	$ajax->writeMainPanelImmediate($html);
+}
+
+// Redirects the user to their portal page.
+function redirectPortal()
+{
+	global $CONFIGVAR;
+	global $ajax;
+
+	if (isset($_SESSION['passChange']))
+	{
+		if ($_SESSION['passChange'] == true)
+			handleError('Cannot Continue: Your password must be changed.');
+	}
+	else
+	{
+		if ($_SESSION['method'] == 0)
+		{
+			handleError("Internal Error: Password change flag missing.");
+		}
+	}
+	$_SESSION['banner'] = true;
+	switch((int)$_SESSION['portalType'])
+	{
+		case 0:
+			$ajax->redirect('/modules' . '/' . $CONFIGVAR['html_gridportal_page']['value']);
+			break;
+		case 1:
+			$ajax->redirect('/modules' . '/' . $CONFIGVAR['html_linkportal_page']['value']);
+			break;
+		case 2:
+			$ajax->redirect('/application' . '/' . $CONFIGVAR['html_appportal_page']['value']);
+			break;
+		default:
+			handleError('Invalid redirect.  Contact your administrator.');
+			break;
+	}
+}
+
 // Exits out with an error message.
-function error_exit($message)
+function handleError($message)
 {
 	global $ajax;
 
@@ -159,7 +207,7 @@ function error_exit($message)
 
 
 // Changes the user password.
-function change_password()
+function changePassword()
 {
 	global $passMin;
 	global $passMax;
@@ -177,11 +225,11 @@ function change_password()
 		{
 			$base64 = (int)$_POST['base64'];
 			if ($base64 != 0 && $base64 != 1)
-				error_exit('Invalid characters detected.');
+				handleError('Invalid characters detected.');
 		}
-		else error_exit('Invalid characters detected.');
+		else handleError('Invalid characters detected.');
 	}
-	else error_exit('Missing encode parameter.');
+	else handleError('Missing encode parameter.');
 
 	// Get and decode the client provided old password.
 	if (isset($_POST['oldpassword']))
@@ -192,7 +240,7 @@ function change_password()
 			else $b64dec = $urldec;
 		$oldpass = $b64dec;
 	}
-	else error_exit('Missing old password parameter.');
+	else handleError('Missing old password parameter.');
 
 	// Get and decode the client provided new password 1.
 	if (isset($_POST['newpassword1']))
@@ -203,7 +251,7 @@ function change_password()
 			else $b64dec = $urldec;
 		$newpass1 = $b64dec;
 	}
-	else error_exit('Missing new password 1 parameter.');
+	else handleError('Missing new password 1 parameter.');
 
 	// Get and decode the client provided new password 2.
 	if (isset($_POST['newpassword2']))
@@ -214,7 +262,7 @@ function change_password()
 			else $b64dec = $urldec;
 		$newpass2 = $b64dec;
 	}
-	else error_exit('Missing new password 2 parameter.');
+	else handleError('Missing new password 2 parameter.');
 
 	// Now we have everything that we need to change the user's
 	// password.
@@ -224,7 +272,7 @@ function change_password()
 	$username = $_SESSION['nameUser'];
 	$rxa_login = $dbuser->queryLogin($userid);
 	if ($rxa_login == false)
-		error_exit('Stored Data Conflict<br>Contact Your Administrator<br>XX32745');
+		handleError('Stored Data Conflict<br>Contact Your Administrator<br>XX32745');
 	$hexpass	= (string)$rxa_login['passwd'];
 	$hexsalt	= (string)$rxa_login['salt'];
 	$digest		= (string)$rxa_login['digest'];
@@ -233,40 +281,34 @@ function change_password()
 	// Check the old password for errors.
 	$vfystr->strchk($oldpass, 'Old Password', '', verifyString::STR_PASSWD, true, $passMax, 1);
 	if ($herr->checkState())
-	{
-		$errstr = $herr->errorGetMessage();
-		error_exit($errstr);
-	}
+		handleError($herr->errorGetMessage());
 
 	// Verify that the old password matches what is on record.
 	$result = password::verify($oldpass, $hexsalt, $hexpass, $digest, $count);
 	if (!$result)
-		error_exit('Invalid existing password was entered.');
+		handleError('Invalid existing password was entered.');
 	
 	// Check the new passwords for errors.
-	$vfystr->strchk($oldpass, 'New Password 1', '', verifyString::STR_PASSWD, true, $passMax, $passMin);
-	$vfystr->strchk($oldpass, 'New Password 2', '', verifyString::STR_PASSWD, true, $passMax, $passMin);
+	$vfystr->strchk($newpass1, 'New Password 1', '', verifyString::STR_PASSWD, true, $passMax, $passMin);
+	$vfystr->strchk($newpass2, 'New Password 2', '', verifyString::STR_PASSWD, true, $passMax, $passMin);
 	if ($herr->checkState())
-	{
-		$errstr = $herr->errorGetMessage();
-		error_exit($errstr);
-	}
+		handleError($herr->errorGetMessage());
 
 	// Makes sure that the two new passwords match.
 	if (strcmp($newpass1, $newpass2) != 0)
-		error_exit('The new passwords do not match.');
+		handleError('The new passwords do not match.');
 	
 	// Make sure that the old and new passwords do not match.
 	if (strcmp($oldpass, $newpass1) == 0)
-		error_exit('The old and new passwords cannot match');
+		handleError('The old and new passwords cannot match');
 	
 	// Make sure that the new password does not match the username.
 	if (strcmp($username, $newpass1) == 0)
-		error_exit('The new password cannot match your username.');
+		handleError('The new password cannot match your username.');
 
 	// Make sure that the new password does not contain the username.
 	if (stripos($newpass1, $username) !== false)
-		error_exit('The new password cannot contain your username.');
+		handleError('The new password cannot contain your username.');
 
 	// Make sure that the new password complies with
 	// complexity requirements.
@@ -276,7 +318,7 @@ function change_password()
 		switch($CONFIGVAR['security_passwd_complex_level']['value'])
 		{
 			case 0:		// Shouldn't happen
-				error_exit('Internal Error: Contact your administrator.  XX28362');
+				handleError('Internal Error: Contact your administrator.  XX28362');
 				break;
 			case 1:
 				$mxe = 'Password must contain upper and lower case letters.';
@@ -288,10 +330,10 @@ function change_password()
 				$mxe = 'Password must contain upper and lower case letters, numbers, and symbols.';
 				break;
 			default:	// Shouldn't happen
-				error_exit('Internal Error: Contact your administrator.  XX27572');
+				handleError('Internal Error: Contact your administrator.  XX27572');
 				break;
 		}
-		error_exit($msg . '<br>' . $mxe);
+		handleError($msg . '<br>' . $mxe);
 	}
 
 	// If we get to this point, then all checks have passed.
@@ -306,19 +348,104 @@ function change_password()
 	$result = $dbuser->updateLoginPassword($userid, $nextchange, $digest,
 		$count, $hexsalt, $hexpass);
 	if (!$result)
-		error_exit($herr->errorGetMessage());
+		handleError($herr->errorGetMessage());
 	
 	// Clear the password change flag.
 	$_SESSION['passChange'] = false;
 
 	// Advance the page.
-	$ajax->sendCommand(1);
-
+	$timeout = (integer)($CONFIGVAR['security_passexp_timeout']['value'] / 86400);
+	$message = 'Your password has been changed.<br>';
+	$message .= 'It must be changed again in ' . $timeout . ' days.';
+	echo htmlContinue($message);
 	exit(0);
 }
 
-// Sends the banner page header to the client.
-function bannerShowHeader($title, $subtitle, $message, $token)
+// Sends the change password form to the client.
+function htmlChangePassword()
+{
+	global $passMax;
+	$html = "
+		<div class=\"width75\">
+			<form class=\"passwd form-horizontal\">
+				<div class=\"form-group\">
+					<label class=\"control-label col-xs-4\" for=\"oldpass\">Old Password</label>
+					<div class=\"col-xs-8\">
+						<input type=\"password\" class=\"form-control\" id=\"oldpass\" maxlength=\"$passMax\">
+					</div>
+				</div>
+				<div class=\"form-group\">
+					<label class=\"control-label col-xs-4\" for=\"newpass1\">Enter New Password</label>
+					<div class=\"col-xs-8\">
+						<input type=\"password\" class=\"form-control\" id=\"newpass1\" maxlength=\"$passMax\">
+					</div>
+				</div>
+				<div class=\"form-group\">
+					<label class=\"control-label col-xs-4\" for=\"newpass2\">Enter Password Again</label>
+					<div class=\"col-xs-8\">
+						<input type=\"password\" class=\"form-control\" id=\"newpass2\" maxlength=\"$passMax\">
+					</div>
+				</div>
+				<div class=\"button\">
+					<div class=\"form-group\">
+						<span class=\"col-xs-3\"></span>
+						<input type=\"button\" class=\"btn btn-default col-xs-2\" value=\"Submit\" onclick=\"submitPasswordChange()\">
+						<span class=\"col-xs-2\"></span>
+						<input type=\"button\" class=\"btn btn-default col-xs-2\" value=\"Reset\" onclick=\"clearForm()\">
+						<span class=\"col-xs-3\"></span>
+					</div>
+				</div>
+			</form>
+		</div>";
+	return $html;
+}
+
+// Send the continue button with an optional message
+// to the client.
+function htmlContinue($message = '')
+{
+	$html = "
+		<div class=\"width75\">";
+	if (isset($_SESSION['loginLast']))
+	{
+		$date = timedate::unix2canonical($_SESSION['loginLast']);
+		$html .= "
+			<div class=\"text-center\">
+				<h4 class=\"color-blue\">
+					Last Login:
+					<span class=\"color-red\">
+						$date
+					</span>
+				</h4>
+			</div>";
+	}
+	if (!empty($message))
+	{
+		$html .= "
+			<div class=\"text-center\">
+				<h4 class=\"color-blue\">
+					$message
+				</h4>
+			</div>";
+	}
+	$html .= "
+			<form class=\"form-horizontal\">
+				<div class=\"button\">
+					<div class=\"form-group\">
+						<span class=\"col-xs-4\"></span>
+						<input type=\"button\" class=\"btn btn-default col-xs-4\" value=\"Continue\" onclick=\"submitContinue()\">
+						<span class=\"col-xs-4\"></span>
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class=\"vspace10\"></div>
+";
+	return $html;
+}
+
+// Sends the banner page template to the client.
+function htmlTemplate($title, $subtitle, $message, $token)
 {
 	global $baseUrl;
 ?>
@@ -360,18 +487,12 @@ function bannerShowHeader($title, $subtitle, $message, $token)
 			<img src="<?php echo $baseUrl; ?>/images/border/border2a.gif" />
 		</div>
 		<br>
-		<div class="color-black" id="main"></div>
-		<div class="color-blue" id="responseTarget"></div>
-		<div class="color-red" id="errorTarget"></div>
+		<div class="width75">
+			<div class="color-blue" id="responseTarget"></div>
+			<div class="color-red" id="errorTarget"></div>
+			<div class="color-black" id="main"></div>
+		</div>
 		<br>
-<?php
-}
-
-// Sends the banner page footer to the client.
-function bannerShowFooter()
-{
-	global $baseUrl;
-?>
 		<div class="image-border-bottom">
 			<img src="<?php echo $baseUrl; ?>/images/border/border2b.gif" />
 		</div>
@@ -379,80 +500,6 @@ function bannerShowFooter()
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
 	</body>
 </html>
-<?php
-}
-
-// Sends the change password form to the client.
-function bannerShowPassword($hidden)
-{
-	global $passMax;
-
-	if ($hidden) $hide = ' hidden';
-		else $hide = '';
-?>
-		<div id="block_password"<?php echo $hide; ?>>
-			<div class="width75">
-				<form class="passwd form-horizontal">
-					<div class="form-group">
-						<label class="control-label col-xs-4" for="oldpass">Old Password</label>
-						<div class="col-xs-8">
-							<input type="password" class="form-control" id="oldpass" maxlength=<?php echo $passMax; ?>>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="control-label col-xs-4" for="newpass1">Enter New Password</label>
-						<div class="col-xs-8">
-							<input type="password" class="form-control" id="newpass1" maxlength=<?php echo $passMax; ?>>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="control-label col-xs-4" for="newpass2">Enter Password Again</label>
-						<div class="col-xs-8">
-							<input type="password" class="form-control" id="newpass2" maxlength=<?php echo $passMax; ?>>
-						</div>
-					</div>
-					<div class="button">
-						<div class="form-group">
-							<span class="col-xs-3"></span>
-							<input type="button" class="btn btn-default col-xs-2" value="Submit" onclick="submitPasswordChange()">
-							<span class="col-xs-2"></span>
-							<input type="button" class="btn btn-default col-xs-2" value="Reset" onclick="clearForm()">
-							<span class="col-xs-3"></span>
-						</div>
-					</div>
-				</form>
-			</div>
-		</div>
-<?php
-}
-
-function bannerShowContinue($hidden)
-{
-	if ($hidden) $hide = ' hidden';
-		else $hide = '';
-?>
-		<div id="block_continue"<?php echo $hide; ?>>
-			<div class="width75">
-				<div class="text-center">
-					<h4 class="color-blue">
-						Last Login:
-						<span class="color-red">
-							<?php echo timedate::unix2canonical($_SESSION['loginLast']); ?>
-						</span>
-					</h4>
-				</div>
-				<form class="form-horizontal">
-					<div class="button">
-						<div class="form-group">
-							<span class="col-xs-4"></span>
-							<input type="button" class="btn btn-default col-xs-4" value="Continue" onclick="submitContinue()">
-							<span class="col-xs-4"></span>
-						</div>
-					</div>
-				</form>
-			</div>
-			<div class="vspace10"></div>
-		</div>
 <?php
 }
 

@@ -287,6 +287,14 @@ class oauthClass implements oauthInterface
 
 		// If we get to this point, then the authentication was successful.
 		// So, we log the user into the application.
+		if (function_exists('oauth_login'))
+		{
+			oauth_login($userid, $rxu, $rxp);
+		}
+		else
+		{
+			handleError('OAuth Login Failure: Missing Code');
+		}
 	}
 }
 

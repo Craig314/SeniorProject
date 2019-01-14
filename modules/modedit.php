@@ -54,14 +54,6 @@ $moduleSystem = true;
 // has in this module.  Currently not implemented.
 $modulePermissions = array();
 
-
-
-// These are the data editing modes.
-const MODE_VIEW	= 0;
-const MODE_UPDATE	= 1;
-const MODE_INSERT	= 2;
-const MODE_DELETE	= 3;
-
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
@@ -69,8 +61,7 @@ $htmlInjectFile = false;
 
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
-const BASEDIR = '../libs/';
-require_once BASEDIR . 'modhead.php';
+require_once '../libs/includes.php';
 
 // Called when the client sends a GET request to the server.
 // This call comes from modhead.php.
@@ -340,6 +331,9 @@ function updateRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
+	// Get field data.
+	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
+
 	// Get data
 	$key = getPostValue('hidden');
 	$id = getPostValue('modid');
@@ -365,11 +359,11 @@ function updateRecordAction()
 		handleError('Database key mismatch.');
 
 	// Check mandatory fields.
-	$vfystr->strchk($id, 'Module ID', 'modid', verifyString::STR_PINTEGER, true, 2147483647, 1);
-	$vfystr->strchk($name, 'Name', 'modname', verifyString::STR_ALPHA, true, 32, 3);
-	$vfystr->strchk($desc, 'Description', 'moddesc', verifyString::STR_ASCII, true, 256, 1);
-	$vfystr->strchk($file, 'Filename', 'modfile', verifyString::STR_FILENAME, true, 50, 1);
-	$vfystr->strchk($icon, 'Icon', 'modicon', verifyString::STR_FILENAME, true, 50, 1);
+	$vfystr->fieldchk($fieldData, 0, $id);
+	$vfystr->fieldchk($fieldData, 1, $name);
+	$vfystr->fieldchk($fieldData, 2, $desc);
+	$vfystr->fieldchk($fieldData, 3, $file);
+	$vfystr->fieldchk($fieldData, 4, $icon);
 	
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -416,6 +410,9 @@ function insertRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
+	// Get field data.
+	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
+
 	// Get data
 	$id = getPostValue('modid');
 	$name = getPostValue('modname');
@@ -428,11 +425,11 @@ function insertRecordAction()
 	$sys = getPostValue('modsys');
 
 	// Check mandatory fields.
-	$vfystr->strchk($id, 'Module ID', 'modid', verifyString::STR_PINTEGER, true, 2147483647, 1);
-	$vfystr->strchk($name, 'Name', 'modname', verifyString::STR_ALPHA, true, 32, 3);
-	$vfystr->strchk($desc, 'Description', 'moddesc', verifyString::STR_ASCII, true, 256, 1);
-	$vfystr->strchk($file, 'Filename', 'modfile', verifyString::STR_FILENAME, true, 50, 1);
-	$vfystr->strchk($icon, 'Icon', 'modicon', verifyString::STR_FILENAME, true, 50, 1);
+	$vfystr->fieldchk($fieldData, 0, $id);
+	$vfystr->fieldchk($fieldData, 1, $name);
+	$vfystr->fieldchk($fieldData, 2, $desc);
+	$vfystr->fieldchk($fieldData, 3, $file);
+	$vfystr->fieldchk($fieldData, 4, $icon);
 	
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -807,7 +804,7 @@ function formPage($mode, $rxa)
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck()
+function fcData()
 {
 	global $CONFIGVAR;
 	global $vfystr;
@@ -815,6 +812,7 @@ function generateFieldCheck()
 	$data = array(
 		0 => array(
 			'name' => 'modid',
+			'dispname' => 'Module ID',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
 			'max' => 2147483647,
@@ -822,6 +820,7 @@ function generateFieldCheck()
 		),
 		1 => array(
 			'name' => 'modname',
+			'dispname' => 'Name',
 			'type' => $vfystr::STR_ALPHA,
 			'noblank' => true,
 			'max' => 32,
@@ -829,6 +828,7 @@ function generateFieldCheck()
 		),
 		2 => array(
 			'name' => 'moddesc',
+			'dispname' => 'Description',
 			'type' => $vfystr::STR_ASCII,
 			'noblank' => true,
 			'max' => 256,
@@ -836,6 +836,7 @@ function generateFieldCheck()
 		),
 		3 => array(
 			'name' => 'modfile',
+			'dispname' => 'Filename',
 			'type' => $vfystr::STR_FILENAME,
 			'noblank' => true,
 			'max' => 50,
@@ -843,6 +844,7 @@ function generateFieldCheck()
 		),
 		4 => array(
 			'name' => 'modicon',
+			'dispname' => 'Icon',
 			'type' => $vfystr::STR_FILENAME,
 			'noblank' => true,
 			'max' => 50,
@@ -850,6 +852,7 @@ function generateFieldCheck()
 		),
 		5 => array(
 			'name' => 'modact',
+			'dispname' => 'Active',
 			'type' => $vfystr::STR_NONE,
 			'noblank' => false,
 			'max' => 0,
@@ -857,6 +860,7 @@ function generateFieldCheck()
 		),
 		6 => array(
 			'name' => 'modalluser',
+			'dispname' => 'All Users',
 			'type' => $vfystr::STR_NONE,
 			'noblank' => false,
 			'max' => 0,
@@ -864,6 +868,7 @@ function generateFieldCheck()
 		),
 		7 => array(
 			'name' => 'modvend',
+			'dispname' => 'Vendor Only',
 			'type' => $vfystr::STR_NONE,
 			'noblank' => false,
 			'max' => 0,
@@ -871,14 +876,14 @@ function generateFieldCheck()
 		),
 		8 => array(
 			'name' => 'modsys',
+			'dispname' => 'System',
 			'type' => $vfystr::STR_NONE,
 			'noblank' => false,
 			'max' => 0,
 			'min' => 1,
 		),
 	);
-	$fieldcheck = json_encode($data);
-	return $fieldcheck;
+	return $data;
 }
 
 

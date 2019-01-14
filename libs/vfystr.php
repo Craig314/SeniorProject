@@ -43,6 +43,7 @@ interface verifyStringInterface
 	const STR_TIMEDISP		= 21;	// Time Displacement
 	const STR_ALPHASPEC		= 22;	// Alpha Spec'd (a-z_ only)
 	const STR_DESC			= 23;	// Descriptions
+	const STR_HEX			= 24;	// Hex String
 	const STR_CUSTOM		= 99;	// Custom Verification (Do Not Use);
 
 	// Start custom checks at 100
@@ -203,6 +204,9 @@ class verifyString implements verifyStringInterface
 				break;
 			case self::STR_DESC:
 				$result = $this->checkCharASCIIFormat($data, $field, $id);
+				break;
+			case self::STR_HEX:
+				$result = $this->checkCharHex($data, $field, $id);
 				break;
 			default:
 				$herr->errorPutMessage($this->etype,
@@ -792,6 +796,25 @@ class verifyString implements verifyStringInterface
 		}
 		return true;
 	}
+
+	// Checks for invalid characters in a hex string.
+	private function checkCharHex($data, $field, $id)
+	{
+		global $herr;
+
+		$regex = '/^[A-Fa-f0-9]+$/';
+		$result = preg_match($regex, $data);
+		if ($result != 1)
+		{
+			$herr->errorPutMessage($this->etype,
+				'Invalid characters detected.<br>Only hex characters A-F a-f' .
+				' and 0-9 are allowed.', $this->estate,
+				$field, $id);
+			return false;
+		}
+		return true;
+	}
+
 }
 
 

@@ -51,23 +51,14 @@ $moduleSystem = true;
 // has in this module.  Currently not implemented.
 $modulePermissions = array();
 
-
-
-// These are the data editing modes.
-const MODE_VIEW	= 0;
-const MODE_UPDATE	= 1;
-const MODE_INSERT	= 2;
-const MODE_DELETE	= 3;
-
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
 $htmlInjectFile = false;
 
-// Order matters here.  The modhead library needs to be loaded last.
+// Order matters here.  The includes library needs to be loaded last.
 // If additional libraries are needed, then load them before.
-const BASEDIR = '../libs/';
-require_once BASEDIR . 'modhead.php';
+require_once '../libs/includes.php';
 
 // Called when the client sends a GET request to the server.
 // This call comes from modhead.php.
@@ -354,6 +345,9 @@ function updateRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
+	// Get field data.
+	$fieldData = generateFieldCheck(FIELDCHK_ARRAY);
+
 	// Get data
 	$key = getPostValue('hidden');
 	$id = getPostValue('flag');
@@ -373,10 +367,9 @@ function updateRecordAction()
 		handleError('Database key mismatch.');
 
 	// Check fields.
-	$vfystr->strchk($id, 'Flag', 'flag', verifyString::STR_PINTEGER, true, 127, 0);
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_ALPHANUM, true, 32, 1);
-	$vfystr->strchk($desc, 'Description', 'desc', verifyString::STR_DESC,
-		false , 256, 0);
+	$vfystr->fieldchk($fieldData, 0, $id);
+	$vfystr->fieldchk($fieldData, 1, $name);
+	$vfystr->fieldchk($fieldData, 2, $desc);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -594,7 +587,7 @@ function formPage($mode, $rxa)
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck()
+function fcData()
 {
 	global $CONFIGVAR;
 	global $vfystr;
@@ -602,6 +595,7 @@ function generateFieldCheck()
 	$data = array(
 		0 => array(
 			'name' => 'flag',
+			'dispname' => 'Flag',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
 			'max' => 127,
@@ -609,6 +603,7 @@ function generateFieldCheck()
 		),
 		1 => array(
 			'name' => 'name',
+			'dispname' => 'Name',
 			'type' => $vfystr::STR_ALPHANUM,
 			'noblank' => true,
 			'max' => 32,
@@ -616,14 +611,14 @@ function generateFieldCheck()
 		),
 		2 => array(
 			'name' => 'desc',
+			'dispname' => 'Description',
 			'type' => $vfystr::STR_DESC,
 			'noblank' => false,
 			'max' => 256,
 			'min' => 0,
 		),
 	);
-	$fieldcheck = JSON_encode($data);
-	return $fieldcheck;
+	return $data;
 }
 
 

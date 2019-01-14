@@ -51,14 +51,6 @@ $moduleSystem = true;
 // has in this module.  Currently not implemented.
 $modulePermissions = array();
 
-
-
-// These are the data editing modes.
-const MODE_VIEW	= 0;
-const MODE_UPDATE	= 1;
-const MODE_INSERT	= 2;
-const MODE_DELETE	= 3;
-
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
@@ -66,8 +58,7 @@ $htmlInjectFile = false;
 
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
-const BASEDIR = '../libs/';
-require_once BASEDIR . 'modhead.php';
+require_once '../libs/includes.php';
 
 // Called when the client sends a GET request to the server.
 // This call comes from modhead.php.
@@ -460,39 +451,23 @@ function insertRecordAction()
 	$usepkce = getPostValue('usepkce');
 	$pkcemethod = getPostValue('pkcemethod');
 
-	$vfystr->strchk($id, 'Provider', 'provider', verifyString::STR_PINTEGER,
-		true, 2147483647, 0);
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 3);
-	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
-		true, 32, 1);
-	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
-		true, 1209600, 900);
-	$vfystr->strchk($clientid, 'Client ID', 'clientid',
-		verifyString::STR_ALPHANUM, true, 32, 3);
-	$vfystr->strchk($scope, 'Scope', 'scope', verifyString::STR_ALPHANUMPUNCT, true,
-		256, 3);
-	$vfystr->strchk($authtype, 'Authentication Type', 'authtype',
-		verifyString::STR_PINTEGER, true, 3, 0);
-	$vfystr->strchk($pkcemethod, 'PKCE Method', 'pkcemethod',
-		verifyString::STR_PINTEGER, true, 1, 0);
-	$vfystr->strchk($authurl, 'Authentication URL', 'authurl',
-		verifyString::STR_URI, true, 512, 3);
-	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
-		verifyString::STR_URI, true, 512, 3);
-	$vfystr->strchk($resource1, 'Resource URL 1', 'resource1',
-		verifyString::STR_URI, true, 512, 3);
-
-	// Check optional fields.
-	$vfystr->strchk($clientsecret, 'Client Secret', 'clientsecret',
-		verifyString::STR_ALPHANUM, false, 64, 3);
-	$vfystr->strchk($exchange, 'Token Exchange URL', 'exchange',
-		verifyString::STR_URI, false, 512, 3);
-	$vfystr->strchk($resource2, 'Resource URL 2', 'resource2',
-		verifyString::STR_URI, false, 512, 3);
-	$vfystr->strchk($resource3, 'Resource URL 3', 'resource3',
-		verifyString::STR_URI, false, 512, 3);
-	$vfystr->strchk($resource4, 'Resource URL 4', 'resource4',
-		verifyString::STR_URI, false, 512, 3);
+	// Check field data
+	$vfystr->fieldchk($fieldData, 0, $id);
+	$vfystr->fieldchk($fieldData, 1, $name);
+	$vfystr->fieldchk($fieldData, 2, $module);
+	$vfystr->fieldchk($fieldData, 3, $expire);
+	$vfystr->fieldchk($fieldData, 4, $clientid);
+	$vfystr->fieldchk($fieldData, 5, $scope);
+	$vfystr->fieldchk($fieldData, 6, $authtype);
+	$vfystr->fieldchk($fieldData, 7, $pkcemethod);
+	$vfystr->fieldchk($fieldData, 8, $authurl);
+	$vfystr->fieldchk($fieldData, 9, $redirect);
+	$vfystr->fieldchk($fieldData, 10, $resource1);
+	$vfystr->fieldchk($fieldData, 11, $clientsecret);
+	$vfystr->fieldchk($fieldData, 12, $exchange);
+	$vfystr->fieldchk($fieldData, 13, $resource2);
+	$vfystr->fieldchk($fieldData, 14, $resource3);
+	$vfystr->fieldchk($fieldData, 14, $resource4);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -955,7 +930,7 @@ function authTypeText($authtype)
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck($returnType = 0)
+function fcData()
 {
 	global $CONFIGVAR;
 	global $vfystr;
@@ -1090,20 +1065,7 @@ function generateFieldCheck($returnType = 0)
 			'min' => 3,
 		),
 	);
-	switch ($returnType)
-	{
-		case 0:
-			$fieldcheck = json_encode($data);
-			break;
-		case 1:
-			$fieldcheck = $data;
-			break;
-		default:
-			handleError('Internal Programming Error: CODE XY039223<br>' .
-				'Contact your administrator.');
-			break;
-	}
-	return $fieldcheck;
+	return $data;
 }
 
 

@@ -338,15 +338,8 @@ function updateRecordAction()
 	global $moduleDisplayLower;
 	global $dbconf;
 
-	// Set the field list.
-	$fieldlist = array(
-		'provider',
-		'name',
-		'module',
-		'expire',
-		'serverurl',
-		'redirect',
-	);
+	// Generate field check data.
+	$fieldCheck = generateFieldCheck(FIELDCHK_ARRAY);
 	
 	// Get data
 	$key = getPostValue('hidden');
@@ -372,15 +365,12 @@ function updateRecordAction()
 	$redirect = getPostValue('redirect');
 
 	// Check mandatory fields.
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 1);
-	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
-		true, 32, 1);
-	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
-		true, 1209600, 900);
-	$vfystr->strchk($serverurl, 'Server URL', 'serverurl',
-		verifyString::STR_URI, true, 512, 3);
-	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
-		verifyString::STR_URI, true, 512, 3);
+	$vfystr->fieldchk($fieldCheck, 0, $id);
+	$vfystr->fieldchk($fieldCheck, 1, $name);
+	$vfystr->fieldchk($fieldCheck, 2, $module);
+	$vfystr->fieldchk($fieldCheck, 3, $expire);
+	$vfystr->fieldchk($fieldCheck, 4, $serverurl);
+	$vfystr->fieldchk($fieldCheck, 5, $redirect);
 
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -440,17 +430,12 @@ function insertRecordAction()
 	$redirect = getPostValue('redirect');
 
 	// Check mandatory fields.
-	$vfystr->strchk($id, 'Provider', 'provider', verifyString::STR_PINTEGER,
-		true, 214748364, 0);
-	$vfystr->strchk($name, 'Name', 'name', verifyString::STR_NAME, true, 50, 1);
-	$vfystr->strchk($module, 'Module', 'module', verifyString::STR_FILENAME,
-		true, 32, 1);
-	$vfystr->strchk($expire, 'Expire', 'expire', verifyString::STR_PINTEGER,
-		true, 1209600, 900);
-	$vfystr->strchk($serverurl, 'Server URL', 'serverurl',
-		verifyString::STR_URI, true, 512, 3);
-	$vfystr->strchk($redirect, 'Redirect URL', 'redirect',
-		verifyString::STR_URI, true, 512, 3);
+	$vfystr->fieldchk($fieldCheck, 0, $id);
+	$vfystr->fieldchk($fieldCheck, 1, $name);
+	$vfystr->fieldchk($fieldCheck, 2, $module);
+	$vfystr->fieldchk($fieldCheck, 3, $expire);
+	$vfystr->fieldchk($fieldCheck, 4, $serverurl);
+	$vfystr->fieldchk($fieldCheck, 5, $redirect);
 	
 	// Handle any errors from above.
 	if ($vfystr->errstat() == true)
@@ -750,7 +735,7 @@ function formPage($mode, $rxa)
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck()
+function fcData()
 {
 	global $CONFIGVAR;
 	global $vfystr;
@@ -758,6 +743,7 @@ function generateFieldCheck()
 	$data = array(
 		0 => array(
 			'name' => 'provider',
+			'dispname' => 'Provider',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
 			'max' => 2147483647,
@@ -765,6 +751,7 @@ function generateFieldCheck()
 		),
 		1 => array(
 			'name' => 'name',
+			'dispname' => 'Provider Name',
 			'type' => $vfystr::STR_NAME,
 			'noblank' => true,
 			'max' => 50,
@@ -772,6 +759,7 @@ function generateFieldCheck()
 		),
 		2 => array(
 			'name' => 'module',
+			'dispname' => 'Module',
 			'type' => $vfystr::STR_FILENAME,
 			'noblank' => true,
 			'max' => 32,
@@ -779,6 +767,7 @@ function generateFieldCheck()
 		),
 		3 => array(
 			'name' => 'expire',
+			'dispname' => 'Expire',
 			'type' => $vfystr::STR_PINTEGER,
 			'noblank' => true,
 			'max' => 1209600,
@@ -786,6 +775,7 @@ function generateFieldCheck()
 		),
 		4 => array(
 			'name' => 'serverurl',
+			'dispname' => 'Server URL',
 			'type' => $vfystr::STR_URI,
 			'noblank' => true,
 			'max' => 512,
@@ -793,14 +783,14 @@ function generateFieldCheck()
 		),
 		5 => array(
 			'name' => 'redirect',
+			'dispname' => 'Redirect URL',
 			'type' => $vfystr::STR_URI,
 			'noblank' => true,
 			'max' => 512,
 			'min' => 3,
 		),
 	);
-	$fieldcheck = json_encode($data);
-	return $fieldcheck;
+	return $data;
 }
 
 

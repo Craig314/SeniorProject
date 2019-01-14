@@ -118,5 +118,88 @@ function convBooleanValue($value)
 	return 'Yes';
 }
 
+// Converts type numbers into names.
+function convertType($type)
+{
+	switch ($type)
+	{
+		case DBTYPE_STRING:
+			return 'String';
+			break;
+		case DBTYPE_INTEGER:
+			return 'Integer';
+			break;
+		case DBTYPE_BOOLEAN:
+			return 'Boolean';
+			break;
+		case DBTYPE_LONGSTR:
+			return 'Long String';
+			break;
+		case DBTYPE_TIMEDISP:
+			return 'Time Displacement';
+			break;
+		default:
+			return 'Unknown';
+			break;
+	}
+}
+
+// Converts long string values to shorter strings for display.
+function convertLongString($type, $value)
+{
+	if ($type == DBTYPE_LONGSTR)
+	{
+		$len = strlen($value);
+		$data = '';
+		if ($len > DBSTR_LENGTH)
+		{
+			for ($i = 0; $i < DBSTR_LENGTH; $i++)
+			{
+				$data .= $value[$i];
+			}
+			$data .= '...';
+		}
+		else $data = $value;
+		return $data;
+	}
+	return $value;
+}
+
+// Generates either an array or json field data.
+function generateFieldCheck($returnType = 0, $dataType = NULL)
+{
+	global $CONFIGVAR;
+	global $vfystr;
+
+	if (function_exists('fcData'))
+	{
+		if ($dataType !== NULL)
+			$data = fcData($dataType);
+		else
+			$data = fcData();
+	}
+	else
+	{
+		$data = NULL;
+	}
+	switch ($returnType)
+	{
+		case FIELDCHK_JSON:
+			if (!empty($data))
+				$fieldcheck = json_encode($data);
+			else
+				$fieldcheck = '';
+			break;
+		case FIELDCHK_ARRAY:
+			$fieldcheck = $data;
+			break;
+		default:
+			handleError('Internal Programming Error: CODE XY039223<br>' .
+				'Contact your administrator.');
+			break;
+	}
+	return $fieldcheck;
+}
+
 
 ?>

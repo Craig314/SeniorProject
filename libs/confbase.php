@@ -31,8 +31,32 @@ const OAUTH_CLIENTAPP = 3;
 const FLAG_COUNT_SYSTEM = 128;
 const FLAG_COUNT_APPLICATION = 128;
 
+// Data Editing Modes
+const MODE_VIEW		= 0;
+const MODE_UPDATE	= 1;
+const MODE_INSERT	= 2;
+const MODE_DELETE	= 3;
+
+// Field Check Data Formats
+const FIELDCHK_JSON		= 0;
+const FIELDCHK_ARRAY	= 1;
+
+// Configuration Field Datatypes
+const DBTYPE_STRING		= 0;
+const DBTYPE_INTEGER	= 1;
+const DBTYPE_BOOLEAN	= 2;
+const DBTYPE_LONGSTR	= 3;
+const DBTYPE_TIMEDISP	= 10;
+
+// Display Length For Long String Type
+const DBSTR_LENGTH		= 20;
+
 // Debugging
 const APP_DEBUG_STATUS = true;
+
+// Include Directories
+const BASELIBSDIR	= '../libs/';
+const BASEAPPSDIR	= '../applibs/';
 
 // Unix System V Shared Memory (available on Windows too)
 const APP_SYSV_SHAREDMEMORY_KEY = 0x15E7AC03;

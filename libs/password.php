@@ -22,10 +22,12 @@ interface passwordInterface
 {
 	static public function getHashAlgorithm();
 	static public function generateSalt($saltlen = 0);
+	static public function generateChallenge($length);
 	static public function hash($passwd, $salt, $digest, $count);
 	static public function encryptNew($passwd, &$hexsalt, &$hexpass, &$digest, $count);
 	static public function encrypt($passwd, $hexsalt, $digest, $count);
 	static public function verify($passwd, $hexsalt, $hexpass, $digest, $count);
+	static public function verifyCHAP($passwd, $challenge, $hexpass, $digest);
 	static public function checkComplexity($passwd);
 }
 
@@ -72,6 +74,19 @@ class password implements passwordInterface
 		return $salt;
 	}
 
+	// Generates a one-time-password challenge.
+	static public function generateChallenge($length)
+	{
+		$cstrong = NULL;
+		$random = openssl_random_pseudo_bytes($length, $cstrong);
+		if ($cstrong == false)
+		{
+			echo 'Security Error: OpenSSL Weak crypto!';
+			exit(1);
+		}
+		return $random;
+	}
+
 	// Performs password hashing.  Uses random timing values
 	// to thwart password hash timing attacks.
 	// Returns a BINARY string of the hashed password.
@@ -91,7 +106,7 @@ class password implements passwordInterface
 		if ($loopcount > 0)
 		{
 			for ($i = 0; $i < $loopcount; $i++)
-			$longpass .= $passwd;
+				$longpass .= $passwd;
 		}
 		else $longpass = $passwd;
 
@@ -144,10 +159,24 @@ class password implements passwordInterface
 		return $hexpass;
 	}
 
+	// Macro function to verify a password.  Returns true if the password
+	// checks, false if it doesn't.
 	static public function verify($passwd, $hexsalt, $hexpass, $digest, $count)
 	{
 		$hexpass2 = self::encrypt($passwd, $hexsalt, $digest, $count);
 		if (strcasecmp($hexpass, $hexpass2) != 0) return false;
+		return true;
+	}
+
+	// Performs the CHAP verify.  Returns true if passed, false if
+	// it doesn't pass.
+	static public function verifyCHAP($passwd, $challenge, $hexpass, $digest)
+	{
+		$binpassusr = hex2bin($passwd);
+		$binpassref = hex2bin($hexpass);
+		$binchall = hex2bin($challenge);
+		$pwdhash = openssl_digest($binpassref . $binchall, $digest, true);
+		if (strcasecmp($pwdhash, $binpassusr) != 0) return false;
 		return true;
 	}
 

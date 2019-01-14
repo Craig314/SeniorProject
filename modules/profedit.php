@@ -51,22 +51,6 @@ $moduleSystem = true;
 // has in this module.  Currently not implemented.
 $modulePermissions = array();
 
-
-
-// These are the data editing modes.
-const MODE_VIEW	= 0;
-const MODE_UPDATE	= 1;
-const MODE_INSERT	= 2;
-const MODE_DELETE	= 3;
-
-// Additonal Constants
-const BMFS_COUNT	= 256;		// # of system bitmap flags
-const BMFA_COUNT	= 256;		// # of application bitmap flags
-
-// Field check generation data formats.
-const FIELDCHK_JSON		= 0;
-const FIELDCHK_ARRAY	= 1;
-
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
@@ -1028,7 +1012,7 @@ function convPortalType($portal)
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck($returnType = 0)
+function fcData()
 {
 	global $CONFIGVAR;
 	global $vfystr;
@@ -1067,20 +1051,7 @@ function generateFieldCheck($returnType = 0)
 			'min' => 1,
 		),
 	);
-	switch ($returnType)
-	{
-		case FIELDCHK_JSON:
-			$fieldcheck = json_encode($data);
-			break;
-		case FIELDCHK_ARRAY:
-			$fieldcheck = $data;
-			break;
-		default:
-			handleError('Internal Programming Error: CODE XY039223<br>' .
-				'Contact your administrator.');
-			break;
-	}
-	return $fieldcheck;
+	return $data;
 }
 
 

@@ -40,6 +40,8 @@ require_once BASEDIR . 'vfystr.php';
 require_once BASEDIR . 'html.php';
 require_once BASEDIR . 'ajax.php';
 require_once BASEDIR . 'account.php';
+require_once BASEDIR . 'openid.php';
+require_once BASEDIR . 'oauth.php';
 
 // For developmental use only.
 if (APP_DEBUG_STATUS === true)
@@ -57,49 +59,13 @@ $userMax = $CONFIGVAR['security_username_maxlen']['value'];
 $passMax = $CONFIGVAR['security_passwd_maxlen']['value'];
 
 // Start the session and load some default values.
-$session->start();
-$_SESSION['banner'] = false;
-$_SESSION['login'] = false;
-$_SESSION['loginLast'] = -1;
-$_SESSION['loginTime'] = -1;
-$_SESSION['nameUser'] = '';
-$_SESSION['nameReal'] = '';
-$_SESSION['userId'] = $CONFIGVAR['account_id_none']['value'];
-$_SESSION['profileId'] = $CONFIGVAR['profile_id_none']['value'];
-$_SESSION['passChange'] = false;
-$_SESSION['portalType'] = -1;
-$_SESSION['flagSys'] = hex2bin('00000000000000000000000000000000');
-$_SESSION['flagApp'] = hex2bin('00000000000000000000000000000000');
+$session->create();
 
 // Now we process requests.
 if ($_SERVER['REQUEST_METHOD'] == 'GET')
 {
 	// This is called on a GET operation.
-	loginShowHeader();
-	switch($modeOption)
-	{
-		case 0:
-			loginShowNative(false, $modeOption);
-			break;
-		case 1:
-			if ($CONFIGVAR['oauth_enable']['value'] == 0 &&
-				$CONFIGVAR['openid_enable']['value'] == 0)
-			{
-				loginShowNative(false, 0);
-			}
-			else
-			{
-				loginShowOption(false);
-				loginShowNative(true, $modeOption);
-				if ($CONFIGVAR['oauth_enable']['value'] == 0) loginShowOAuth(true);
-				if ($CONFIGVAR['openid_enable']['value'] == 0) loginShowOpenID(true);
-			}
-			break;
-		default:
-			loginShowNative(false, $modeOption);
-			break;
-	}
-	loginShowFooter();
+	htmlPageTemplate();
 	exit(0);
 }
 else if ($_SERVER['REQUEST_METHOD'] == 'POST')
@@ -110,14 +76,14 @@ else if ($_SERVER['REQUEST_METHOD'] == 'POST')
 		$command_id = (int)$_POST['COMMAND'];
 		switch($command_id)
 		{
-			case 1:
-				native_login();
+			case -1:		// Load additional content
+				determineLoginType();
 				break;
-			case 2:
-				oauth_login();
+			case 1:			// Submit Username
+				processUsername();
 				break;
-			case 3:
-				openid_login();
+			case 2:			// Submit Password
+				processPassword();
 				break;
 			default:
 				$ajax->sendCommand(ajaxClass::CMD_ERRCLRDISP,
@@ -145,80 +111,424 @@ else
 	exit(1);
 }
 
-function error_exit($message)
+// Error exit function.
+function handleError($message)
 {
 	global $ajax;
-	$ajax->sendCommand(ajaxClass::CMD_ERRCLRCHTML, $message);
+	$ajax->sendCommand(ajaxClass::CMD_ERRDISP, $message);
 	exit(1);
 }
 
-// Performs the native login method.
-function native_login()
+// Determines the login type
+function determineLoginType()
 {
 	global $CONFIGVAR;
-	global $userMax;
-	global $passMax;
+	global $modeOption;
 	global $ajax;
-	global $herr;
-	global $vfystr;
+
+	switch($modeOption)
+	{
+		case 0:
+			html1Stage_login();
+			break;
+		case 1:
+			if ($CONFIGVAR['oauth_enable']['value'] == 0 &&
+				$CONFIGVAR['openid_enable']['value'] == 0)
+			{
+				$html = html1Stage_login();
+			}
+			else
+			{
+				$html = html2Stage_username();
+			}
+			break;
+		default:
+			$html = html1Stage_login();
+			break;
+	}
+	$ajax->writeMainPanelImmediate($html, NULL);
+	exit(0);
+}
+
+// Returns information about the specific username.
+function getUserNameData($username)
+{
 	global $dbuser;
+	global $herr;
+
+	$rxa = $dbuser->queryUsers($username);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+	}
+	return $rxa;
+}
+
+// Returns information about the specific userid.
+function getUserData($userid)
+{
+	global $dbuser;
+	global $herr;
+
+	$rxa = $dbuser->queryUsersUserId($userid);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: Unable to query user ID.');
+	}
+	return $rxa;
+}
+
+// Returns login information about the specific userid.
+function getUserLogin($userid)
+{
+	global $dbuser;
+	global $herr;
+
+	$rxa = $dbuser->queryLogin($userid);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: Unable to query user login data.');
+	}
+	return $rxa;
+}
+
+// Returns contact information about the specific userid.
+function getUserContact($userid)
+{
+	global $dbuser;
+	global $herr;
+
+	$rxa = $dbuser->queryContact($userid);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: Unable to query user contact data.');
+	}
+	return $rxa;
+}
+
+// Returns information about the specific profile ID.
+function getProfileData($profid)
+{
 	global $dbconf;
-	global $account;
-	global $session;
+	global $herr;
 
-	// There's a lot of security issues that needs to be looked
-	// for in this.  Robust coding practices.
+	$rxa = $dbconf->queryProfile($profid);
+	if ($rxa == false)
+	{
+		if ($herr->checkState())
+			handleError($herr->errorGetMessage());
+		else
+			handleError('Database Error: Unable to query profile ID.');
+	}
+	return $rxa;
+}
 
-	// We would like to do base64 decoding, but if someone tries
-	// to screw with the parameter, then we just error it out.
+// Decodes the base64 flag.
+function decodeB64Flag()
+{
 	if (isset($_POST['base64']))
 	{
 		if (is_numeric($_POST['base64']))
 		{
 			$base64 = (int)$_POST['base64'];
 			if ($base64 != 0 && $base64 != 1)
-				error_exit('Invalid characters detected.');
+				handleError('Invalid characters detected.');
 		}
-		else error_exit('Invalid characters detected.');
+		else handleError('Invalid characters detected.');
 	}
-	else error_exit('Missing encode parameter.');
+	else handleError('Missing encode parameter.');
+	if ($base64 == 0) return false;
+	return true;
+}
 
-	// Get and decode the client provided username.
-	if (isset($_POST['native_username']))
+// Decodes the CHAP flag.
+function decodeCHAPFlag()
+{
+	if (isset($_POST['use_chap']))
 	{
-		$post = $_POST['native_username'];
+		if (is_numeric($_POST['use_chap']))
+		{
+			$usechap = (int)$_POST['use_chap'];
+			if ($usechap != 0 && $usechap != 1)
+				handleError('Invalid characters detected.');
+		}
+		else handleError('Invalid characters detected.');
+	}
+	else handleError('Missing CHAP parameter.');
+	if ($usechap == 0) return false;
+	return true;
+}
+
+// Decodes and checks the username that was submitted.
+function decodeUsername()
+{
+	global $userMax;
+	global $vfystr;
+	global $herr;
+
+	// Get Base64 encoding flag.
+	$base64 = decodeB64Flag();
+
+	// Get and decode the username that was provided by the client.
+	if (isset($_POST['username']))
+	{
+		$post = $_POST['username'];
 		$urldec = rawurldecode($post);
-		if ($base64 === 1) $b64dec = base64_decode($urldec);
+		if ($base64 === true) $b64dec = base64_decode($urldec);
 			else $b64dec = $urldec;
 		$username = $b64dec;
 	}
-	else error_exit('Missing username parameter.');
+	else handleError('Missing username parameter.');
 
-	// Get and decode the client provided password.
-	if (isset($_POST['native_password']))
-	{
-		$post = $_POST['native_password'];
-		$urldec = rawurldecode($post);
-		if ($base64 === 1) $b64dec = base64_decode($urldec);
-			else $b64dec = $urldec;
-		$rpasswd = $b64dec;
-	}
-	else error_exit('Missing password parameter.');
-
-	// Check user provided input.
+	// Check to make sure that the username contains valid characters.
 	$vfystr->strchk($username, 'Username', '', verifyString::STR_USERID, true, $userMax, 1);
-	$vfystr->strchk($rpasswd, 'Password', '', verifyString::STR_PASSWD, true, $passMax, 1);
 	if ($herr->checkState())
 	{
-		$errstr = $herr->errorGetMessage();
-		error_exit($errstr);
+		handleError($herr->errorGetMessage());
 	}
 
-	// We have all three parameters, now we run the validate.
+	// Return the username
+	return $username;
+}
+
+// Decodes and checks the password that was submitted.
+function decodePassword()
+{
+	global $passMax;
+	global $vfystr;
+	global $herr;
+
+	// Get Base64 encoding flag.
+	$base64 = decodeB64Flag();
+
+	// Get CHAP flag.
+	$chap = decodeCHAPFlag();
+
+	// Get and decode the password that was provided by the client.
+	if (isset($_POST['password']))
+	{
+		$post = $_POST['password'];
+		$urldec = rawurldecode($post);
+		if ($base64 === true) $b64dec = base64_decode($urldec);
+			else $b64dec = $urldec;
+		$password = $b64dec;
+	}
+	else handleError('Missing password parameter.');
+
+	// Check to make sure that the password is ok to process.
+	// Different checks are required if the CHAP flag is set.
+	if ($chap == true)
+	{
+		$vfystr->strchk($password, 'Password', '', verifyString::STR_HEX,
+			true, $passMax, 1);
+	}
+	else
+	{
+		$vfystr->strchk($password, 'Password', '', verifyString::STR_PASSWD,
+			true, $passMax, 1);
+	}
+	if ($herr->checkState())
+	{
+		handleError($herr->errorGetMessage());
+	}
+
+	// Return the password.
+	return $password;
+}
+
+// Process username submission
+function processUsername()
+{
+	$username = decodeUsername();
+	$rxa = getUserNameData($username);
+	if ($rxa != false)
+	{
+		// If the username is in the database.
+		$_SESSION['userName'] = $username;
+		$_SESSION['userId'] = $rxa['userid'];
+		$_SESSION['method'] = $rxa['method'];
+		switch ($rxa['method'])
+		{
+			case LOGIN_METHOD_NATIVE:
+				stage1_native($rxa);
+				break;
+			case LOGIN_METHOD_OAUTH:
+				stage1_oauth($rxa);
+				break;
+			case LOGIN_METHOD_OPENID:
+				stage1_openid($rxa);
+				break;
+			default:
+				handleError('Invalid login mode for user name.<br>Contact your administrator.');
+				exit(1);
+		}
+	}
+	else
+	{
+		// If the username was not found.
+		$_SESSION['userName'] = '';
+		$_SESSION['userId'] = $CONFIGVAR['account_id_none']['value'];
+		if ($CONFIGVAR['oauth_enable']['value'] == 0 &&
+			$CONFIGVAR['openid_enable']['value'] == 0)
+		{
+			handleError('Invalid username/password');
+		}
+		else
+		{
+			$ajax->writeMainPanelImmediate(html2Stage_password($username));
+		}
+	}
+}
+
+// Process password submission.
+// Only valid for native logins.
+function processPassword()
+{
+	global $CONFIGVAR;
+
+	$password = decodePassword();
+	$chap = decodeCHAPFlag();
+	if ($chap == true)
+	{
+		if ($CONFIGVAR['security_chap_enable']['value'] == 0)
+		{
+			handleError('Invalid password mode.');
+		}
+		else
+		{
+			native_login($_SESSION['userName'], $password, true);
+		}
+	}
+	else
+	{
+		native_login($_SESSION['userName'], $password, false);
+	}
+}
+
+// This applies to the native login method.
+function stage1_native($rxa)
+{
+	global $CONFIGVAR;
+	global $ajax;
+
+	// Check if we need to display the password prompt.
+	if ($CONFIGVAR['oauth_enable']['value'] == 0 &&
+		$CONFIGVAR['openid_enable']['value'] == 0)
+	{
+		// Native logins only, so we send the command to instruct the client
+		// to send us the password.
+		$chap = generateCHAP($rxa['userid']);
+		if ($chap == false)
+		{
+			$ajax->sendCommand(901);
+		}
+		else
+		{
+			$ajax->loadQueueCommand(900, $chap);
+			$ajax->loadQueueCommand(901);
+			$ajax->sendQueue();
+		}
+	}
+	else
+	{
+		// We have multiple types of logins enabled, so since this is
+		// the native method, we send the password prompt with the
+		// CHAP challenge data package, if enabled.
+		$html = html2Stage_password($rxa['username']);
+		$chap = generateCHAP($rxa['userid']);
+		if ($chap == false)
+		{
+			$ajax->writeMainPanelImmediate($html);
+		}
+		else
+		{
+			$ajax->loadQueueCommand(900, $chap);
+			$ajax->loadQueueCommand(ajaxClass::CMD_WMAINPANEL, $html);
+			$ajax->sendQueue();
+			exit(0);
+		}
+	}
+}
+
+// This applies to the OAuth login method.
+function stage1_oauth($rxa)
+{
+	global $CONFIGVAR;
+
+	if ($CONFIGVAR['oauth_enable']['value'] == 0)
+	{
+		handleError('Login method not available.<br>Contact your administrator.');
+	}
+	$oauth->initiate($rxa['userid'], $rxa['username']);
+}
+
+// This applies to the OpenID login method.
+function stage1_openid($rxa)
+{
+	global $CONFIGVAR;
+
+	if ($CONFIGVAR['openid_enable']['value'] == 0)
+	{
+		handleError('Login method not available.<br>Contact your administrator.');
+	}
+	$openid->initiate($rxa['userid']);
+}
+
+// Generates a CHAP challenge data package to be sent to the client.
+function generateCHAP($userid)
+{
+	global $CONFIGVAR;
+
+	// If CHAP is not enabled, then forget it.
+	if ($CONFIGVAR['security_chap_enable']['value'] == 0) return false;
+
+	// Query user login data.
+	$rxa = getUserLogin($userid);
+
+	// Generate the challenge.
+	$binChallenge = password::generateChallenge(
+		$CONFIGVAR['security_chap_length']['value']);
+	$hexChallenge = bin2hex($binChallenge);
+	$_SESSION['challenge'] = $hexChallenge;
+
+	// Construct JSON data array.
+	$data = array(
+		'salt' => $rxa['salt'],
+		'digest' => $rxa['digest'],
+		'count' => $rxa['count'],
+		'challenge' => $hexChallenge,
+	);
+	$json = json_encode($data);
+
+	// Return JSON format data.
+	return $json;
+}
+
+// Performs full password validation.  Uses either the standard
+// method or CHAP.
+function native_login($username, $password, $useCHAP)
+{
+	global $CONFIGVAR;
+	global $ajax;
+	global $herr;
+	global $dbuser;
+	global $dbconf;
+	global $account;
+	global $session;
 
 	// Get userid and profid for the username from the database.
 	$rxa_users = $dbuser->queryUsers($username);
-	if ($rxa_users == false) error_exit('Invalid Username/Password');
+	if ($rxa_users == false) handleError('Invalid Username/Password');
 	$userid = (int)$rxa_users['userid'];
 	$profid = (int)$rxa_users['profileid'];
 	$active = (int)$rxa_users['active'];
@@ -226,7 +536,7 @@ function native_login()
 	// Get the login data
 	$rxa_login = $dbuser->queryLogin($userid);
 	if ($rxa_login == false)
-		error_exit('Stored Data Conflict<br>Contact Your Administrator<br>XX32334');
+		handleError('Stored Data Conflict<br>Contact Your Administrator<br>XX32334');
 	$hexpass	= (string)$rxa_login['passwd'];
 	$hexsalt	= (string)$rxa_login['salt'];
 	$digest		= (string)$rxa_login['digest'];
@@ -237,7 +547,16 @@ function native_login()
 	// Verify the password.  If too many attempts have been made
 	// within a specified time period, then lockout the account
 	// for the same configured amount of time.
-	$passchk = password::verify($rpasswd, $hexsalt, $hexpass, $digest, $count);
+	if ($useCHAP == true)
+	{
+		$passchk = password::verifyCHAP($password, $_SESSION['challenge'],
+			$hexpass, $digest);
+	}
+	else
+	{
+		$passchk = password::verify($password, $hexsalt, $hexpass, $digest,
+			$count);
+	}
 	if ($passchk == false)
 	{
 		if ($locktime != 0)
@@ -267,7 +586,7 @@ function native_login()
 			$locktime = time() + (int)$CONFIGVAR['security_lockout_time'];
 			$dbuser->updateLoginLockout($userid, 1, $locktime);
 		}
-		error_exit('Invalid Username/Password');
+		handleError('Invalid Username/Password');
 	}
 
 	// Mark the current time
@@ -279,15 +598,15 @@ function native_login()
 	// data.
 	$rxa_login = $dbuser->queryLogin($userid);
 	if ($rxa_login == false)
-		error_exit('Stored Data Conflict<br>Contact Your Administrator<br>XX32745');
+		handleError('Stored Data Conflict<br>Contact Your Administrator<br>XX32745');
 	$lockout = (int)$rxa_login['locked'];
 	$locktime = (int)$rxa_login['locktime'];
 	if ($active == 0)
-		error_exit('Your account has been disabled.<br>Contact your administrator');
+		handleError('Your account has been disabled.<br>Contact your administrator');
 	if ($lockout != 0)
 	{
 		if ($loginTime < $locktime)
-			error_exit('Your account has been locked out.<br>Try again later.');
+			handleError('Your account has been locked out.<br>Try again later.');
 		// Account is no longer locked out.  Update the database.
 		$dbuser->updateLoginLockout($userid, 0, 0);
 	}
@@ -295,18 +614,15 @@ function native_login()
 	// The user has successfully logged in. Now we load in their contact info.
 	$rxa_contact = $dbuser->queryContact($userid);
 	if ($rxa_contact == false)
-		error_exit('Stored Data Conflict<br>Contact Your Administrator<br>XX29174');
+		handleError('Stored Data Conflict<br>Contact Your Administrator<br>XX29174');
 
 	// And the profile
 	$rxa_profile = $dbconf->queryProfile($profid);
 	if ($rxa_profile == false)
-		error_exit('Stored Data Conflict<br>Contact Your Administrator<br>XX87319');
+		handleError('Stored Data Conflict<br>Contact Your Administrator<br>XX87319');
 	
 	// Then we set some variables.
-	$lastLoginTime = (int)$rxa_login['lastlog'];
-	$realName = (string)$rxa_contact['name'];
 	$passChangeTime = (int)$rxa_login['timeout'];
-	$portalType = (int)$rxa_profile['portal'];
 
 	// Check if the user needs to change their password, or if they are
 	// exempt.
@@ -322,19 +638,8 @@ function native_login()
 	$dbuser->updateLoginLastlog($userid, $loginTime);
 
 	// Load updated information into session variables
-	$_SESSION['banner'] = false;
-	$_SESSION['login'] = true;
-	$_SESSION['loginLast'] = $lastLoginTime;
-	$_SESSION['loginTime'] = $loginTime;
-	$_SESSION['nameUser'] = $username;
-	$_SESSION['nameReal'] = $realName;
-	$_SESSION['userId'] = $userid;
-	$_SESSION['profileId'] = $profid;
+	user_login($rxa_users, $rxa_profile, $rxa_contact, $rxa_login);
 	$_SESSION['passChange'] = $changePass;
-	$_SESSION['portalType'] = $portalType;
-	$_SESSION['regenTimeLast'] = time() + $CONFIGVAR['session_regen_time']['value'];
-	$_SESSION['flagSys'] = $rxa_profile['bitmap_core'];
-	$_SESSION['flagApp'] = $rxa_profile['bitmap_app'];
 
 	// The user is now logged in.  Initiate forced redirect
 	// To configured banner page.
@@ -343,17 +648,183 @@ function native_login()
 }
 
 // OAuth Login
-function oauth_login()
+// This is called from the oauth.php library in the callback function.
+// Logs the user into the system.
+function oauth_login($userid, $rxu, $rxprov)
 {
+	global $CONFIGVAR;
+
+	// Get the pertenant user data from the database.
+	$rxc = getUserContact($userid);
+	$rxp = getProfileData($rxu['profileid']);
+
+	// Set the user's session.
+	user_login($rxu, $rxp, $rxc, NULL);
+	$_SESSION['expire'] = $time + $rxprov['expire'];
+	$_SESSION['provider'] = $rxprov['provider'];
+
+	// The user is now logged in.  Initiate forced redirect
+	// To configured banner page.
+	$ajax->redirect('/' . $CONFIGVAR['html_banner_page']['value']);
+	exit(0);
 }
 
 // OpenID Login
-function openid_login()
+// This is called from the openid.php library in the callback function.
+// Logs the user into the system.
+function openid_login($userid, $rxu, $rxprov)
 {
+	global $CONFIGVAR;
+
+	// Get the pertenant user data from the database.
+	$rxc = getUserContact($userid);
+	$rxp = getProfileData($rxu['profileid']);
+
+	// Set the user's session.
+	user_login($rxu, $rxp, $rxc, NULL);
+	$_SESSION['expire'] = $time + $rxprov['expire'];
+	$_SESSION['provider'] = $rxprov['provider'];
+
+	// The user is now logged in.  Initiate forced redirect
+	// To configured banner page.
+	$ajax->redirect('/' . $CONFIGVAR['html_banner_page']['value']);
+	exit(0);
 }
 
-// Send the login page header to the client.
-function loginShowHeader()
+// Logs the user into the system and sets various session variables.
+function user_login($user, $profile, $contact, $login)
+{
+	global $CONFIGVAR;
+
+	$_SESSION['banner'] = false;
+	$_SESSION['login'] = true;
+	$_SESSION['loginTime'] = time();
+	$_SESSION['regenTimeLast'] = time() + $CONFIGVAR['session_regen_time']['value'];
+	if (!empty($login))
+	{
+		$_SESSION['loginLast'] = $login['lastlog'];
+	}
+	$_SESSION['nameReal'] = $contact['name'];
+	$_SESSION['nameUser'] = $user['username'];
+	$_SESSION['userId'] = $user['userid'];
+	$_SESSION['profileId'] = $user['profileid'];
+	$_SESSION['method'] = $user['method'];
+	$_SESSION['portalType'] = $profile['portal'];
+	$_SESSION['flagSys'] = $profile['bitmap_core'];
+	$_SESSION['flagApp'] = $profile['bitmap_app'];
+}
+
+// Generates and displays the username prompt.
+function html2Stage_username()
+{
+	$html = htmlFormOpen('submit_form');
+	$html .= htmlUsername();
+	$html .= htmlButtons();
+	$html .= htmlFormClose();
+	return $html;
+}
+
+// Generates and displays the password prompt.
+function html2Stage_password($username)
+{
+	$html = htmlFormOpen('submit_form');
+	$html .= htmlPrintUser($username);
+	$html .= htmlPassword();
+	$html .= htmlButtons();
+	$html .= htmlFormClose();
+	return $html;
+}
+
+// Generates and displays both the username and password prompts.
+function html1Stage_login()
+{
+	$html = htmlFormOpen('submit_form');
+	$html .= htmlUsername();
+	$html .= htmlPassword();
+	$html .= htmlButtons();
+	$html .= htmlFormClose();
+	return $html;
+}
+
+// Opens an HTML form.
+function htmlFormOpen($name)
+{
+	$html = "				<form class=\"login form-horizontal\" id=\"$name\" method=post>
+";
+	return $html;
+}
+
+// Closes an HTML form.
+function htmlFormClose()
+{
+	$html = "				</form>
+";
+	return $html;
+}
+
+// Shows an HTML Username field.
+function htmlUsername()
+{
+	global $userMax;
+	$html = "					<div class=\"row\">
+						<div class=\"form-group\">
+							<label class=\"control-label col-xs-3 text-right\" for=\"username\">Username</label>
+							<div class=\"input-group col-xs-8\">
+								<span class=\"input-group-addon\"><i class=\"glyphicon glyphicon-user\"></i></span>
+								<input type=\"text\" class=\"form-control\" id=\"username\" maxlength=\"$userMax\">
+							</div>
+						</div>
+					</div>
+";
+	return $html;
+}
+
+// Shows an HTML Password field.
+function htmlPassword()
+{
+	global $passMax;
+	$html = "					<div class=\"row\">
+						<div class=\"form-group\">
+							<label class=\"control-label col-xs-3 text-right\" for=\"password\">Password</label>
+							<div class=\"input-group col-xs-8\">
+								<span class=\"input-group-addon\"><i class=\"glyphicon glyphicon-lock\"></i></span>
+								<input type=\"password\" class=\"form-control\" id=\"password\" maxlength=$passMax>
+							</div>
+						</div>
+					</div>
+";
+	return $html;
+}
+
+// Shows the Username
+function htmlPrintUser($username)
+{
+	$html = "					<div class=\"row\">
+						<p>Enter password for $username</p>
+					</div>
+";
+}
+
+// Shows buttons
+function htmlButtons()
+{
+	$html = "					<div class=\"row\">
+						<div class=\"button\">
+							<div class=\"form-group\">
+								<span class=\"col-xs-2\"></span>
+								<input type=\"button\" class=\"btn btn-default col-xs-3\" value=\"Submit\" onclick=\"loginAPI.submitForm()\">
+								<span class=\"col-xs-2\"></span>
+								<input type=\"button\" class=\"btn btn-default col-xs-3\" value=\"Reset\" onclick=\"loginAPI.resetForm()\">
+								<span class=\"col-xs-2\"></span>
+							</div>
+						</div>
+					</div>
+";
+	return $html;
+}
+
+// Send the login page template to the client.
+function htmlPageTemplate()
 {
 	global $baseUrl;
 ?>
@@ -374,12 +845,12 @@ function loginShowHeader()
 		<meta name="theme-color" content="#ffffff">
 		<!-- The rest of the headers -->
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/baseline/ajax.js"></script>
-		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/module/login.js"></script>
+		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/baseline/chap.js"></script>
 		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/css/bootstrap.css">
 		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/css/common.css">
 		<link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>/css/login.css">
 	</head>
-	<body>
+	<body href-link="login.php" onload="initialRun()">
 		<div class="vspace10"></div>
 		<div class="image-banner-center">
 			<img src="<?php echo $baseUrl; ?>/images/branding/trademark_large.png" />
@@ -394,206 +865,17 @@ function loginShowHeader()
 			<div class="color-red text-center" id="errorTarget"></div>
 			<div id="main"></div>
 		</div>
-<?php
-}
-
-// Sends the login method choice to the client.
-function loginShowOption($hidden)
-{
-	global $baseUrl;
-
-	if ($hidden === true) $hide = 'hidden';
-		else $hide = '';
-?>
-		<div id="method_chooser" <?php echo $hide; ?>>
-			<div class="width75">
-				<div class="color-black"><b>Select a login method.</b></div>
-				<form class="login-choice" id="form_choice" method=post>
-					<div class="row">
-						<div class="button">
-							<div class="form-group">
-								<span class="col-xs-4"></span>
-								<input type="button" class="btn btn-default col-xs-4" value="Native Login" onclick="unhideFormNative()">
-								<span class="col-xs-4"></span>
-							</div>
-						</div>
-					</div>
-<?php
-	if ($CONFIGVAR['oauth_enable']['value'] != 0)
-	{
-?>
-					<div class="row">
-						<div class="button">
-							<div class="form-group">
-								<span class="col-xs-4"></span>
-								<input type="button" class="btn btn-default col-xs-4" value="OAuth Login" onclick="unhideFormOAuth()">
-								<span class="col-xs-4"></span>
-							</div>
-						</div>
-					</div>
-<?php
-	}
-	if ($CONFIGVAR['openid_enable']['value'] != 0)
-	{
-?>
-					<div class="row">
-						<div class="button">
-							<div class="form-group">
-								<span class="col-xs-4"></span>
-								<input type="button" class="btn btn-default col-xs-4" value="OpenID Login" onclick="unhideFormOpenID()">
-								<span class="col-xs-4"></span>
-							</div>
-						</div>
-					</div>
-<?php
-	}
-?>
-				</form>
-			</div>
-		</div>
-<?php
-}
-
-// Sends the native login page to the client.
-function loginShowNative($hidden, $mode)
-{
-	global $userMax;
-	global $passMax;
-
-	if ($hidden === true) $hide = 'hidden';
-		else $hide = '';
-?>
-		<div id="native_form" <?php echo $hide; ?>>
-			<div class="width75">
-				<form class="login form-horizontal" id="form_native" method=post>
-					<div class="row">
-						<div class="form-group">
-							<label class="control-label col-xs-3 text-right" for="native_username">Username</label>
-							<div class="input-group col-xs-8">
-								<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-								<input type="text" class="form-control" id="native_username" maxlength=<?php echo $userMax; ?>>
-							</div>
-						</div>
-					</div>
-					<div class="row">
-						<div class="form-group">
-							<label class="control-label col-xs-3 text-right" for="password">Password</label>
-							<div class="input-group col-xs-8">
-								<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-								<input type="password" class="form-control" id="native_password" maxlength=<?php echo $passMax; ?>>
-							</div>
-						</div>
-					</div>
-					<div class="row">
-						<div class="button">
-							<div class="form-group">
-								<span class="col-xs-2"></span>
-								<input type="button" class="btn btn-default col-xs-3" value="Submit" onclick="submitFormNative()">
-								<span class="col-xs-2"></span>
-								<input type="button" class="btn btn-default col-xs-3" value="Reset" onclick="resetFormNative()">
-								<span class="col-xs-2"></span>
-							</div>
-						</div>
-					</div>
-<?php
-	if ($mode > 0)
-	{
-?>					
-					<div class="button">
-						<div class="form-group">
-							<span class="col-xs-5"></span>
-							<input type="button" class="btn btn-default col-xs-2" value="Return" onclick="returnChooser()">
-							<span class="col-xs-5"></span>
-						</div>
-					</div>
-<?php
-	}
-?>					
-				</form>
-			</div>
-		</div>
-<?php
-}
-
-// Sends the OAuth login page to the client.
-function loginShowOAuth($hidden)
-{
-	global $baseUrl;
-
-	if ($hidden === true) $hide = 'hidden';
-		else $hide = '';
-?>
-		<div id="oauth_form" <?php echo $hide; ?>>
-			<div class="width75">
-				<form class="login form-horizontal" id="form_oauth" method=post>
-					<div class="button">
-						<div class="form-group">
-							<span class="col-xs-5"></span>
-							<input type="button" class="btn btn-default col-xs-2" value="Return" onclick="returnChooser()">
-							<span class="col-xs-5"></span>
-						</div>
-					</div>
-				</form>
-			</div>
-		</div>
-		</div>
-<?php
-}
-
-// Sends the OpenID login page to the client.
-function loginShowOpenID($hidden)
-{
-	global $baseUrl;
-
-	if ($hidden === true) $hide = 'hidden';
-		else $hide = '';
-?>
-		<div id="openid_form" <?php echo $hide; ?>>
-			<div class="width75">
-				<form class="login form-horizontal" id="openid_form" method=post>
-					<div class="form-group">
-						<label class="control-label col-xs-4" for="openid_url">OpenID URL</label>
-						<div class="col-xs-8">
-							<input type="text" class="form-control" id="openid_url" />
-						</div>
-					</div>
-					<div class="button">
-						<div class="form-group">
-							<span class="col-xs-2"></span>
-							<input type="button" class="btn btn-default col-xs-3" value="Submit" onclick="submitFormOpenID()">
-							<span class="col-xs-2"></span>
-							<input type="button" class="btn btn-default col-xs-3" value="Reset" onclick="resetFormOpenID()">
-							<span class="col-xs-2"></span>
-						</div>
-					</div>
-					<div class="button">
-						<div class="form-group">
-							<span class="col-xs-5"></span>
-							<input type="button" class="btn btn-default col-xs-2" value="Return" onclick="returnChooser()">
-							<span class="col-xs-5"></span>
-						</div>
-					</div>
-				</form>
-			</div>
-		</div>
-		</div>
-<?php
-}
-
-// Sends the login page footer to the client.
-function loginShowFooter()
-{
-	global $baseUrl;
-?>
 		<div class="vspace5"></div>
 		<div class="image-border-bottom">
 			<img src="<?php echo $baseUrl; ?>/images/border/border2b.gif" />
 		</div>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/APIs/JQuery/BaseJQuery/jquery-3.1.0.min.js"></script>
 		<script type="text/javascript" src="<?php echo $baseUrl; ?>/APIs/Bootstrap/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="<?php echo $baseUrl; ?>/js/module/login.js"></script>
 	</body>
 </html>
 <?php
 }
+
 
 ?>

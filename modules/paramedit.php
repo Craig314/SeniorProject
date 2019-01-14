@@ -54,24 +54,6 @@ $moduleSystem = true;
 // has in this module.  Currently not implemented.
 $modulePermissions = array();
 
-
-
-// These are the data editing modes.
-const MODE_VIEW		= 0;
-const MODE_UPDATE	= 1;
-const MODE_INSERT	= 2;
-const MODE_DELETE	= 3;
-
-// These are the configuration data types in the database.
-const DBTYPE_STRING		= 0;
-const DBTYPE_INTEGER	= 1;
-const DBTYPE_BOOLEAN	= 2;
-const DBTYPE_LONGSTR	= 3;
-const DBTYPE_TIMEDISP	= 10;
-
-// Other misculanious constants.
-const DBSTR_LENGTH		= 20;
-
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
 //$inject_html_file = '../dat/somefile.html';
@@ -79,8 +61,7 @@ $htmlInjectFile = false;
 
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
-const BASEDIR = '../libs/';
-require_once BASEDIR . 'modhead.php';
+require_once '../libs/includes.php';
 
 // Called when the client sends a GET request to the server.
 // This call comes from modhead.php.
@@ -349,6 +330,9 @@ function updateRecordAction()
 				'setting. Key = ' . $key);
 	}
 
+	// Generate field checking data.
+	$fieldCheck = generateFieldCheck(FIELDCHK_ARRAY, $rxa['type']);
+
 	// Get value data.
 	$value = getPostValue('datavalue');
 
@@ -356,19 +340,11 @@ function updateRecordAction()
 	switch ($rxa['type'])
 	{
 		case DBTYPE_STRING:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_ASCII, true, 512, 1);
-			break;
 		case DBTYPE_INTEGER:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_INTEGER, true);
-			break;
 		case DBTYPE_BOOLEAN:
-			if (!empty($value)) $value = 1; else $value = 0;
-			break;
 		case DBTYPE_LONGSTR:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_ASCII, true, 512, 1);
-			break;
 		case DBTYPE_TIMEDISP:
-			$vfystr->strchk($value, 'Value', 'datavalue', verifyString::STR_TIMEDISP, true, 6, 5);
+			$vfystr->fieldchk($fieldCheck, 0, $value);
 			break;
 		default:
 			handleError('Invalid datatype from database detected.');
@@ -552,7 +528,7 @@ function formPage($mode, $rxa)
 
 	// Render
 	$ajax->writeMainPanelImmediate(html::pageAutoGenerate($data),
-		generateFieldCheck($rxa['type']));
+		generateFieldCheck(FIELDCHK_JSON, $rxa['type']));
 }
 
 // Converts type numbers into names.
@@ -603,24 +579,40 @@ function convertLongString($type, $value)
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck($datatype)
+function fcData($datatype)
 {
 	global $CONFIGVAR;
 	global $vfystr;
 
+	switch ($datatype)
+	{
+		case DBTYPE_STRING:
+		case DBTYPE_LONGSTR:
+			$min = 1;
+			$max = 512;
+			break;
+		case DBTYPE_TIMEDISP:
+			$min = 5;
+			$max = 6;
+			break;
+		default:
+			$min = 1;
+			$max = 0;
+			break;
+	}
 	$data = array(
 		0 => array(
 			'name' => 'datavalue',
+			'dispname' => 'Value',
 			'type' => $vfystr::STR_CUSTOM,
 			'ctype' => $vfystr::STR_NONE,
 			'noblank' => false,
-			'max' => 0,
-			'min' => 1,
+			'max' => $max,
+			'min' => $min,
 			'dtype' => $datatype,	// Custom for this module only.
 		),
 	);
-	$fieldcheck = json_encode($data);
-	return $fieldcheck;
+	return $data;
 }
 
 

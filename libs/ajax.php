@@ -72,7 +72,7 @@ interface ajaxInterface
 	public function loadQueueJSON($jnbr, $data);
 	public function sendQueue();
 	public function writePanelsImmediate($nav, $stat, $main, $fields = NULL);
-	public function writeMainPanelImmediate($main, $fields);
+	public function writeMainPanelImmediate($main, $fields = NULL);
 	public function writeStatusPanelImmediate($status);
 }
 
@@ -204,7 +204,7 @@ class ajaxClass implements ajaxInterface
 		echo self::TYPE_MULTI . $sendData;
 	}
 
-	public function writeMainPanelImmediate($main, $fields)
+	public function writeMainPanelImmediate($main, $fields = NULL)
 	{
 		if (!empty($fields))
 		{

@@ -21,6 +21,8 @@ require_once 'html.php';
 
 interface openidInterface
 {
+	public function initiate($userid);
+	public function callback($openIdData);
 }
 
 
@@ -182,11 +184,16 @@ class openidClass implements openidInterface
 		if ($failed == true)
 			handleError('Authentication Failure: ' . $openIdData['error']);
 		
-		// Everything seems to check so log the user in.
-		userLogin($_SESSION['userId']);
-
-		// Needs more code to redirect the user to their portal page.
-
+		// If we get to this point, then the authentication was successful.
+		// So, we log the user into the application.
+		if (function_exists('openid_login'))
+		{
+			openid_login($_SESSION['userId'], $rxu, $rxp);
+		}
+		else
+		{
+			handleError('OpenID Login Failure: Missing Code');
+		}
 	}
 }
 

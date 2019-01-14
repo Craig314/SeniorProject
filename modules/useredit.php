@@ -51,18 +51,6 @@ $moduleSystem = true;
 // has in this module.  Currently not implemented.
 $modulePermissions = array();
 
-
-
-// These are the data editing modes.
-const MODE_VIEW	= 0;
-const MODE_UPDATE	= 1;
-const MODE_INSERT	= 2;
-const MODE_DELETE	= 3;
-
-// Field check generation data formats.
-const FIELDCHK_JSON		= 0;
-const FIELDCHK_ARRAY	= 1;
-
 // These are flags to indicate what is in the database and what tables
 // are being changed for an update operation.  The following values
 // have the given meanings.
@@ -70,10 +58,10 @@ const FIELDCHK_ARRAY	= 1;
 // 1 - insert
 // 2 - delete
 // 3 - update
-const DBCHG_NONE = 0;
-const DBCHG_INS = 1;
-const DBCHG_DEL = 2;
-const DBCHG_UPD = 3;
+const DBCHG_NONE	= 0;
+const DBCHG_INS		= 1;
+const DBCHG_DEL		= 2;
+const DBCHG_UPD		= 3;
 
 // This setting indicates that a file will be used instead of the
 // default template.  Set to the name of the file to be used.
@@ -82,14 +70,10 @@ $htmlInjectFile = false;
 
 // Order matters here.  The modhead library needs to be loaded last.
 // If additional libraries are needed, then load them before.
-const BASEDIR = '../libs/';
-const APPSDIR = '../applibs/';
-require_once BASEDIR . 'dbaseuser.php';
-require_once BASEDIR . 'timedate.php';
-require_once BASEDIR . 'password.php';
-if (file_exists(APPSDIR . 'dbaseapp.php'))
-	include_once(APPSDIR . 'dbaseapp.php');
-require_once BASEDIR . 'modhead.php';
+if (file_exists('../applibs/dbaseapp.php'))
+	include_once('../applibs/dbaseapp.php');
+require_once '../libs/password.php';
+require_once '../libs/includes.php';
 
 // Called when the client sends a GET request to the server.
 // This call comes from modhead.php.
@@ -2025,7 +2009,7 @@ function checkProfileId($profid)
 }
 
 // Generate the field definitions for client side error checking.
-function generateFieldCheck($returnType = 0)
+function fcData()
 {
 	global $CONFIGVAR;
 	global $vfystr;
@@ -2181,20 +2165,7 @@ function generateFieldCheck($returnType = 0)
 			'min' => 0,
 		),
 	);
-	switch ($returnType)
-	{
-		case FIELDCHK_JSON:
-			$fieldcheck = json_encode($data);
-			break;
-		case FIELDCHK_ARRAY:
-			$fieldcheck = $data;
-			break;
-		default:
-			handleError('Internal Programming Error: CODE XY039223<br>' .
-				'Contact your administrator.');
-			break;
-	}
-	return $fieldcheck;
+	return $data;
 }
 
 

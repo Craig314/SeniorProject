@@ -39,16 +39,22 @@ CREATE TABLE IF NOT EXISTS `assignment` (
   KEY `duedate` (`duedate`),
   CONSTRAINT `FK1_asssignment_courseid_course_courseid` FOREIGN KEY (`courseid`) REFERENCES `course` (`courseid`) ON UPDATE CASCADE,
   CONSTRAINT `FK2_assignment_gwgroup_weightgroup_group` FOREIGN KEY (`gwgroup`) REFERENCES `weightgroup` (`group`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 COMMENT='The assignments that the instructor assigns to students.';
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8 COMMENT='The assignments that the instructor assigns to students.';
 
--- Dumping data for table application.assignment: ~5 rows (approximately)
+-- Dumping data for table application.assignment: ~11 rows (approximately)
 /*!40000 ALTER TABLE `assignment` DISABLE KEYS */;
 INSERT INTO `assignment` (`assignment`, `courseid`, `name`, `description`, `descfile`, `allowext`, `duedate`, `lockdate`, `gradeweight`, `gwgroup`, `curve`, `points`, `exempt`, `maxturnin`) VALUES
-	(1, 20284, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540763960, NULL, 10, 0, 0, 10, 0, 3),
-	(2, 14298, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540763960, NULL, 10, 0, 0, 10, 0, 3),
-	(3, 21924, 'Assignment 1', 'Assignment 1', NULL, NULL, 1540995920, NULL, 10, 0, 0, 10, 0, 3),
-	(4, 21924, 'Assignment 2', 'Assignment 2', NULL, NULL, 1541427920, NULL, 10, 0, 0, 10, 0, 3),
-	(5, 14298, 'Assignment 2', 'Assignment 2', NULL, NULL, 1541687190, NULL, 10, 0, 0, 10, 0, 3);
+	(1, 20284, 'Assignment 1', 'Assignment 1', NULL, NULL, 1543910399, NULL, 10, 0, 0, 10, 0, 3),
+	(2, 14298, 'Assignment 1', 'Assignment 1', NULL, NULL, 1544169599, NULL, 10, 0, 0, 10, 0, 3),
+	(3, 21924, 'Assignment 1', 'Assignment 1', NULL, NULL, 1545379199, NULL, 10, 0, 0, 10, 0, 3),
+	(4, 21924, 'Assignment 2', 'Assignment 2', NULL, NULL, 1544083199, NULL, 10, 0, 0, 10, 0, 3),
+	(5, 14298, 'Assignment 2', 'Assignment 2', NULL, NULL, 1545379199, NULL, 10, 0, 0, 10, 0, 3),
+	(6, 20284, 'Assignment 3', 'Assignment 3', NULL, NULL, 1544234400, NULL, 10, 0, 0, 10, 0, 3),
+	(7, 14298, 'Assignment 3', 'Assignment 3', NULL, NULL, 1544234400, NULL, 10, 0, 0, 10, 0, 3),
+	(8, 14298, 'Assignment 4', 'Assignment 4', NULL, NULL, 1544342399, NULL, 10, 0, 0, 10, 0, 3),
+	(9, 14298, 'Assignment 5', 'Assignment 5', NULL, NULL, 1544428799, NULL, 10, 0, 0, 10, 0, 3),
+	(10, 14298, 'Assignment 6', 'Assignment 6', NULL, NULL, 1544687999, NULL, 10, 0, 0, 10, 0, 3),
+	(11, 21924, 'Assignment 3', 'Assignment 3', NULL, NULL, 1544947199, NULL, 10, 0, 0, 10, 0, 3);
 /*!40000 ALTER TABLE `assignment` ENABLE KEYS */;
 
 -- Dumping structure for table application.assignstep
@@ -215,7 +221,7 @@ CREATE TABLE IF NOT EXISTS `turnin` (
   CONSTRAINT `FK4_turnin_step_assignstep_step` FOREIGN KEY (`step`) REFERENCES `assignstep` (`step`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Maintains a log of assignments that the student has turned in.';
 
--- Dumping data for table application.turnin: ~0 rows (approximately)
+-- Dumping data for table application.turnin: ~1 rows (approximately)
 /*!40000 ALTER TABLE `turnin` DISABLE KEYS */;
 /*!40000 ALTER TABLE `turnin` ENABLE KEYS */;
 
@@ -229,12 +235,13 @@ CREATE TABLE IF NOT EXISTS `weightgroup` (
   PRIMARY KEY (`group`),
   KEY `FK1_weightgroup_instructor_users_userid` (`instructor`),
   CONSTRAINT `FK1_weightgroup_instructor_users_userid` FOREIGN KEY (`instructor`) REFERENCES `userdata`.`users` (`userid`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='The grade weight group definition.';
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='The grade weight group definition.';
 
 -- Dumping data for table application.weightgroup: ~1 rows (approximately)
 /*!40000 ALTER TABLE `weightgroup` DISABLE KEYS */;
 INSERT INTO `weightgroup` (`group`, `instructor`, `weight`, `description`, `name`) VALUES
-	(0, 0, 0, 'THis grade weight group is used when there is no weight group.', 'No Grade Weight Group');
+	(0, 0, 0, 'THis grade weight group is used when there is no weight group.', 'No Grade Weight Group'),
+	(2, 1000, 42, 'For tests&period;', 'Tests');
 /*!40000 ALTER TABLE `weightgroup` ENABLE KEYS */;
 
 -- Dumping structure for trigger application.trig_assignstep_step
@@ -332,7 +339,9 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(40, 1, 'security_hashtime_max', 'Password Hashtime Maximum', '500', 'Maximum jitter time for password hashing.', 0),
 	(41, 1, 'security_login_failure_lockout', 'Allowed Login Failure Attempts', '5', 'The maximum number of login failure attempts before the account is locked out.', 1),
 	(42, 1, 'security_lockout_time', 'Account Lockout Time', '900', 'The amount of time the account is locked out after the\r\nnumber of login failure attempts have been exceeded.', 1),
-	(50, 2, 'session_regen_enable', 'Session Regenerate Enable', '0', 'Enables or disables session ID regeneration.', 1),
+	(43, 2, 'security_chap_enable', 'Enable Challenge Authenticaion Protocol', '1', 'Enables a one-time-password encoding method.', 1),
+	(44, 1, 'security_chap_length', 'CHAP Challenge Length', '32', 'Number of random bytes for the CHAP challenge length.', 1),
+	(50, 2, 'session_regen_enable', 'Session Regenerate Enable', '1', 'Enables or disables session ID regeneration.', 1),
 	(51, 1, 'session_regen_time', 'Session Regenerate Timeout', '30', 'The time interval between session ID regeneration.\r\nThis helps to prevent session fixation and session\r\nhijacking.', 1),
 	(52, 1, 'session_expire_time', 'Session Expire Timeout', '60', 'The time in seconds that the old session before ID regeneration is still valid.', 1),
 	(53, 1, 'session_nonce_len', 'Session Nonce Length', '32', 'The length of the session nonce in bytes.', 0),
@@ -363,7 +372,8 @@ INSERT INTO `config` (`setting`, `type`, `name`, `dispname`, `value`, `descripti
 	(1040, 1, 'app_profile_instruct', 'Instructor Profile ID', '100', 'The profile ID that course instructors use.', 0),
 	(1041, 1, 'app_profile_student', 'Student Profile ID', '200', 'The profile ID that students use.', 0),
 	(1050, 1, 'default_gradescale', 'Default Grading Scale', '0', 'The default grading scale that is used if nothing is selected.', 1),
-	(1051, 1, 'gradescale_mode', 'Grade Scale Mode', '0', 'Determines the type of grading scale in use. 0: Fractional grades (B+, B-, etc...) 1: Whole grades (A, B, C, etc...)', 1);
+	(1051, 1, 'gradescale_mode', 'Grade Scale Mode', '0', 'Determines the type of grading scale in use. 0: Fractional grades (B+, B-, etc...) 1: Whole grades (A, B, C, etc...)', 1),
+	(1060, 1, 'default_weightgroup', 'Default Grade Weight Group', '0', 'The default grade weight group that is used if nothing is specified.', 1);
 /*!40000 ALTER TABLE `config` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.flagdesc_app
@@ -390,7 +400,7 @@ CREATE TABLE IF NOT EXISTS `flagdesc_core` (
   PRIMARY KEY (`flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table defines the names and descriptions of core system flags from the userdata.profile table.  The flag attribute is the bit position of the flag.';
 
--- Dumping data for table configuration.flagdesc_core: ~1 rows (approximately)
+-- Dumping data for table configuration.flagdesc_core: ~0 rows (approximately)
 /*!40000 ALTER TABLE `flagdesc_core` DISABLE KEYS */;
 /*!40000 ALTER TABLE `flagdesc_core` ENABLE KEYS */;
 
@@ -404,10 +414,11 @@ CREATE TABLE IF NOT EXISTS `modaccess` (
   CONSTRAINT `FK_modaccess_profile` FOREIGN KEY (`profileid`) REFERENCES `profile` (`profileid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table determines which modules a particular user profile has access to.  If the tuple is present for the module ID and profile ID combination, then all users on that profile ID have access to that module.';
 
--- Dumping data for table configuration.modaccess: ~1 rows (approximately)
+-- Dumping data for table configuration.modaccess: ~2 rows (approximately)
 /*!40000 ALTER TABLE `modaccess` DISABLE KEYS */;
 INSERT INTO `modaccess` (`moduleid`, `profileid`) VALUES
-	(1501, 100);
+	(1501, 100),
+	(1502, 100);
 /*!40000 ALTER TABLE `modaccess` ENABLE KEYS */;
 
 -- Dumping structure for table configuration.module
@@ -424,7 +435,7 @@ CREATE TABLE IF NOT EXISTS `module` (
   PRIMARY KEY (`moduleid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This defines all modules that are available in the application.';
 
--- Dumping data for table configuration.module: ~19 rows (approximately)
+-- Dumping data for table configuration.module: ~18 rows (approximately)
 /*!40000 ALTER TABLE `module` DISABLE KEYS */;
 INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`, `active`, `allusers`, `system`, `vendor`) VALUES
 	(1, 'Grid Portal', 'Views the available modules in grid format.', 'gridportal.php', 'icon_grid', 1, 1, 1, 0),
@@ -447,6 +458,7 @@ INSERT INTO `module` (`moduleid`, `name`, `description`, `filename`, `iconname`,
 	(1102, 'Enrollment', 'Edits the course enrollment&period;', 'enrollment.php', 'icon_enrollment2', 1, 0, 0, 0),
 	(1500, 'Grades', 'Grades', 'grades.php', 'icon_grade', 1, 1, 0, 0),
 	(1501, 'Grading Scale', 'Allows creating&comma; viewing&comma; and editing of grading scales&period;', 'gradescale.php', 'icon_grade3', 1, 0, 0, 0),
+	(1502, 'Grade Weight Groups', 'Allows editing of the grade weight groups so different assignments&comma; quizes&comma; tests&comma; etc&period;&period;&period; contribute different amounts to the total course grade&period;', 'gradeweight.php', 'icon_grade2', 1, 0, 0, 0),
 	(1600, 'Assignments', 'Assignments', 'assignments.php', 'icon_homework', 1, 1, 0, 0);
 /*!40000 ALTER TABLE `module` ENABLE KEYS */;
 
@@ -515,7 +527,7 @@ INSERT INTO `profile` (`profileid`, `name`, `description`, `portal`, `bitmap_cor
 	(2, 'Admin', 'Profile for use only by the application admin.', 0, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, _binary 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
 	(100, 'Instructor', 'The profile for course instructors&period;', 2, _binary 0x00000000000000000000000000000000, _binary 0x05000000000000000000000000000000),
 	(200, 'Student', 'The profile for students&period;', 2, _binary 0x00000000000000000000000000000000, _binary 0x00000000000000000000000000000000),
-	(435, 'Test Profile', 'This profile is for development testing purposes&period;', 2, _binary 0x02000006000000000000000000000000, _binary 0x00010000000000000000000000000000);
+	(435, 'Test Profile', 'This profile is for development testing purposes&period;', 2, _binary 0x00000000000000000000000000000000, _binary 0x00000000000000000000000000000000);
 /*!40000 ALTER TABLE `profile` ENABLE KEYS */;
 
 
@@ -571,12 +583,12 @@ CREATE TABLE IF NOT EXISTS `login` (
 /*!40000 ALTER TABLE `login` DISABLE KEYS */;
 INSERT INTO `login` (`userid`, `locked`, `locktime`, `lastlog`, `failcount`, `timeout`, `digest`, `count`, `salt`, `passwd`) VALUES
 	(0, 0, 0, 0, 0, -1, 'SHA256', 100, '0000000000000000000000000000000000000000000000000000000000000000', '0000000000000000000000000000000000000000000000000000000000000000'),
-	(1, 0, 1541625858, 1543544044, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
+	(1, 0, 1547293947, 1547466007, 0, -1, 'SHA256', 100, 'db63f993e8a1b7de7926ac01b89b743b11ad0674b850cae778ff36684e0d1bc3', 'a0f843907bc5276d68afa04b24935f8f33a7f1c3ec7344d1851ba02f11d2cb13'),
 	(2, 0, 0, 1536731231, 0, -1, 'SHA256', 100, '265273ef2fabd48ffbd3a8218a09af8b7a1187b53acfa51626ddb63d0cf4dc8c', 'ea008ac085fe70a84e8a183ca8d3d943a74f3dff278a0768b5ebcc167abdce73'),
-	(34, 0, 1541017469, 1537509577, 1, 2147483647, 'SHA256', 100, '62b1c831bcabd2235af77b7d607199cebbe13f2e2383d690c5eb6cb8e1f1a9da', '35ff44e1a99b3fa565a6b9c11624bff018437d465fe125c206b4a9fee6f44e1a'),
-	(1000, 0, 0, 1541017383, 0, 2147483647, 'SHA256', 100, '3d85c8641e61e8b8c5ddb6b2b52f717736415cad7ceae3486fa835d59b18a6f8', 'db8812f0f4d975c2ea9172ea0611169dc3ff27475b5057ca21762d16402c61bc'),
+	(34, 0, 1541017469, 1547465273, 0, 1555241875, 'SHA256', 100, 'a64d7ff2e115673b4bce4e31858a2ffa4b9e51ee8b0c55098c4f01ca0bc2752e', '8e79341620debda579a721638053a052254032c87fd2aa65fa97e0d7ca80e570'),
+	(1000, 0, 0, 1544044101, 0, 2147483647, 'SHA256', 100, '3d85c8641e61e8b8c5ddb6b2b52f717736415cad7ceae3486fa835d59b18a6f8', 'db8812f0f4d975c2ea9172ea0611169dc3ff27475b5057ca21762d16402c61bc'),
 	(1001, 0, 0, 0, 0, 2147483647, 'SHA256', 100, 'fae2455c525bf8364cda5a95bd38287461ee8ca3662ecfa1285bdb0141e73592', '15452a7755e9d68edff36d20d573b662ac2f8b037cb67629437a4f8cc4681a4c'),
-	(2000, 0, 1541183684, 1543800399, 0, 2147483647, 'SHA256', 100, '61942ac2e51e43516d325b4aa4cd33f9c3d829f666cbac140a200452df3f9373', '6ead0b2e7c114c0bdbcf55595cc7115af2a436669381fb51c77a2b4af12a37e1'),
+	(2000, 0, 1541183684, 1544122399, 0, 2147483647, 'SHA256', 100, '61942ac2e51e43516d325b4aa4cd33f9c3d829f666cbac140a200452df3f9373', '6ead0b2e7c114c0bdbcf55595cc7115af2a436669381fb51c77a2b4af12a37e1'),
 	(2001, 0, 0, 0, 0, 2147483647, 'SHA256', 100, '6f0724ece7ba6ac9296c1e32fc6e1054e45a493ff684a8cab049fc8e8b10d0ef', '5922976a8119338be7716654f7cb8726ff21d129cf853f8d9ef4d5143ada1f86'),
 	(2003, 0, 0, 0, 0, 2147483647, 'SHA256', 100, '9c2b3ddfc3d1e8caf1ca5797eda8eb27fb431f1b5031f1fa1918da972b181689', '956430a38a95241f3175eae6e3ff1e4f3c5080fb13935a7e0c48e50b43b72717');
 /*!40000 ALTER TABLE `login` ENABLE KEYS */;

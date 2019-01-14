@@ -10,23 +10,7 @@ Banner Page JavaScript File
 
 // This is called when the page first loads.
 function initialRun() {
-	var url;
-
-	url = $(document.body).attr('href-link');
-	serverLinkObject.setUrlPath(url);
-}
-
-// This is a custom command.
-function customCmdProc(command, data) {
-	switch(command) {
-		case 1:
-			document.getElementById('block_password').hidden = true;
-			document.getElementById('block_continue').hidden = false;
-			break;
-		default:
-			return(false);
-	}
-	return(true);
+	ajaxServerCommand.loadAdditionalContent($(document.body).attr("href-link"));
 }
 
 // Submits the Native form to the server for processing.

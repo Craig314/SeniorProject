@@ -27,6 +27,38 @@ interface sessionInterface
 
 class session implements sessionInterface
 {
+	// Creates a new session and fills in default values.
+	public function create()
+	{
+		global $CONFIGVAR;
+
+		// Start the session
+		$result = session_start();
+		if (!$result) printErrorImmediate('Security Error: Session start failed');
+
+		// Load default values
+		$_SESSION['banner'] = false;
+		$_SESSION['login'] = false;
+		$_SESSION['loginLast'] = -1;
+		$_SESSION['loginTime'] = -1;
+		$_SESSION['nameUser'] = '';
+		$_SESSION['nameReal'] = '';
+		$_SESSION['userId'] = $CONFIGVAR['account_id_none']['value'];
+		$_SESSION['profileId'] = $CONFIGVAR['profile_id_none']['value'];
+		$_SESSION['passChange'] = false;
+		$_SESSION['portalType'] = -1;
+		$_SESSION['flagSys'] = hex2bin('00000000000000000000000000000000');
+		$_SESSION['flagApp'] = hex2bin('00000000000000000000000000000000');
+
+		// These are needed to verify that the user's session has
+		// not been hijacked.
+		$_SESSION['token'] = bin2hex(openssl_random_pseudo_bytes
+			($CONFIGVAR['session_nonce_len']['value']));
+		$_SESSION['IPAddress'] = $_SERVER['REMOTE_ADDR'];
+		$_SESSION['userAgent'] = md5($_SERVER['HTTP_USER_AGENT']);
+
+	}
+
 	// Configures a new session and stores various values in
 	// the $_SESSION variable to authenticate the user.
 	// This should only be called on successful login.
@@ -136,7 +168,7 @@ class session implements sessionInterface
 	// immediately terminate the script.
 	public function validate()
 	{
-		$hijack = ' Possible session hijacking attempt.';
+		$hijack = '<br>Possible session hijacking attempt.';
 
 		// Check for expired session
 		if ($_SESSION['OBSOLETE'] && $_SESSION['EXPIRES'] < time())
